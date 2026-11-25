@@ -16,7 +16,8 @@
         high: '高',
         xhigh: '极高'
       };
-      const EFFORT_RE = /\s*(?:\((low|medium|high|xhigh|extra|max|ultra)\)|\b(low|medium|high|xhigh)\b)\s*$/i;
+      const EFFORT_RE =
+        /\s*(?:\((low|medium|high|xhigh|extra\s*high|extra|max|ultra|very\s*high)\)|\b(extra\s+high|very\s+high|low|medium|high|xhigh)\b)\s*$/i;
 
       let disposed = false;
       let syncTimer = null;
@@ -38,9 +39,26 @@
           .replace(/'/g, '&#39;');
       }
 
+      function formatCompactModelDisplay(name) {
+        return String(name || '')
+          .replace(/\s+/g, ' ')
+          .replace(/\bGemini\s+(?=\S)/gi, '')
+          .trim();
+      }
+
       function normalizeEffortKey(raw) {
-        const s = String(raw || '').toLowerCase();
-        if (s === 'extra' || s === 'max' || s === 'ultra' || s === 'xhigh') return 'xhigh';
+        const s = String(raw || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        if (
+          s === 'extra high' ||
+          s === 'extra-high' ||
+          s === 'very high' ||
+          s === 'extra' ||
+          s === 'max' ||
+          s === 'ultra' ||
+          s === 'xhigh'
+        ) {
+          return 'xhigh';
+        }
         if (s === 'high' || s === 'medium' || s === 'low') return s;
         return '';
       }
@@ -313,9 +331,10 @@
         } else {
           for (const f of families) {
             const tone = f.pct <= 10 ? 'crit' : f.pct <= 30 ? 'warn' : 'ok';
+            const displayFamily = formatCompactModelDisplay(f.family);
             html +=
               `<div class="isdou-up-row ${f.active ? 'is-active' : ''} ${f.disabled ? 'is-depleted' : ''}">` +
-              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">${escapeHtml(f.family)}</span>` +
+              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">${escapeHtml(displayFamily)}</span>` +
               `<span class="isdou-up-reset">${escapeHtml(f.resetStr || '--')}</span>` +
               `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${f.pct}%"></div></div>` +
               `<span class="isdou-up-val" data-tone="${tone}">${f.pct}%</span>` +
@@ -371,7 +390,7 @@
         }, 140);
       }
 
-      function tidyModelTriggerLabel(modelBtn, hasEffortSeg, family) {
+      function tidyModelTriggerLabel(modelBtn, hasEffortSeg, family, restoreOnly = false) {
         if (!modelBtn) return;
         const textNodes = [];
         const walker = document.createTreeWalker(modelBtn, NodeFilter.SHOW_TEXT);
@@ -381,24 +400,7 @@
         }
         if (textNodes.length === 0) return;
 
-        if (hasEffortSeg && family) {
-          if (textNodes.length >= 2) {
-            const lastNode = textNodes[textNodes.length - 1];
-            const lastTxt = (lastNode.nodeValue || '').trim();
-            if (normalizeEffortKey(lastTxt)) {
-              const parentSpan = lastNode.parentElement;
-              if (parentSpan && parentSpan !== modelBtn) {
-                parentSpan.setAttribute('data-isdou-effort-hidden', 'true');
-              }
-            }
-          } else if (textNodes.length === 1) {
-            const single = textNodes[0];
-            if ((single.nodeValue || '').trim() !== family) {
-              single.__isdouOrigLabel = single.__isdouOrigLabel || single.nodeValue;
-              single.nodeValue = family;
-            }
-          }
-        } else {
+        if (restoreOnly) {
           modelBtn.querySelectorAll('[data-isdou-effort-hidden]').forEach((el) => {
             el.removeAttribute('data-isdou-effort-hidden');
           });
@@ -406,7 +408,41 @@
             if (tn.__isdouOrigLabel) {
               tn.nodeValue = tn.__isdouOrigLabel;
               delete tn.__isdouOrigLabel;
+              delete tn.__isdouShortLabel;
             }
+          }
+          return;
+        }
+
+        if (hasEffortSeg && family && textNodes.length >= 2) {
+          const lastNode = textNodes[textNodes.length - 1];
+          const lastTxt = (lastNode.nodeValue || '').trim();
+          if (normalizeEffortKey(lastTxt)) {
+            const parentSpan = lastNode.parentElement;
+            if (parentSpan && parentSpan !== modelBtn) {
+              parentSpan.setAttribute('data-isdou-effort-hidden', 'true');
+            }
+          }
+        } else {
+          modelBtn.querySelectorAll('[data-isdou-effort-hidden]').forEach((el) => {
+            el.removeAttribute('data-isdou-effort-hidden');
+          });
+        }
+
+        const primaryNode = textNodes[0];
+        const rawCur = primaryNode.nodeValue || '';
+        const sourceText = rawCur !== primaryNode.__isdouShortLabel ? rawCur : primaryNode.__isdouOrigLabel || rawCur;
+        const baseName =
+          hasEffortSeg && family && textNodes.length === 1 ? family : sourceText;
+        const shortLabel = formatCompactModelDisplay(baseName);
+
+        if (shortLabel) {
+          if (rawCur !== primaryNode.__isdouShortLabel) {
+            primaryNode.__isdouOrigLabel = rawCur;
+          }
+          primaryNode.__isdouShortLabel = shortLabel;
+          if (primaryNode.nodeValue !== shortLabel) {
+            primaryNode.nodeValue = shortLabel;
           }
         }
       }
@@ -658,7 +694,7 @@
         document.querySelectorAll('.isdou-effort-seg, .isdou-usage-badge').forEach((el) => el.remove());
         if (popoverEl) popoverEl.remove();
         document.querySelectorAll('[data-testid="model-selector-trigger"]').forEach((btn) => {
-          tidyModelTriggerLabel(btn, false, '');
+          tidyModelTriggerLabel(btn, false, '', true);
         });
       });
     })();

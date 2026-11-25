@@ -97,8 +97,8 @@
       "bytes": 23895
     },
     "runtime/65-composer-bar.js": {
-      "sha256": "a03497186405746c7ef260548a203e085035a2e812ecbc60b791dd8fe8a69e04",
-      "bytes": 28903
+      "sha256": "45bcb0a4d440435b0c465d03936f6cba70a0e82a01c247c6a524a54360620d27",
+      "bytes": 30084
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
