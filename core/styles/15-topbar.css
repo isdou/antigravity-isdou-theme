@@ -1,0 +1,89 @@
+/* ============================================================================
+ * 15-topbar.css — Linear Minimal Top Header Bar & Pane Controls
+ *
+ * 设计准则：
+ * - 1px 底部精密发丝线与左侧栏正交对齐，构成干净的 Linear 十字工作台骨架
+ * - 面包屑与标题收敛为 13px 紧凑字号，路径主次灰阶分明
+ * - 右侧面板切换与更多按钮统一为 26×26px 的 5px 小圆角图标钮
+ * ============================================================================ */
+
+/* 1. 主内容区顶栏容器 */
+[data-main-content-header="true"] {
+  background-color: var(--isdou-canvas-bg) !important;
+  border-bottom: 1px solid var(--isdou-sidebar-border) !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+/* 2. 顶栏面包屑与会话标题 */
+[data-main-content-header="true"] [data-testid="breadcrumb-segment"],
+[data-main-content-header="true"] .agy-layout-vars :is(a, button, span) {
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  letter-spacing: -0.011em !important;
+}
+
+[data-main-content-header="true"] [data-testid="breadcrumb-segment"] {
+  border-radius: 5px !important;
+  padding: 3px 6px !important;
+  font-weight: 460 !important;
+  color: var(--isdou-fg-secondary) !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+[data-main-content-header="true"] [data-testid="breadcrumb-segment"]:last-of-type {
+  font-weight: 520 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-main-content-header="true"] [data-testid="breadcrumb-segment"]:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 3. 顶栏与侧栏顶部控制图标按钮（统一 26×26px · 5px 圆角） */
+[data-main-content-header="true"] button:not([data-testid="breadcrumb-segment"]),
+[data-testid="pane-titlebar-toolbar"] button,
+[data-testid="sidebar-toggle"],
+[data-testid="sidebar-search-button"],
+[data-testid="toggle-overview-panel"],
+[data-testid="toggle-maximize-pane"],
+[data-testid="toggle-aux-sidebar"],
+[data-testid="titlebar-more-actions"],
+[data-testid="side-panel-new-tab-button"] {
+  border-radius: 5px !important;
+  color: var(--isdou-fg-muted) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+[data-main-content-header="true"] button:not([data-testid="breadcrumb-segment"]):hover,
+[data-testid="pane-titlebar-toolbar"] button:hover,
+[data-testid="sidebar-toggle"]:hover,
+[data-testid="sidebar-search-button"]:hover,
+[data-testid="toggle-overview-panel"]:hover,
+[data-testid="toggle-maximize-pane"]:hover,
+[data-testid="toggle-aux-sidebar"]:hover,
+[data-testid="titlebar-more-actions"]:hover,
+[data-testid="side-panel-new-tab-button"]:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-main-content-header="true"] button svg,
+[data-testid="pane-titlebar-toolbar"] button svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* 4. 右侧辅助面板 / 旁路提问（Side Panel）分割线与顶栏同步 */
+[data-testid="side-panel-sash"],
+[data-testid="sidebar-sash"] {
+  --sash-line: var(--isdou-sidebar-border) !important;
+}
+
+[data-testid="side-question-tab-header-title"] {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+}

@@ -78,8 +78,8 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   color: var(--isdou-fg-primary) !important;
 }
 
-#antigravity\.agentSidePanelInputBox div:has(> [data-lexical-editor="true"]) > p.pointer-events-none,
-.surface-composer-card [data-lexical-editor="true"] ~ p.pointer-events-none {
+#antigravity\.agentSidePanelInputBox div:not([data-ag-has-suggestion="true"]):has(> [data-lexical-editor="true"]) > p.pointer-events-none,
+.surface-composer-card div:not([data-ag-has-suggestion="true"]) > [data-lexical-editor="true"] ~ p.pointer-events-none {
   left: 12px !important;
   right: 12px !important;
   top: 10px !important;
@@ -177,6 +177,13 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   height: 15px !important;
 }
 
+/* 语音按钮外层圆球包裹容器也统一收敛为 6px 小方钮 */
+.agy-composer-footer div.rounded-full:has(> button[data-testid="voice-start-button"]) {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+}
+
 /* 主发送按钮（Linear 靛紫蓝 6px 小方钮）与禁用空状态 */
 #antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button) {
   width: 26px !important;
@@ -253,8 +260,12 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
 /* ----------------------------------------------------------------------------
  * 5. Claude Code 风格输入框下一句预测（浅灰细体 Ghost Text + Tab 键帽）
  * ---------------------------------------------------------------------------- */
+#antigravity\.agentSidePanelInputBox [data-ag-has-suggestion="true"] > p.pointer-events-none,
+.surface-composer-card:has([data-ag-has-suggestion="true"]) p.pointer-events-none,
 [data-ag-has-suggestion="true"] > p.pointer-events-none,
 [data-ag-has-suggestion="true"] [data-lexical-editor="true"] ~ p.pointer-events-none {
+  display: none !important;
+  visibility: hidden !important;
   opacity: 0 !important;
 }
 

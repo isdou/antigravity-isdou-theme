@@ -233,3 +233,104 @@ code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
   border-color: var(--isdou-code-border) !important;
   padding: 7px 12px !important;
 }
+
+/* ----------------------------------------------------------------------------
+ * 5. 工具调用折叠行、思考触发器与变更文件卡（Linear Activity Timeline 风格）
+ * ---------------------------------------------------------------------------- */
+
+/* 「已工作 Xm」与「思考过程」折叠按钮：从 16px 大字瘦身为 12.5px 内敛时间轴行 */
+button[data-testid="worked-for-collapsible"],
+button[data-testid="thinking-collapsible-trigger"],
+[data-testid="agent-loading"] {
+  min-height: 24px !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12.5px !important;
+  font-weight: 460 !important;
+  line-height: 1.4 !important;
+  letter-spacing: -0.008em !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--isdou-fg-muted) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+button[data-testid="worked-for-collapsible"] span,
+button[data-testid="thinking-collapsible-trigger"] span {
+  font-size: 12.5px !important;
+  color: inherit !important;
+}
+
+button[data-testid="worked-for-collapsible"] svg,
+button[data-testid="thinking-collapsible-trigger"] svg {
+  width: 13px !important;
+  height: 13px !important;
+  color: var(--isdou-fg-subtle) !important;
+}
+
+button[data-testid="worked-for-collapsible"]:hover,
+button[data-testid="thinking-collapsible-trigger"]:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 步骤计数徽章（如 4/4 steps）：精致 11.5px 等宽微标签 */
+button[data-testid="step-plan-chip"] {
+  min-height: 20px !important;
+  height: 20px !important;
+  margin-left: 4px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  background-color: var(--isdou-chip-bg) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 480 !important;
+  line-height: 1 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--isdou-fg-muted) !important;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease !important;
+}
+
+button[data-testid="step-plan-chip"]:hover {
+  background-color: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 展开后的工具步骤列表：左侧 Linear 1px 垂直时间轴线 + 紧凑字号 */
+[data-step-list="true"] > div > div:not(:first-child) {
+  margin-left: 11px !important;
+  padding-left: 11px !important;
+  border-left: 1px solid var(--isdou-sidebar-guide) !important;
+  font-size: 12.5px !important;
+}
+
+[data-step-list="true"] :is(button, summary):not([data-testid="worked-for-collapsible"]):not([data-testid="step-plan-chip"]) {
+  font-size: 12.5px !important;
+  border-radius: 5px !important;
+}
+
+/* 变更文件汇总卡片（Changed Files Card）与排队消息卡 */
+[data-testid="changed-files-card"],
+[data-testid="queued-messages-card"] {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  background-color: var(--isdou-code-bg) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+[data-testid="changed-files-card-header"] {
+  background-color: var(--isdou-code-header-bg) !important;
+  border-bottom: 1px solid var(--isdou-code-border) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+}
+
+[data-testid="changed-files-card-review"] {
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}

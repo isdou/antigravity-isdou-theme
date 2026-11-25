@@ -29,6 +29,7 @@ export const FEATURE_GROUPS = Object.freeze({
     sparsePaths: [
       '/core/styles/00-tokens.css',
       '/core/styles/10-sidebar.css',
+      '/core/styles/15-topbar.css',
       '/core/styles/20-chat.css',
       '/core/styles/30-composer.css',
       '/core/runtime/20-theme-sync.js'
@@ -36,6 +37,7 @@ export const FEATURE_GROUPS = Object.freeze({
     coreRelPaths: [
       'styles/00-tokens.css',
       'styles/10-sidebar.css',
+      'styles/15-topbar.css',
       'styles/20-chat.css',
       'styles/30-composer.css',
       'runtime/20-theme-sync.js'
