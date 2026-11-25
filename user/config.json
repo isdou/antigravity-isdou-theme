@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "channel": "auto",
+  "preset": "linear-light",
+  "telemetryLayout": "compact",
+  "telemetryCacheMode": "session",
+  "contextLimit": "auto",
+  "promptSuggestionModel": "gemini-3.8-flash-low",
+  "modules": {
+    "theme": true,
+    "i18n": true,
+    "metrics": false,
+    "promptSuggestions": true,
+    "deadlockHealer": true,
+    "zoomShortcuts": true,
+    "cdpAutoRelaunch": true,
+    "customCss": true,
+    "customJs": true
+  },
+  "themeVars": {}
+}

@@ -1,0 +1,124 @@
+{
+  "name": "antigravity-isdou-theme",
+  "version": "0.1.0",
+  "minNodeVersion": "22.13.0",
+  "fullMetricsNodeVersion": "22.13.0",
+  "files": {
+    "daemon.mjs": {
+      "sha256": "565f762a741aaba96186521b088437fd0683e15203a7aa9376facf8cd48240fa",
+      "bytes": 4376
+    },
+    "daemon/cdp-bridge.mjs": {
+      "sha256": "4505535b4adafc43ffb3d2488b69bdbf1ee23ea393828d7b80820b752f286808",
+      "bytes": 28982
+    },
+    "daemon/cdp-relaunch.mjs": {
+      "sha256": "51e9a4212942252547594c3294a6cccba426d081b5934a69fab3068aa21370c1",
+      "bytes": 15048
+    },
+    "daemon/ls-log.mjs": {
+      "sha256": "bc81e76d861392490903eede432ecc64913acb8617835cc7aa01b74fb0509834",
+      "bytes": 2123
+    },
+    "daemon/paths.mjs": {
+      "sha256": "7b6621ed9e25db04f3991285629b92db26c60160fc8d9bfe3d0fc2b60d8b1fd7",
+      "bytes": 13682
+    },
+    "daemon/prompt-suggest.mjs": {
+      "sha256": "fd13e3ec259581c59f56386423bc19fa953ffac4d589b6b54a58e2b1c2c88e45",
+      "bytes": 10773
+    },
+    "daemon/protobuf.mjs": {
+      "sha256": "9e1cff0e22d8361fc80a9b7d4076a0071b64bbab036386d644713e2d82cf3367",
+      "bytes": 7375
+    },
+    "daemon/sqlite-metrics.mjs": {
+      "sha256": "f39540f7c6caea4a9f3ad84954255fdca7f8a3bd500f9af873207426087a9592",
+      "bytes": 21609
+    },
+    "daemon/telemetry-renderer.mjs": {
+      "sha256": "186e438512a681e2eccbbdbc15f771ce30f7602af6a27f5d56ee6dda1d636ef7",
+      "bytes": 19694
+    },
+    "i18n.json": {
+      "sha256": "22f5e7c475d9110c228eaeb94f23a1e60b34918b347d7c726c77d1ae298fd065",
+      "bytes": 117134
+    },
+    "installer/cdp-launch.mjs": {
+      "sha256": "8b63ba4676bbca083fd154687c7784d6279a951c869de4d6fcaf19c56ce61e12",
+      "bytes": 28826
+    },
+    "installer/env.mjs": {
+      "sha256": "0b9394917e972869bce0911340f30242227987850e7e4b5658f306fe123536e2",
+      "bytes": 12591
+    },
+    "installer/features.mjs": {
+      "sha256": "a214684954450270e191b818534272fc20d31dbf3df940fb4f91046738d8b0d6",
+      "bytes": 5297
+    },
+    "installer/manifest.mjs": {
+      "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
+      "bytes": 5745
+    },
+    "installer/service.mjs": {
+      "sha256": "39af71a4f46abc1a59bac26c899f1ccb1790d17cb0ddf380118cea7dceaa0346",
+      "bytes": 13504
+    },
+    "runtime/00-head.js": {
+      "sha256": "92a99983fddf52fd572a04141901319b6a9351a5ff1c92b5eb0b7057a6d62fa3",
+      "bytes": 12355
+    },
+    "runtime/10-guards.js": {
+      "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
+      "bytes": 2542
+    },
+    "runtime/20-theme-sync.js": {
+      "sha256": "dbc299a9f832bf5aa2d9f5dae6b720f8b38c4ec15f2281345bd0776fa8f0629f",
+      "bytes": 6506
+    },
+    "runtime/30-antigravity-probe.js": {
+      "sha256": "df553bf2ee72675ca24e9f94ff1a0cd797571e728032c32d2ea1994302545514",
+      "bytes": 7875
+    },
+    "runtime/40-status-machine.js": {
+      "sha256": "a51d9c7db5b64e488af435adb4469d88ebf38ad52eb423180842939490b62efb",
+      "bytes": 11902
+    },
+    "runtime/50-telemetry-ui.js": {
+      "sha256": "defdc3c471a38476e1a43642c0556ed204ee45fca1256e907da6157370e17eb8",
+      "bytes": 51173
+    },
+    "runtime/60-i18n-engine.js": {
+      "sha256": "cd47a833fe2df838b3a33ab6fa967c71d70707fd175650c098e8e3d58f1f53d2",
+      "bytes": 37588
+    },
+    "runtime/70-prompt-suggestions.js": {
+      "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
+      "bytes": 13115
+    },
+    "runtime/90-tail.js": {
+      "sha256": "9e9ab5e1219797d146d9c1cf62144aa629cf057a83796c0ddab64c3e47c858b3",
+      "bytes": 2772
+    },
+    "shared.mjs": {
+      "sha256": "986f2acb964253183358d2d4bdea54341d5b2be8f3060101390261586d4ebad2",
+      "bytes": 7088
+    },
+    "styles/00-tokens.css": {
+      "sha256": "fd51e1e36d70414b2cb44bb3317aebd2312bc07489d092d7e2ddd6265acee291",
+      "bytes": 5573
+    },
+    "styles/10-sidebar.css": {
+      "sha256": "c22e1a74876f0c7a7ca9bb38a301e8cab14d9ad1cf0acd5fd85a262b8cb60e64",
+      "bytes": 8850
+    },
+    "styles/20-chat.css": {
+      "sha256": "9432f11e58d64b5bf258b8f41c5da9d7c407a67b5b3e9c864c68f0a77625dd26",
+      "bytes": 1033
+    },
+    "styles/30-composer.css": {
+      "sha256": "afbf1731538fa0f88755d46e355acf62218b26670fbf8944acce266c8f222dfe",
+      "bytes": 3763
+    }
+  }
+}

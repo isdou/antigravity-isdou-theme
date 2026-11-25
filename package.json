@@ -1,0 +1,14 @@
+{
+  "name": "antigravity-isdou-theme",
+  "version": "0.1.0",
+  "description": "Linear-inspired minimal UI theme, localization, and Claude-style prompt suggestions for Google Antigravity.",
+  "type": "module",
+  "author": "isdou",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "check": "node -e \"import('node:fs').then(fs => { import('node:child_process').then(({execFileSync}) => { const walk = d => fs.existsSync(d) ? fs.readdirSync(d, {withFileTypes:true}).flatMap(e => e.isDirectory() ? walk(d+'/'+e.name) : (/\\.mjs$/.test(e.name) ? [d+'/'+e.name] : [])) : []; for (const f of ['install.mjs', ...walk('core')]) execFileSync(process.execPath, ['--check', f], {stdio:'inherit'}); const rt = fs.readdirSync('core/runtime').filter(n => n.endsWith('.js')).sort().map(n => fs.readFileSync('core/runtime/'+n, 'utf8')).join('\\n'); execFileSync(process.execPath, ['--input-type=commonjs', '--check'], {input: 'const __AG_BOOT_PAYLOAD__ = {};\\n' + rt, stdio:['pipe','inherit','inherit']}); }); })\""
+  }
+}

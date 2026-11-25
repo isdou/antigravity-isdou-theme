@@ -1,0 +1,132 @@
+/* ============================================================================
+ * 00-tokens.css — Linear Design System Tokens (Daylight & Obsidian Dark)
+ *
+ * 全局单一变量源：修改这里的色阶、圆角或字重，全局侧边栏/聊天区/输入框同步联动。
+ * ============================================================================ */
+
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif !important;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Monaco, ui-monospace, SFMono-Regular, monospace !important;
+
+  /* Linear 精密几何圆角体系（利落克制，拒绝臃肿圆球） */
+  --isdou-radius-xs: 4px;
+  --isdou-radius-sm: 6px;
+  --isdou-radius-md: 8px;
+  --isdou-radius-lg: 12px;
+}
+
+/* ----------------------------------------------------------------------------
+ * Linear Daylight（浅色模式）
+ * ---------------------------------------------------------------------------- */
+html:not([data-ag-theme-mode="dark"]):not(:has(> body.dark)),
+html:not([data-ag-theme-mode="dark"]) body:not(.dark) {
+  --isdou-accent: #5E6AD2;
+  --isdou-accent-hover: #4E5AC0;
+  --isdou-accent-soft: rgba(94, 106, 210, 0.12);
+
+  --isdou-canvas-bg: #FFFFFF;
+  --isdou-sidebar-bg: #F7F8F9;
+  --isdou-sidebar-border: #ECEEF0;
+  --isdou-sidebar-divider: #E9EBEE;
+  --isdou-sidebar-hover: rgba(0, 0, 0, 0.04);
+  --isdou-sidebar-selected: #E8EAEE;
+  --isdou-sidebar-guide: #E2E5E9;
+
+  --isdou-fg-primary: #16171A;
+  --isdou-fg-secondary: #494E56;
+  --isdou-fg-muted: #8A8F98;
+  --isdou-fg-subtle: #A0A5AE;
+
+  --isdou-composer-tray: #F4F5F7;
+  --isdou-composer-card: #FFFFFF;
+  --isdou-composer-border: #E4E6EA;
+  --isdou-composer-focus-border: #C9CDD4;
+  --isdou-composer-shadow: 0 2px 10px rgba(0, 0, 0, 0.035), 0 1px 2px rgba(0, 0, 0, 0.02);
+
+  /* 桥接宿主原生 CSS 变量 */
+  --primary: var(--isdou-accent) !important;
+  --primary-foreground: #FFFFFF !important;
+  --editor-selection-background: rgba(94, 106, 210, 0.18) !important;
+  --background: var(--isdou-canvas-bg) !important;
+  --content: var(--isdou-canvas-bg) !important;
+  --foreground: var(--isdou-fg-primary) !important;
+  --secondary-foreground: var(--isdou-fg-secondary) !important;
+  --muted-foreground: var(--isdou-fg-muted) !important;
+  --sidebar: var(--isdou-sidebar-bg) !important;
+  --shell: var(--isdou-sidebar-bg) !important;
+  --vscode-sideBar-background: var(--isdou-sidebar-bg) !important;
+  --sidebar-secondary: var(--isdou-sidebar-selected) !important;
+  --sidebar-muted: var(--isdou-sidebar-hover) !important;
+  --sidebar-border: var(--isdou-sidebar-border) !important;
+  --border: #EAECEF !important;
+  --card: #FFFFFF !important;
+  --card-border: #E6E8EC !important;
+  --card-edge: #ECEEF0 !important;
+  --sash-line: var(--isdou-sidebar-border) !important;
+  --onyx-frame: #F4F5F7 !important;
+  --onyx-well: #F7F8F9 !important;
+  --onyx-raised: #FFFFFF !important;
+  --onyx-selected: var(--isdou-sidebar-selected) !important;
+  --glass: #FFFFFF !important;
+  --glass-border: #E6E8EC !important;
+  --home-glow: transparent !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * Linear Obsidian（深色模式）
+ * ---------------------------------------------------------------------------- */
+html[data-ag-theme-mode="dark"],
+html[data-ag-theme-mode="dark"] body,
+html:has(> body.dark),
+body.dark,
+body.theme-dark {
+  --isdou-accent: #5E6AD2;
+  --isdou-accent-hover: #6E7AE2;
+  --isdou-accent-soft: rgba(94, 106, 210, 0.22);
+
+  --isdou-canvas-bg: #0F1012;
+  --isdou-sidebar-bg: #141518;
+  --isdou-sidebar-border: rgba(255, 255, 255, 0.06);
+  --isdou-sidebar-divider: rgba(255, 255, 255, 0.055);
+  --isdou-sidebar-hover: rgba(255, 255, 255, 0.042);
+  --isdou-sidebar-selected: rgba(255, 255, 255, 0.082);
+  --isdou-sidebar-guide: rgba(255, 255, 255, 0.075);
+
+  --isdou-fg-primary: #F2F3F5;
+  --isdou-fg-secondary: #9CA1AA;
+  --isdou-fg-muted: #6C717A;
+  --isdou-fg-subtle: #555962;
+
+  --isdou-composer-tray: #16171B;
+  --isdou-composer-card: #1C1D22;
+  --isdou-composer-border: rgba(255, 255, 255, 0.08);
+  --isdou-composer-focus-border: rgba(255, 255, 255, 0.15);
+  --isdou-composer-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
+
+  --primary: var(--isdou-accent) !important;
+  --primary-foreground: #FFFFFF !important;
+  --editor-selection-background: rgba(94, 106, 210, 0.32) !important;
+  --background: var(--isdou-canvas-bg) !important;
+  --content: var(--isdou-canvas-bg) !important;
+  --foreground: var(--isdou-fg-primary) !important;
+  --secondary-foreground: var(--isdou-fg-secondary) !important;
+  --muted-foreground: var(--isdou-fg-muted) !important;
+  --sidebar: var(--isdou-sidebar-bg) !important;
+  --shell: var(--isdou-sidebar-bg) !important;
+  --vscode-sideBar-background: var(--isdou-sidebar-bg) !important;
+  --sidebar-secondary: var(--isdou-sidebar-selected) !important;
+  --sidebar-muted: var(--isdou-sidebar-hover) !important;
+  --sidebar-border: var(--isdou-sidebar-border) !important;
+  --border: rgba(255, 255, 255, 0.07) !important;
+  --card: #18191D !important;
+  --card-border: rgba(255, 255, 255, 0.075) !important;
+  --card-edge: rgba(255, 255, 255, 0.06) !important;
+  --sash-line: var(--isdou-sidebar-border) !important;
+  --onyx-frame: #16171B !important;
+  --onyx-well: #141518 !important;
+  --onyx-raised: #1E2025 !important;
+  --onyx-selected: var(--isdou-sidebar-selected) !important;
+  --glass: #1A1B20 !important;
+  --glass-border: rgba(255, 255, 255, 0.08) !important;
+  --home-glow: transparent !important;
+}

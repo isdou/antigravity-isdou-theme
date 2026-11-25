@@ -1,0 +1,36 @@
+/* ============================================================================
+ * 20-chat.css — Clean Canvas & Typography Foundation
+ *
+ * 保持主对话区干净通透，不乱加暴力覆写，方便后续按模块精细定制。
+ * ============================================================================ */
+
+html, body {
+  font-family: var(--font-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-markdown-root],
+[data-testid="user-message-content"],
+.agy-user-bubble,
+.prose,
+.markdown {
+  font-family: var(--font-sans) !important;
+  letter-spacing: -0.008em;
+}
+
+:is([data-markdown-root], .prose, .markdown) :is(p, li, blockquote) {
+  line-height: 1.65;
+}
+
+code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
+  font-family: var(--font-mono) !important;
+}
+
+.surface-glass,
+.agy-fastpick.surface-glass,
+.quick-input-widget.surface-glass,
+.agy-user-bubble {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

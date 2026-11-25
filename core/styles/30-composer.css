@@ -1,0 +1,108 @@
+/* ============================================================================
+ * 30-composer.css — Linear Minimal Composer & Claude-style Ghost Suggestions
+ * ============================================================================ */
+
+/* 输入框外托盘与悬浮内卡 */
+:is(#antigravity\.agentSidePanelInputBox, [id="antigravity.agentSidePanelInputBox"], .surface-composer.bg-card-border) {
+  background-color: var(--isdou-composer-tray) !important;
+  border: 1px solid var(--isdou-sidebar-border) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+body[data-agy-theme] .surface-composer > .surface-composer-card,
+.surface-composer-card.bg-card,
+[id="antigravity.agentSidePanelInputBox"] .surface-composer-card,
+[id="antigravity.agentSidePanelInputBox"] > div.bg-card {
+  background-color: var(--isdou-composer-card) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  border-radius: 11px !important;
+  box-shadow: var(--isdou-composer-shadow) !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+
+.surface-composer:focus-within > .surface-composer-card,
+[id="antigravity.agentSidePanelInputBox"]:focus-within .surface-composer-card {
+  border-color: var(--isdou-composer-focus-border) !important;
+}
+
+/* 发送按钮：Linear 靛紫蓝点睛 */
+#antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button):not(:disabled) {
+  background-color: var(--isdou-accent) !important;
+  border-color: var(--isdou-accent) !important;
+  color: #FFFFFF !important;
+}
+
+#antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button):not(:disabled):hover {
+  background-color: var(--isdou-accent-hover) !important;
+}
+
+/* Claude Code 风格输入框下一句预测（浅灰细体 Ghost Text + Tab 键帽） */
+[data-ag-has-suggestion="true"] > p.pointer-events-none,
+[data-ag-has-suggestion="true"] [data-lexical-editor="true"] ~ p.pointer-events-none {
+  opacity: 0 !important;
+}
+
+.ag-prompt-ghost-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ag-prompt-ghost-overlay[hidden] {
+  display: none !important;
+}
+
+#antigravity\.agentSidePanelInputBox .ag-prompt-ghost-text,
+.ag-prompt-ghost-text {
+  color: rgba(138, 143, 152, 0.72) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: 400 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+#antigravity\.agentSidePanelInputBox .ag-prompt-ghost-kbd,
+.ag-prompt-ghost-kbd {
+  pointer-events: auto;
+  cursor: pointer;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 17px;
+  padding: 0 5px;
+  margin-top: 2px;
+  border-radius: 4px;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 450 !important;
+  line-height: 1 !important;
+  color: var(--isdou-fg-muted) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-ag-theme-mode="dark"] #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-text,
+html[data-ag-theme-mode="dark"] .ag-prompt-ghost-text {
+  color: rgba(156, 161, 170, 0.50) !important;
+}
+
+html[data-ag-theme-mode="dark"] #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-kbd,
+html[data-ag-theme-mode="dark"] .ag-prompt-ghost-kbd {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.11) !important;
+}

@@ -1,0 +1,232 @@
+/* ============================================================================
+ * 10-sidebar.css — Linear Minimal Precision Sidebar
+ *
+ * 设计准则：
+ * - 6px 精密小圆角，摒弃松散圆球与廉价厚阴影
+ * - 纯粹通过冷中性石板灰阶区分主次：标题 #16171A / 常态行 #494E56 / 辅助 #8A8F98
+ * - 清晰的 1px 发丝边界与项目子树垂直缩进引导线（Indent Guide）
+ * - 隐形极细滚动条，悬停侧边栏时才轻柔浮现
+ * ============================================================================ */
+
+/* 1. 侧边栏容器底布与右侧 1px 发丝线 */
+.bg-sidebar:not([data-has-browser-hole="true"]),
+aside.bg-sidebar {
+  background-color: var(--isdou-sidebar-bg) !important;
+  border-right: 1px solid var(--isdou-sidebar-border) !important;
+  font-family: var(--font-sans) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 去除宿主内置玻璃模糊与多余内边阴影 */
+.agy-inset-shell [data-side-panel-body]::after,
+.agy-sheet[data-sheet-inset] [data-main-content-body]::after {
+  box-shadow: inset 0 0 0 1px var(--isdou-sidebar-border) !important;
+}
+
+/* 侧边栏水平分隔线：收敛为极淡 1px 发丝线 */
+.bg-sidebar > div.h-px {
+  background-color: var(--isdou-sidebar-divider) !important;
+  margin-left: 12px !important;
+  margin-right: 12px !important;
+  opacity: 1 !important;
+}
+
+/* 2. 顶部导航项（新建对话 / 自动化任务 / 技能与自定义）与底部系统设置项 */
+.bg-sidebar > div.px-2 .agy-button-custom,
+.bg-sidebar > div.pt-2 .agy-button-custom,
+.bg-sidebar [data-testid="new-conversation-button"],
+.bg-sidebar [data-testid="automations-button"] {
+  min-height: 29px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  letter-spacing: -0.011em !important;
+  color: var(--isdou-fg-secondary) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+.bg-sidebar > div.px-2 .agy-button-custom:hover,
+.bg-sidebar > div.pt-2 .agy-button-custom:hover,
+.bg-sidebar [data-testid="new-conversation-button"]:hover,
+.bg-sidebar [data-testid="automations-button"]:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+.bg-sidebar > div.px-2 .agy-button-custom svg,
+.bg-sidebar > div.pt-2 .agy-button-custom svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: var(--isdou-fg-muted) !important;
+  transition: color 100ms ease !important;
+}
+
+.bg-sidebar > div.px-2 .agy-button-custom:hover svg,
+.bg-sidebar > div.pt-2 .agy-button-custom:hover svg {
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 侧边栏小图标按钮（折叠、新建项目、更多操作）统一 5px 精密圆角 */
+.bg-sidebar .agy-button-icon,
+.bg-sidebar .agy-button-icon-sm {
+  border-radius: 5px !important;
+  color: var(--isdou-fg-muted) !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+.bg-sidebar .agy-button-icon:hover,
+.bg-sidebar .agy-button-icon-sm:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 3. 分组栏小标题（如「项目管理」）—— Linear 标志性冷灰微标签 */
+.bg-sidebar :is([class*="text-muted"], [class*="text-[11px]"], [class*="uppercase"]) {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.005em !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+/* 4. 项目折叠头（h3 > button[data-testid="project-header"]） */
+.bg-sidebar button[data-testid="project-header"],
+.bg-sidebar button[data-project-card="true"] {
+  min-height: 28px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-left: 6px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: transparent !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.012em !important;
+  color: var(--isdou-fg-secondary) !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+.bg-sidebar [class*="group/headerbtn"]:hover button[data-testid="project-header"],
+.bg-sidebar button[data-testid="project-header"]:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+.bg-sidebar button[data-testid="project-header"] span {
+  color: inherit !important;
+  font-weight: 500 !important;
+}
+
+.bg-sidebar [data-testid="project-header-icon"] svg {
+  width: 14.5px !important;
+  height: 14.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+.bg-sidebar button[data-testid="project-header"][aria-expanded="true"] {
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 展开项目子会话树：左侧 Linear 1px 垂直层级引导线（Indent Guide） */
+.bg-sidebar [class*="group/headerbtn"] + div:has([data-testid="conversation-row-sidebar"]) {
+  position: relative !important;
+  margin-left: 16px !important;
+  padding-left: 8px !important;
+  border-left: 1px solid var(--isdou-sidebar-guide) !important;
+}
+
+/* 5. 会话列表行（conversation-row-sidebar）—— 利落 6px 圆角与精准灰阶 */
+.bg-sidebar [data-testid="conversation-row-sidebar"],
+.bg-sidebar .agy-sidebar-row {
+  min-height: 29px !important;
+  padding: 4px 8px !important;
+  margin: 1px 0 !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  box-shadow: none !important;
+  transition: background-color 90ms ease !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"] > a.inset-0,
+.bg-sidebar .agy-sidebar-row > a.inset-0 {
+  border-radius: var(--isdou-radius-sm) !important;
+}
+
+/* 未选中会话行：干净透明底 + 中性石板灰字 */
+.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]),
+.bg-sidebar .agy-sidebar-row:not([data-selected="true"]) {
+  background-color: transparent !important;
+  --row-bg: transparent !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) [class*="truncate"],
+.bg-sidebar .agy-sidebar-row:not([data-selected="true"]) span.truncate {
+  font-size: 13px !important;
+  font-weight: 420 !important;
+  letter-spacing: -0.008em !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+/* 悬停态：极轻 4% 灰底，文字微提亮 */
+.bg-sidebar [data-testid="conversation-row-sidebar"]:hover:not([data-selected="true"]),
+.bg-sidebar .agy-sidebar-row:hover:not([data-selected="true"]) {
+  background-color: var(--isdou-sidebar-hover) !important;
+  --row-bg: var(--isdou-sidebar-hover) !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"]:hover:not([data-selected="true"]) span.truncate {
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 选中态：Linear 标志性紧凑冷灰胶囊（无浮夸阴影，靠精准对比度定锚） */
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"],
+.bg-sidebar .agy-sidebar-row[data-selected="true"],
+body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
+  background-color: var(--isdou-sidebar-selected) !important;
+  --row-bg: var(--isdou-sidebar-selected) !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  box-shadow: none !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"] span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"] [class*="truncate"],
+.bg-sidebar .agy-sidebar-row[data-selected="true"] span.truncate {
+  font-size: 13px !important;
+  font-weight: 510 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 会话行右侧时间与计数数字：等宽对齐、克制淡化 */
+.bg-sidebar [data-testid="conversation-row-sidebar"] time,
+.bg-sidebar [data-testid="conversation-row-sidebar"] [class*="shrink-0"]:not(svg):not(:has(button)) {
+  font-variant-numeric: tabular-nums !important;
+  font-size: 11px !important;
+  color: var(--isdou-fg-subtle) !important;
+}
+
+/* 6. 侧边栏隐形极细滚动条（仅在鼠标进入侧边栏时微微显露） */
+.bg-sidebar ::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.bg-sidebar ::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.bg-sidebar ::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border-radius: 999px !important;
+}
+
+.bg-sidebar:hover ::-webkit-scrollbar-thumb {
+  background: rgba(128, 134, 145, 0.24) !important;
+}
+
+.bg-sidebar ::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 134, 145, 0.42) !important;
+}
