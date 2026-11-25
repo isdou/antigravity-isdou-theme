@@ -32,6 +32,7 @@ export const FEATURE_GROUPS = Object.freeze({
       '/core/styles/15-topbar.css',
       '/core/styles/20-chat.css',
       '/core/styles/30-composer.css',
+      '/core/styles/40-modals-home.css',
       '/core/runtime/20-theme-sync.js'
     ],
     coreRelPaths: [
@@ -40,6 +41,7 @@ export const FEATURE_GROUPS = Object.freeze({
       'styles/15-topbar.css',
       'styles/20-chat.css',
       'styles/30-composer.css',
+      'styles/40-modals-home.css',
       'runtime/20-theme-sync.js'
     ],
     aliases: ['theme', 'linear', 'style', 'styles', 'css', 'dark', 'light']

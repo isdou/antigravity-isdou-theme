@@ -1,0 +1,188 @@
+/* ============================================================================
+ * 40-modals-home.css — Linear Settings Modal, Dialogs, Command Palette & Home
+ *
+ * 设计准则：
+ * - 设置弹窗左栏与主界面侧边栏同源（#F7F8F9 / #141518 + 1px 发丝边 + 6px 选中胶囊）
+ * - 设置项卡片统一 8px 细框，Switch 开关开启态采用 Linear 靛紫蓝 #5E6AD2
+ * - 首页欢迎页去除背景光晕，收敛为 22px 负字距克制几何标题与 6px 细框快捷芯片
+ * ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+ * 1. 系统设置弹窗与通用对话框（Settings Modal & Dialogs）
+ * ---------------------------------------------------------------------------- */
+.settings-modal-backdrop {
+  background-color: rgba(15, 16, 18, 0.30) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.62) !important;
+}
+
+.settings-modal-container,
+[role="dialog"] {
+  border-radius: var(--isdou-radius-lg) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-canvas-bg) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
+  font-family: var(--font-sans) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 设置弹窗左侧导航栏：与主侧边栏保持 100% 视觉同构 */
+[data-testid="settings-sidebar"],
+.settings-modal-container aside,
+.settings-modal-container nav {
+  background-color: var(--isdou-sidebar-bg) !important;
+  border-right: 1px solid var(--isdou-sidebar-border) !important;
+}
+
+[data-testid="settings-sidebar"] :is(button, a),
+.settings-modal-container :is(aside, nav) :is(button, a) {
+  min-height: 29px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  font-size: 13px !important;
+  font-weight: 450 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--isdou-fg-secondary) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+[data-testid="settings-sidebar"] :is(button, a):hover,
+.settings-modal-container :is(aside, nav) :is(button, a):hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-testid="settings-sidebar"] :is([aria-selected="true"], [data-active="true"], [data-selected="true"], [data-state="active"]),
+.settings-modal-container :is(aside, nav) :is([aria-selected="true"], [data-active="true"], [data-selected="true"], [data-state="active"]) {
+  background-color: var(--isdou-sidebar-selected) !important;
+  font-weight: 510 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 设置右侧分组标题、卡片与细分割线 */
+:is(.settings-modal-container, [role="dialog"]) h2 {
+  font-size: 15.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.016em !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+:is(.settings-modal-container, [role="dialog"]) h3 {
+  font-size: 13.5px !important;
+  font-weight: 560 !important;
+  letter-spacing: -0.012em !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+:is(.settings-modal-container, [role="dialog"]) :is(.agy-card, [class*="agy-card"]) {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  background-color: var(--isdou-code-bg) !important;
+  box-shadow: none !important;
+}
+
+:is(.settings-modal-container, [role="dialog"]) :is(.agy-card, [class*="agy-card"], [class*="divide-border"]) span.text-sm {
+  font-size: 13px !important;
+  font-weight: 460 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 设置弹窗内的 Switch 开关：开启态统一为 Linear 靛紫蓝 */
+:is(.settings-modal-container, [role="dialog"]) button[role="switch"]:is([aria-checked="true"], [data-state="checked"]) {
+  background-color: var(--isdou-accent) !important;
+  border-color: var(--isdou-accent) !important;
+}
+
+/* 弹窗内的输入框、下拉框与普通操作按钮统一 6px 圆角 */
+:is(.settings-modal-container, [role="dialog"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select
+) {
+  border-radius: var(--isdou-radius-sm) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  font-size: 13px !important;
+  color: var(--isdou-fg-primary) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:is(.settings-modal-container, [role="dialog"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select
+):focus {
+  border-color: var(--isdou-accent) !important;
+  box-shadow: 0 0 0 2px var(--isdou-composer-focus-ring) !important;
+}
+
+:is(.settings-modal-container, [role="dialog"]) button:not([role="switch"]):not(.agy-button-icon) {
+  border-radius: var(--isdou-radius-sm) !important;
+  font-size: 12.5px !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 2. 全局命令面板 / 快速跳转（⌘K Quick Input & Fastpick）
+ * ---------------------------------------------------------------------------- */
+.agy-fastpick,
+.quick-input-widget {
+  border-radius: 10px !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
+}
+
+[data-testid="new-tab-search-input"],
+.agy-fastpick input,
+.quick-input-widget input {
+  font-family: var(--font-sans) !important;
+  font-size: 13.5px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 3. 首页欢迎页（New Conversation / Home Splash）
+ * ---------------------------------------------------------------------------- */
+[data-testid="home-greeting"],
+[data-testid="home-splash-content"] {
+  font-family: var(--font-sans) !important;
+}
+
+[data-testid="home-greeting"] :is(h1, h2),
+[data-testid="home-splash-content"] :is(h1, h2) {
+  font-size: 22px !important;
+  font-weight: 560 !important;
+  letter-spacing: -0.024em !important;
+  line-height: 1.3 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-testid="home-greeting"] p,
+[data-testid="home-splash-content"] p {
+  font-size: 13.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+/* 首页快捷建议芯片 / 模板按钮收敛为 6px Linear 细框微芯片 */
+[data-testid="home-splash-content"] :is(button, a):not(#antigravity\.agentSidePanelInputBox *) {
+  border-radius: var(--isdou-radius-sm) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  font-size: 12.5px !important;
+  font-weight: 460 !important;
+  color: var(--isdou-fg-secondary) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease !important;
+}
+
+[data-testid="home-splash-content"] :is(button, a):not(#antigravity\.agentSidePanelInputBox *):hover {
+  background-color: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}

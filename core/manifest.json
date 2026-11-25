@@ -53,8 +53,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "34d52130e8417dbf5782962e21d77f3d166c62ca7b9105eae2a94d27d6fcb16d",
-      "bytes": 5363
+      "sha256": "94bbcce1124a325fc001d83032fe30bc4e1851b0d821aebd2ebbb961ca469b27",
+      "bytes": 5439
     },
     "installer/manifest.mjs": {
       "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
@@ -123,6 +123,10 @@
     "styles/30-composer.css": {
       "sha256": "599987540df5ca3a465898318a5d039f33cc9dddb84be7d68abf897e6237a275",
       "bytes": 13209
+    },
+    "styles/40-modals-home.css": {
+      "sha256": "e2783a8ad393ef17d6eadde1ed67b8ed7cec3346036b484041477631e3fb2e97",
+      "bytes": 7435
     }
   }
 }
