@@ -230,3 +230,142 @@ body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
 .bg-sidebar ::-webkit-scrollbar-thumb:hover {
   background: rgba(128, 134, 145, 0.42) !important;
 }
+
+/* 7. 侧边栏「隐藏项目」徽章与恢复浮窗 */
+#isdou-hidden-projects-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 5px !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-fg-muted) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease !important;
+}
+
+#isdou-hidden-projects-btn:hover {
+  background-color: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-hidden-projects-popover {
+  position: fixed !important;
+  z-index: 2147483000 !important;
+  width: 248px !important;
+  max-height: 300px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 8px 10px !important;
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
+  font-family: var(--font-sans) !important;
+  color: var(--isdou-fg-primary) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(-4px) !important;
+  pointer-events: none !important;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease !important;
+}
+
+#isdou-hidden-projects-popover[data-open="true"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-hdr {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid var(--isdou-composer-divider) !important;
+  font-size: 11.5px !important;
+  font-weight: 560 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-all {
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-fg-secondary) !important;
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-all:hover {
+  border-color: var(--isdou-accent) !important;
+  color: var(--isdou-accent) !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  overflow-y: auto !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-height: 26px !important;
+  padding: 2px 4px !important;
+  border-radius: 5px !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-row:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-name {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-restore {
+  flex: 0 0 auto !important;
+  height: 20px !important;
+  padding: 0 7px !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-fg-secondary) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-restore:hover {
+  background-color: var(--isdou-accent) !important;
+  border-color: var(--isdou-accent) !important;
+  color: #ffffff !important;
+}
+
+#isdou-hidden-projects-popover .isdou-hp-empty {
+  padding: 10px 4px !important;
+  text-align: center !important;
+  font-size: 11.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}

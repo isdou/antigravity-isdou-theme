@@ -53,8 +53,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "7c4c9ff2f70cacacd5a94c97f9f7736b6abdec7333f026480ee93846ef38ba4b",
-      "bytes": 5838
+      "sha256": "13b3ae52932c2f31278cccbed680c4e6a3e44f2c26dad4ebf78d02169b87dace",
+      "bytes": 5968
     },
     "installer/manifest.mjs": {
       "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "223275a3f07a62e53287143fc107339ef3249b7c981dd443a1afb93709cd0b98",
-      "bytes": 12580
+      "sha256": "36c3064b47db9eb9c94f6626cc9abeb7c49150c6fd24af29235216aac38d80ef",
+      "bytes": 12707
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -88,6 +88,10 @@
       "sha256": "defdc3c471a38476e1a43642c0556ed204ee45fca1256e907da6157370e17eb8",
       "bytes": 51173
     },
+    "runtime/55-project-hider.js": {
+      "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
+      "bytes": 26518
+    },
     "runtime/60-i18n-engine.js": {
       "sha256": "cd47a833fe2df838b3a33ab6fa967c71d70707fd175650c098e8e3d58f1f53d2",
       "bytes": 37588
@@ -105,8 +109,8 @@
       "bytes": 13115
     },
     "runtime/80-folder-drop.js": {
-      "sha256": "fc80a3873ac92d9418ce27cbc6c326cdbc73a288d98153eddca19c741c809b96",
-      "bytes": 14996
+      "sha256": "1efb0b8b0cc21bcbbf2e0bebbd594a3f842a7d6ca2569701bc7cb32f36cebae1",
+      "bytes": 15066
     },
     "runtime/85-quota-resume.js": {
       "sha256": "31e53f6605cfca2e67fbe15c3f76e3fef53d704b63618bcd358936a6b1b2068d",
@@ -125,8 +129,8 @@
       "bytes": 7354
     },
     "styles/10-sidebar.css": {
-      "sha256": "c22e1a74876f0c7a7ca9bb38a301e8cab14d9ad1cf0acd5fd85a262b8cb60e64",
-      "bytes": 8850
+      "sha256": "ae324eb3c25cf0203ec020f7aa185353a93dc154ce80ddd639cef56cedf5784d",
+      "bytes": 13329
     },
     "styles/15-topbar.css": {
       "sha256": "d45197a5ddd7fb2e7108cb7355256a0ee10d20d472707f48112995cd0aa91370",

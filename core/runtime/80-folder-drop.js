@@ -263,6 +263,7 @@
 
         const existing = findExistingProjectByPath(handles.store, fsPath);
         if (existing) {
+          window.__isdouHiddenProjects?.unhideProject?.(existing.id);
           if (typeof handles.selectProjectFn === 'function') {
             handles.selectProjectFn(existing.id);
           } else {
