@@ -186,3 +186,198 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   border-color: var(--isdou-chip-hover-border) !important;
   color: var(--isdou-fg-primary) !important;
 }
+
+/* ----------------------------------------------------------------------------
+ * 4. 拖放本地文件夹打开浮层 & 配额恢复一键续跑条
+ * ---------------------------------------------------------------------------- */
+#isdou-drop-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  background-color: rgba(15, 17, 21, 0.14) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  transition: opacity 120ms ease !important;
+}
+
+#isdou-drop-overlay.is-visible {
+  opacity: 1 !important;
+}
+
+#isdou-drop-overlay .isdou-drop-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 280px !important;
+  padding: 22px 30px !important;
+  border-radius: var(--isdou-radius-lg) !important;
+  border: 1.5px dashed var(--isdou-accent) !important;
+  background-color: var(--isdou-surface-elevated) !important;
+  box-shadow: var(--isdou-shadow-popover) !important;
+  font-family: var(--font-sans) !important;
+  text-align: center !important;
+}
+
+#isdou-drop-overlay .isdou-drop-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: var(--isdou-radius-md) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-accent) !important;
+}
+
+#isdou-drop-overlay .isdou-drop-title {
+  font-size: 13.5px !important;
+  font-weight: 560 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-drop-overlay .isdou-drop-sub {
+  font-size: 12px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+#isdou-drop-toast {
+  position: fixed !important;
+  top: 44px !important;
+  left: 50% !important;
+  z-index: 2147483001 !important;
+  transform: translate(-50%, -6px) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  padding: 6px 12px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  border: 1px solid var(--isdou-hairline-strong) !important;
+  background-color: var(--isdou-surface-elevated) !important;
+  box-shadow: var(--isdou-shadow-popover) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--isdou-fg-primary) !important;
+  transition: opacity 140ms ease, transform 140ms ease !important;
+}
+
+#isdou-drop-toast.is-visible {
+  opacity: 1 !important;
+  transform: translate(-50%, 0) !important;
+}
+
+#isdou-resume-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin: 0 0 8px 0 !important;
+  padding: 7px 10px !important;
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-hairline-strong) !important;
+  background-color: var(--isdou-surface-elevated) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+#isdou-resume-bar[data-state="ready"] {
+  border-color: color-mix(in srgb, var(--isdou-accent) 45%, var(--isdou-hairline-strong)) !important;
+  background-color: color-mix(in srgb, var(--isdou-accent) 6%, var(--isdou-surface-elevated)) !important;
+}
+
+#isdou-resume-bar .isdou-resume-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+#isdou-resume-bar .isdou-resume-dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 999px !important;
+  flex: 0 0 auto !important;
+  background-color: #d97706 !important;
+}
+
+#isdou-resume-bar[data-state="ready"] .isdou-resume-dot,
+#isdou-resume-bar[data-state="resuming"] .isdou-resume-dot {
+  background-color: var(--isdou-accent) !important;
+}
+
+#isdou-resume-bar .isdou-resume-text {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-resume-bar .isdou-resume-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+}
+
+#isdou-resume-bar .isdou-resume-chip {
+  height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-fg-secondary) !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+#isdou-resume-bar .isdou-resume-chip.is-armed {
+  border-color: var(--isdou-accent) !important;
+  color: var(--isdou-accent) !important;
+}
+
+#isdou-resume-bar .isdou-resume-btn {
+  height: 24px !important;
+  padding: 0 10px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  border: 1px solid transparent !important;
+  background-color: var(--isdou-accent) !important;
+  color: #ffffff !important;
+  font-size: 11.5px !important;
+  font-weight: 540 !important;
+  cursor: pointer !important;
+}
+
+#isdou-resume-bar .isdou-resume-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: default !important;
+}
+
+#isdou-resume-bar .isdou-resume-close {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--isdou-fg-muted) !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+#isdou-resume-bar .isdou-resume-close:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}

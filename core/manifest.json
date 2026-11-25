@@ -53,8 +53,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "94bbcce1124a325fc001d83032fe30bc4e1851b0d821aebd2ebbb961ca469b27",
-      "bytes": 5439
+      "sha256": "7acde2d5a3a6438a977d6ec585449bf23fea617e7c2b8899b987395405653db8",
+      "bytes": 5691
     },
     "installer/manifest.mjs": {
       "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "4b21cdc17edd8c39e544cd9ccd9ab72a52785f1ac586db1ee2a4fe01ce027d4b",
-      "bytes": 12415
+      "sha256": "5cb5f2de4cd6656be24dea759bb2fd135268713d50615538018ce14f8a107b0d",
+      "bytes": 12523
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -100,6 +100,14 @@
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
       "bytes": 13115
     },
+    "runtime/80-folder-drop.js": {
+      "sha256": "fc80a3873ac92d9418ce27cbc6c326cdbc73a288d98153eddca19c741c809b96",
+      "bytes": 14996
+    },
+    "runtime/85-quota-resume.js": {
+      "sha256": "d15376282ab14bae3b99409884584c0813df333d3a29ebfc9036e8de4424e704",
+      "bytes": 22184
+    },
     "runtime/90-tail.js": {
       "sha256": "9e9ab5e1219797d146d9c1cf62144aa629cf057a83796c0ddab64c3e47c858b3",
       "bytes": 2772
@@ -129,8 +137,8 @@
       "bytes": 22535
     },
     "styles/40-modals-home.css": {
-      "sha256": "e2783a8ad393ef17d6eadde1ed67b8ed7cec3346036b484041477631e3fb2e97",
-      "bytes": 7435
+      "sha256": "4e452a093e104a8fbd89ae38c4f67630065d6ed51135ea99c8fff3775e1f8c9b",
+      "bytes": 13502
     }
   }
 }
