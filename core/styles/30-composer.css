@@ -99,6 +99,7 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   padding: 5px 8px !important;
   border-top: 1px solid var(--isdou-composer-divider) !important;
   gap: 6px !important;
+  overflow: hidden !important;
 }
 
 .agy-composer-footer > div:first-child {
@@ -108,6 +109,15 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   align-items: center !important;
   gap: 4px !important;
   min-width: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+
+/* 模型槽位：允许在极窄宽度下安全截断，绝不溢出撞上右侧或档位条 */
+.agy-composer-footer > div:first-child > div:has([data-testid="model-selector-trigger"]) {
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  overflow: hidden !important;
 }
 
 .agy-composer-footer > div:last-child {
@@ -115,7 +125,7 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
   flex-shrink: 0 !important;
 }
 
@@ -125,7 +135,9 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   button[data-testid="permissions-selector-trigger"]
 ) {
   height: 24px !important;
-  padding: 0 7px !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 6px !important;
   gap: 4px !important;
   border-radius: 5px !important;
   background-color: transparent !important;
@@ -137,7 +149,26 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   color: var(--isdou-fg-primary) !important;
   box-shadow: none !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+.agy-composer-footer button[data-testid="model-selector-trigger"] span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 窄分屏下（compact/ultra）自动隐藏冗长权限文字，只保留权限图标防挤爆 */
+.agy-composer-footer[data-isdou-density="compact"] button[data-testid="permissions-selector-trigger"] span,
+.agy-composer-footer[data-isdou-density="ultra"] button[data-testid="permissions-selector-trigger"] span {
+  display: none !important;
+}
+
+.agy-composer-footer[data-isdou-density="compact"] button[data-testid="permissions-selector-trigger"],
+.agy-composer-footer[data-isdou-density="ultra"] button[data-testid="permissions-selector-trigger"] {
+  padding: 0 5px !important;
 }
 
 .agy-composer-footer :is(
@@ -181,7 +212,7 @@ button[data-testid="model-selector-trigger"] [data-isdou-effort-hidden="true"] {
 }
 
 /* 外置 Thinking Effort 单行极简档位条（细竖线分隔 + 无套娃外框，仅激活项轻胶囊点亮） */
-#isdou-effort-seg {
+.isdou-effort-seg {
   position: relative !important;
   display: inline-flex !important;
   flex-direction: row !important;
@@ -189,7 +220,7 @@ button[data-testid="model-selector-trigger"] [data-isdou-effort-hidden="true"] {
   align-items: center !important;
   height: 24px !important;
   margin-left: 2px !important;
-  padding: 0 0 0 8px !important;
+  padding: 0 0 0 7px !important;
   gap: 2px !important;
   border: none !important;
   border-left: 1px solid var(--isdou-sidebar-divider) !important;
@@ -199,12 +230,11 @@ button[data-testid="model-selector-trigger"] [data-isdou-effort-hidden="true"] {
   white-space: nowrap !important;
 }
 
-#isdou-effort-seg[hidden] {
+.isdou-effort-seg[hidden] {
   display: none !important;
 }
 
-#ag-codex-theme ~ * #isdou-effort-seg .isdou-effort-btn,
-.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn {
+.agy-composer-footer .isdou-effort-seg button.isdou-effort-btn {
   width: auto !important;
   min-width: 22px !important;
   height: 20px !important;
@@ -222,32 +252,32 @@ button[data-testid="model-selector-trigger"] [data-isdou-effort-hidden="true"] {
   transition: background-color 100ms ease, color 100ms ease !important;
 }
 
-.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn:hover:not([data-active="true"]) {
+.agy-composer-footer .isdou-effort-seg button.isdou-effort-btn:hover:not([data-active="true"]) {
   color: var(--isdou-fg-primary) !important;
   background-color: var(--isdou-sidebar-hover) !important;
 }
 
-.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
+.agy-composer-footer .isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
   background-color: var(--isdou-accent-soft) !important;
   color: var(--isdou-accent) !important;
   font-weight: 560 !important;
   box-shadow: none !important;
 }
 
-html[data-ag-theme-mode="dark"] .agy-composer-footer #isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
+html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
   background-color: rgba(94, 106, 210, 0.22) !important;
   color: #A5AEFF !important;
   box-shadow: none !important;
 }
 
 /* 外置实时模型配额 & 上下文用量徽章 */
-.agy-composer-footer button#isdou-usage-badge {
+.agy-composer-footer button.isdou-usage-badge {
   width: auto !important;
-  height: 25px !important;
-  padding: 0 7px !important;
-  margin-right: 2px !important;
+  height: 24px !important;
+  padding: 0 6px !important;
+  margin-right: 1px !important;
   gap: 5px !important;
-  border-radius: var(--isdou-radius-sm) !important;
+  border-radius: 5px !important;
   background-color: transparent !important;
   border: 1px solid transparent !important;
   font-family: var(--font-mono) !important;
@@ -256,49 +286,50 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer #isdou-effort-seg button.is
   font-variant-numeric: tabular-nums !important;
   color: var(--isdou-fg-muted) !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
   cursor: pointer !important;
 }
 
-.agy-composer-footer button#isdou-usage-badge[hidden] {
+.agy-composer-footer button.isdou-usage-badge[hidden] {
   display: none !important;
 }
 
-.agy-composer-footer button#isdou-usage-badge:hover {
+.agy-composer-footer button.isdou-usage-badge:hover {
   background-color: var(--isdou-chip-bg) !important;
   border-color: var(--isdou-chip-border) !important;
   color: var(--isdou-fg-primary) !important;
 }
 
-#isdou-usage-badge .isdou-ub-item {
+.isdou-usage-badge .isdou-ub-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-#isdou-usage-badge .isdou-ub-item[data-tone="warn"] {
+.isdou-usage-badge .isdou-ub-item[data-tone="warn"] {
   color: #D97706 !important;
 }
 
-#isdou-usage-badge .isdou-ub-item[data-tone="crit"] {
+.isdou-usage-badge .isdou-ub-item[data-tone="crit"] {
   color: #DC2626 !important;
 }
 
-#isdou-usage-badge .isdou-quota-ring {
+.isdou-usage-badge .isdou-quota-ring {
   width: 12px !important;
   height: 12px !important;
   flex-shrink: 0;
   color: var(--isdou-accent) !important;
 }
 
-#isdou-usage-badge .isdou-quota-ring[data-tone="warn"] {
+.isdou-usage-badge .isdou-quota-ring[data-tone="warn"] {
   color: #D97706 !important;
 }
 
-#isdou-usage-badge .isdou-quota-ring[data-tone="crit"] {
+.isdou-usage-badge .isdou-quota-ring[data-tone="crit"] {
   color: #DC2626 !important;
 }
 
-#isdou-usage-badge .isdou-ub-sep {
+.isdou-usage-badge .isdou-ub-sep {
   opacity: 0.45;
   margin: 0 1px;
 }
@@ -432,22 +463,24 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer #isdou-effort-seg button.is
   color: #DC2626;
 }
 
-/* 纯图标辅助按钮（添加上下文 +、语音输入、开启语音模式）：统一 26×26px 6px 圆角 */
-.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(#isdou-usage-badge) {
-  width: 26px !important;
-  height: 26px !important;
+/* 纯图标辅助按钮（添加上下文 +、语音输入、开启语音模式）：统一 24×24px 5px 圆角防挤压 */
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(.isdou-usage-badge) {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  flex-shrink: 0 !important;
   padding: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: var(--isdou-radius-sm) !important;
+  border-radius: 5px !important;
   background-color: transparent !important;
   border: 1px solid transparent !important;
   color: var(--isdou-fg-muted) !important;
   transition: background-color 100ms ease, color 100ms ease !important;
 }
 
-.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(#isdou-usage-badge):hover:not(:disabled) {
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(.isdou-usage-badge):hover:not(:disabled) {
   background-color: var(--isdou-sidebar-hover) !important;
   color: var(--isdou-fg-primary) !important;
 }

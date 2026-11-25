@@ -1,10 +1,11 @@
 /**
- * Part 65: Linear Inline Thinking Effort Switcher & Live Quota/Context Meter
+ * Part 65: Linear Responsive Inline Effort Switcher & Live Quota/Context Meter
  *
- * - Exposes Thinking Effort tiers (Low / Medium / High / XHigh) directly on the
- *   composer toolbar via React Fiber `setSelectedModel` (0ms switch, zero popup)
- * - Displays live Model Quota % (ring + percentage) and Conversation Context %
- *   right on the toolbar, with a clean Linear hover breakdown popover
+ * - Supports every visible `.agy-composer-footer` (Main pane + Side Question pane)
+ * - Uses ResizeObserver for zero-overlap responsive layout:
+ *     - Wide (>= 600px): `Model ▾  |  低  中  高  极高`  ...  `◔ 71% · Ctx 32%`  `Permissions`
+ *     - Narrow (< 600px, split view): compact Effort cycler pill `[ 高 ]` & compact `◔ 71%`
+ *       so nothing ever collides or gets crushed
  */
   if (!IS_SWARM_PLUGIN_FRAME && ENABLED && MODULES.theme !== false) {
     (function initLinearComposerBar() {
@@ -23,6 +24,8 @@
       let pinnedOpen = false;
       let popoverOpen = false;
       let popoverEl = null;
+      const observedFooters = new Set();
+      let footerRo = null;
 
       function normalizeEffortKey(raw) {
         const s = String(raw || '').toLowerCase();
@@ -102,7 +105,15 @@
         };
       }
 
-      function getActiveMetricsStats() {
+      function getActiveMetricsStats(footer) {
+        const sideContent = footer?.closest?.('[data-testid="side-question-tab-content"]');
+        if (sideContent) {
+          const conv = sideContent.querySelector('[data-testid="side-question-tab-conversation"][data-cascade-id]');
+          const sideCid = conv ? conv.getAttribute('data-cascade-id') : '';
+          const sidePayload = sideCid && window.__ag_metrics_by_cid ? window.__ag_metrics_by_cid[sideCid] : null;
+          if (sidePayload && sidePayload.hasData && sidePayload.stats) return sidePayload.stats;
+          return null;
+        }
         const m = window.__ag_last_metrics;
         if (!m || !m.hasData || !m.stats) return null;
         return m.stats;
@@ -135,7 +146,7 @@
         return el;
       }
 
-      function renderPopoverContent(ctrl) {
+      function renderPopoverContent(ctrl, footer) {
         const el = ensurePopover();
         const families = [];
         const seen = new Set();
@@ -160,7 +171,7 @@
           });
         }
 
-        const stats = getActiveMetricsStats();
+        const stats = getActiveMetricsStats(footer);
         const resetHint = families.find((f) => f.active)?.resetStr || families[0]?.resetStr || '';
 
         let html = `<div class="isdou-up-sec">`;
@@ -197,9 +208,9 @@
         el.innerHTML = html;
       }
 
-      function showPopover(anchorEl, ctrl) {
+      function showPopover(anchorEl, ctrl, footer) {
         if (hoverTimer) clearTimeout(hoverTimer);
-        renderPopoverContent(ctrl);
+        renderPopoverContent(ctrl, footer);
         const el = ensurePopover();
         const r = anchorEl.getBoundingClientRect();
         const popW = 286;
@@ -224,7 +235,6 @@
         }, 140);
       }
 
-      /** 清理模型按钮上与右侧 Effort 分段器重复的档位尾缀，保持紧凑不啰嗦 */
       function tidyModelTriggerLabel(modelBtn, hasEffortSeg, family) {
         if (!modelBtn) return;
         const textNodes = [];
@@ -235,7 +245,6 @@
         }
         if (textNodes.length === 0) return;
 
-        // Antigravity 常把模型名和档位拆成两个 span，或合在一个文本节点里
         if (hasEffortSeg && family) {
           if (textNodes.length >= 2) {
             const lastNode = textNodes[textNodes.length - 1];
@@ -266,27 +275,42 @@
         }
       }
 
-      function syncBar() {
-        if (disposed) return;
-        const box = document.getElementById('antigravity.agentSidePanelInputBox');
-        if (!box) return;
-        const footer = box.querySelector('.agy-composer-footer, [data-agent-composer-root]');
-        const modelBtn = box.querySelector('[data-testid="model-selector-trigger"]');
-        if (!footer || !modelBtn) return;
+      function syncSingleFooter(footer) {
+        if (!footer || !document.body.contains(footer)) return;
+        const modelBtn = footer.querySelector('[data-testid="model-selector-trigger"]');
+        if (!modelBtn) return;
+
+        if (footerRo && !observedFooters.has(footer)) {
+          observedFooters.add(footer);
+          try {
+            footerRo.observe(footer);
+          } catch {}
+        }
+
+        const footerW = footer.getBoundingClientRect().width || footer.clientWidth || 0;
+        const hasPerm = Boolean(footer.querySelector('[data-testid="permissions-selector-trigger"]'));
+        // 有权限按钮时（主栏）需要更宽松的阈值才会展开 4 档全称；无权限按钮时（Side Question）500px 即可展开
+        const wideEffortThreshold = hasPerm ? 640 : 480;
+        const wideUsageThreshold = hasPerm ? 580 : 430;
+        const compactEffort = footerW > 0 && footerW < wideEffortThreshold;
+        const compactUsage = footerW > 0 && footerW < wideUsageThreshold;
+        const ultraCompact = footerW > 0 && footerW < 470;
+        footer.setAttribute('data-isdou-density', ultraCompact ? 'ultra' : compactEffort ? 'compact' : 'wide');
 
         const ctrl = readModelFiberController(modelBtn);
         const sel = ctrl?.selectedModel || null;
         const { family, effort } = splitModelFamilyAndEffort(sel?.label || modelBtn.innerText || '');
 
-        // 1. 外置 Thinking Effort 单行水平直切器（挂载到左侧横向 flex 行中，严禁竖排叠行）
         const leftGroup = footer.firstElementChild;
+        if (!leftGroup) return;
         let modelSlot = modelBtn;
         while (modelSlot && modelSlot.parentElement && modelSlot.parentElement !== leftGroup) {
           modelSlot = modelSlot.parentElement;
         }
         const anchorNode = modelSlot && modelSlot.parentElement === leftGroup ? modelSlot : modelBtn;
 
-        let segEl = box.querySelector('#isdou-effort-seg');
+        // 1. 外置 Thinking Effort 控制器（宽屏平铺全档位 / 窄屏自动收为紧凑单钮点击循环切档）
+        let segEl = footer.querySelector('.isdou-effort-seg');
         const siblingTiers = [];
         if (ctrl && family) {
           const byEffort = new Map();
@@ -307,7 +331,7 @@
         if (siblingTiers.length >= 2) {
           if (!segEl) {
             segEl = document.createElement('div');
-            segEl.id = 'isdou-effort-seg';
+            segEl.className = 'isdou-effort-seg';
             segEl.setAttribute('role', 'group');
             segEl.setAttribute('aria-label', '推理强度档位');
             anchorNode.insertAdjacentElement('afterend', segEl);
@@ -315,26 +339,52 @@
             anchorNode.insertAdjacentElement('afterend', segEl);
           }
 
-          const sig = siblingTiers.map((t) => `${t.effort}:${t.effort === effort ? 1 : 0}`).join('|');
-          if (segEl.getAttribute('data-sig') !== sig) {
-            segEl.setAttribute('data-sig', sig);
-            segEl.innerHTML = '';
-            for (const item of siblingTiers) {
-              const b = document.createElement('button');
-              b.type = 'button';
-              b.className = 'isdou-effort-btn';
-              b.textContent = item.label;
-              b.title = `切换推理强度：${item.option.label}`;
-              if (item.effort === effort) b.setAttribute('data-active', 'true');
-              b.addEventListener('click', (ev) => {
+          if (compactEffort) {
+            const curIdx = Math.max(0, siblingTiers.findIndex((t) => t.effort === effort));
+            const curItem = siblingTiers[curIdx] || siblingTiers[0];
+            const nextItem = siblingTiers[(curIdx + 1) % siblingTiers.length];
+            const sig = `compact:${curItem.effort}`;
+            if (segEl.getAttribute('data-sig') !== sig) {
+              segEl.setAttribute('data-sig', sig);
+              segEl.innerHTML = '';
+              const cyc = document.createElement('button');
+              cyc.type = 'button';
+              cyc.className = 'isdou-effort-btn isdou-effort-cycler';
+              cyc.setAttribute('data-active', 'true');
+              cyc.textContent = curItem.label;
+              cyc.title = `推理强度：${curItem.label}（点击切换为 ${nextItem.label}）`;
+              cyc.addEventListener('click', (ev) => {
                 ev.preventDefault();
                 ev.stopPropagation();
                 try {
-                  ctrl.setSelectedModel(item.option);
+                  ctrl.setSelectedModel(nextItem.option);
                 } catch {}
-                setTimeout(syncBar, 30);
+                setTimeout(syncAllFooters, 30);
               });
-              segEl.appendChild(b);
+              segEl.appendChild(cyc);
+            }
+          } else {
+            const sig = 'wide:' + siblingTiers.map((t) => `${t.effort}:${t.effort === effort ? 1 : 0}`).join('|');
+            if (segEl.getAttribute('data-sig') !== sig) {
+              segEl.setAttribute('data-sig', sig);
+              segEl.innerHTML = '';
+              for (const item of siblingTiers) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'isdou-effort-btn';
+                b.textContent = item.label;
+                b.title = `切换推理强度：${item.option.label}`;
+                if (item.effort === effort) b.setAttribute('data-active', 'true');
+                b.addEventListener('click', (ev) => {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  try {
+                    ctrl.setSelectedModel(item.option);
+                  } catch {}
+                  setTimeout(syncAllFooters, 30);
+                });
+                segEl.appendChild(b);
+              }
             }
           }
           segEl.hidden = false;
@@ -344,18 +394,18 @@
           tidyModelTriggerLabel(modelBtn, false, family);
         }
 
-        // 2. 外置实时用量徽章（模型剩余配额 + 当前上下文占比）
+        // 2. 外置实时用量徽章（宽屏 `◔ 71% · Ctx 32%` / 窄屏 `◔ 71%`）
         const rightGroup = footer.lastElementChild;
         if (!rightGroup) return;
 
-        let badgeEl = box.querySelector('#isdou-usage-badge');
+        let badgeEl = footer.querySelector('.isdou-usage-badge');
         if (!badgeEl) {
           badgeEl = document.createElement('button');
-          badgeEl.id = 'isdou-usage-badge';
+          badgeEl.className = 'isdou-usage-badge';
           badgeEl.type = 'button';
           badgeEl.addEventListener('mouseenter', () => {
             const latestCtrl = readModelFiberController(modelBtn);
-            showPopover(badgeEl, latestCtrl);
+            showPopover(badgeEl, latestCtrl, footer);
           });
           badgeEl.addEventListener('mouseleave', () => {
             if (!pinnedOpen) scheduleHidePopover();
@@ -368,7 +418,7 @@
               hidePopover();
             } else {
               pinnedOpen = true;
-              showPopover(badgeEl, latestCtrl);
+              showPopover(badgeEl, latestCtrl, footer);
             }
           });
           rightGroup.insertBefore(badgeEl, rightGroup.firstChild);
@@ -377,7 +427,7 @@
         }
 
         const quota = readQuotaFraction(sel);
-        const stats = getActiveMetricsStats();
+        const stats = getActiveMetricsStats(footer);
 
         const parts = [];
         if (quota) {
@@ -386,7 +436,7 @@
             `<span class="isdou-ub-item" data-tone="${qTone}">${buildRingSvg(quota.pct, qTone)}<span>${quota.pct}%</span></span>`
           );
         }
-        if (stats && typeof stats.ctxPct === 'number') {
+        if (!compactUsage && stats && typeof stats.ctxPct === 'number') {
           const cTone = stats.ctxPct >= 90 ? 'crit' : stats.ctxPct >= 75 ? 'warn' : 'ok';
           parts.push(
             `<span class="isdou-ub-item" data-tone="${cTone}"><span>Ctx ${stats.ctxPct}%</span></span>`
@@ -405,7 +455,15 @@
         }
 
         if (popoverOpen) {
-          renderPopoverContent(ctrl);
+          renderPopoverContent(ctrl, footer);
+        }
+      }
+
+      function syncAllFooters() {
+        if (disposed) return;
+        const footers = document.querySelectorAll('.agy-composer-footer, [data-agent-composer-root]');
+        for (const f of footers) {
+          syncSingleFooter(f);
         }
       }
 
@@ -413,20 +471,23 @@
         if (disposed || syncTimer) return;
         syncTimer = setTimeout(() => {
           syncTimer = null;
-          syncBar();
+          syncAllFooters();
         }, delay);
       }
 
       function onDocPointerDown(e) {
         if (!popoverOpen) return;
-        const badge = document.getElementById('isdou-usage-badge');
         if (popoverEl && popoverEl.contains(e.target)) return;
-        if (badge && badge.contains(e.target)) return;
+        if (e.target && e.target.closest && e.target.closest('.isdou-usage-badge')) return;
         hidePopover();
       }
 
       function onDocKeyDown(e) {
         if (popoverOpen && e.key === 'Escape') hidePopover();
+      }
+
+      if (typeof ResizeObserver !== 'undefined') {
+        footerRo = new ResizeObserver(() => scheduleSync(40));
       }
 
       const obs =
@@ -436,27 +497,26 @@
       if (obs && document.body) {
         obs.observe(document.body, { childList: true, subtree: true, characterData: true });
       }
-      const pollId = setInterval(() => syncBar(), 1800);
+      const pollId = setInterval(() => syncAllFooters(), 1800);
       document.addEventListener('pointerdown', onDocPointerDown, true);
       document.addEventListener('keydown', onDocKeyDown, true);
 
-      syncBar();
+      syncAllFooters();
 
       window.__ag_cleanup_fns.push(() => {
         disposed = true;
         clearInterval(pollId);
         if (syncTimer) clearTimeout(syncTimer);
         if (hoverTimer) clearTimeout(hoverTimer);
+        if (footerRo) footerRo.disconnect();
         if (obs) obs.disconnect();
         document.removeEventListener('pointerdown', onDocPointerDown, true);
         document.removeEventListener('keydown', onDocKeyDown, true);
-        const seg = document.getElementById('isdou-effort-seg');
-        if (seg) seg.remove();
-        const badge = document.getElementById('isdou-usage-badge');
-        if (badge) badge.remove();
+        document.querySelectorAll('.isdou-effort-seg, .isdou-usage-badge').forEach((el) => el.remove());
         if (popoverEl) popoverEl.remove();
-        const modelBtn = document.querySelector('[data-testid="model-selector-trigger"]');
-        tidyModelTriggerLabel(modelBtn, false, '');
+        document.querySelectorAll('[data-testid="model-selector-trigger"]').forEach((btn) => {
+          tidyModelTriggerLabel(btn, false, '');
+        });
       });
     })();
   }
