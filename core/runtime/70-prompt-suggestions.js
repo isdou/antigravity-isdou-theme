@@ -23,6 +23,7 @@
       const OVERLAY_CLASS = 'ag-prompt-ghost-overlay';
       const HAS_SUGGESTION_ATTR = 'data-ag-has-suggestion';
       const MANUAL_AUTO_FILL_WINDOW_MS = 6000;
+      const INFLIGHT_STALE_MS = 18000;
 
       let disposed = false;
       let currentSuggestion = '';
@@ -31,6 +32,7 @@
       let dismissedFingerprint = '';
       let inflightFingerprint = '';
       let inflightReqId = '';
+      let inflightStartedAt = 0;
       let inflightManual = false;
       let pendingTabEditor = null;
       let pendingTabAt = 0;
@@ -40,6 +42,7 @@
       let wasGenerating = false;
       let scanTimer = null;
       const createdOverlays = new Set();
+      const localCache = new Map();
 
       function isSideQuestionEl(el) {
         return Boolean(
@@ -220,9 +223,105 @@
         syncOverlays();
       };
 
+      function getFiber(el) {
+        if (!el) return null;
+        const fk = Object.keys(el).find(
+          (k) => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$')
+        );
+        return fk ? el[fk] : null;
+      }
+
+      function findLsClient() {
+        const anchors = [
+          document.querySelector('.surface-composer'),
+          document.querySelector('[data-testid="model-selector-trigger"]'),
+          document.getElementById('root')?.firstElementChild,
+          document.getElementById('root')
+        ];
+        for (const anchor of anchors) {
+          let cur = getFiber(anchor);
+          for (let i = 0; i < 80 && cur; i++, cur = cur.return) {
+            let dep = cur.dependencies?.firstContext;
+            while (dep) {
+              const ls = dep.memoizedValue?.core?.authService?._lsClient;
+              if (ls && typeof ls.getModelResponse === 'function') {
+                return ls;
+              }
+              dep = dep.next;
+            }
+          }
+        }
+        return null;
+      }
+
+      function resolveSuggestModelId() {
+        const btn = document.querySelector('[data-testid="model-selector-trigger"]');
+        let cur = getFiber(btn);
+        let opts = null;
+        let selectedVal = 0;
+        for (let i = 0; i < 40 && cur; i++, cur = cur.return) {
+          const p = cur.memoizedProps;
+          if (p && Array.isArray(p.modelOptions)) {
+            opts = p.modelOptions;
+            selectedVal = Number(p.selectedModel?.value) || 0;
+            break;
+          }
+        }
+        if (Array.isArray(opts) && opts.length > 0) {
+          const isUsable = (o) => {
+            if (!o || o.disabled || !o.value) return false;
+            const frac = o.quotaInfo?.remainingFraction ?? o.quotaInfo?.remaining;
+            return frac === undefined || frac > 0;
+          };
+          const pick =
+            opts.find((o) => isUsable(o) && /gemini-3\.8-flash-low/i.test(String(o.modelId || ''))) ||
+            opts.find((o) => isUsable(o) && /3\.8\s*flash.*low/i.test(String(o.label || ''))) ||
+            opts.find(
+              (o) =>
+                isUsable(o) &&
+                /flash/i.test(String(o.modelId || o.label || '')) &&
+                /\blow\b/i.test(String(o.modelId || o.label || ''))
+            ) ||
+            opts.find(
+              (o) =>
+                isUsable(o) &&
+                /flash|hydrogen/i.test(String(o.modelId || o.label || '')) &&
+                /\blow\b/i.test(String(o.modelId || o.label || ''))
+            ) ||
+            opts.find((o) => isUsable(o) && /\blow\b/i.test(String(o.modelId || o.label || ''))) ||
+            opts.find((o) => isUsable(o));
+          if (pick && Number(pick.value) > 0) return Number(pick.value);
+        }
+        return selectedVal > 0 ? selectedVal : 1320;
+      }
+
+      function cleanSuggestionText(raw) {
+        if (!raw) return '';
+        let text = String(raw)
+          .replace(/```[\s\S]*?```/g, '')
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .find(Boolean);
+        if (!text) return '';
+        text = text
+          .replace(/^["'“”‘’`⟫>:\-\s]+/, '')
+          .replace(/["'“”‘’`]+$/, '')
+          .trim();
+        if (!text || /^none$/i.test(text) || /^无$/i.test(text) || text.length < 2 || text.length > 60) {
+          return '';
+        }
+        return text;
+      }
+
       function requestSuggestion(turn, { force = false, autoAcceptEditor = null } = {}) {
         if (!turn || !turn.fingerprint) return;
-        if (typeof window.__agRequestPromptSuggestion !== 'function') return;
+
+        if (inflightReqId && inflightStartedAt && Date.now() - inflightStartedAt > INFLIGHT_STALE_MS) {
+          inflightReqId = '';
+          inflightFingerprint = '';
+          inflightStartedAt = 0;
+          clearPendingTabState();
+        }
 
         if (turn.fingerprint === inflightFingerprint && inflightReqId) {
           if (force && autoAcceptEditor) {
@@ -248,13 +347,79 @@
         }
 
         reqSeq += 1;
-        inflightReqId = `ps-${Date.now()}-${reqSeq}`;
+        const reqId = `ps-${Date.now()}-${reqSeq}`;
+        inflightReqId = reqId;
         inflightFingerprint = turn.fingerprint;
+        inflightStartedAt = Date.now();
         currentScopeKey = turn.scopeKey || '';
+
+        if (localCache.has(turn.fingerprint)) {
+          const cached = localCache.get(turn.fingerprint);
+          if (cached || !force) {
+            Promise.resolve().then(() => {
+              window.__ag_on_prompt_suggestion?.(reqId, {
+                ok: true,
+                suggestion: cached,
+                transient: false
+              });
+            });
+            return;
+          }
+        }
+
+        const ls = findLsClient();
+        if (ls) {
+          const lead = force
+            ? '用户刚按下 Tab 请求提示，请结合以下刚结束的对话片段，务必给出最贴切、最顺手的一句简短后续指令（4~28字，直接输出句子本身，不要引号、解释或换行，尽量不要输出 NONE）：'
+            : '你是一个聊天输入框的「下一句提示词预测器」。请站在用户视角，结合以下刚结束的对话片段，输出用户下一步最可能发出的一句简短中文指令（4~28字，直接输出句子本身，不要引号、解释或换行；仅当对话彻底结束无后续动作时输出 NONE）：';
+          const prompt = [
+            lead,
+            turn.lastUser ? `用户：${turn.lastUser}` : '',
+            `助手：${turn.lastAssistant}`
+          ]
+            .filter(Boolean)
+            .join('\n');
+          const modelVal = resolveSuggestModelId();
+          if (force) syncOverlays();
+          ls.getModelResponse({ prompt, model: modelVal }, { timeoutMs: 12000 })
+            .then((res) => {
+              if (disposed || reqId !== inflightReqId) return;
+              const suggestion = cleanSuggestionText(res?.response || '');
+              if (turn.fingerprint) {
+                if (localCache.size >= 80) {
+                  localCache.delete(localCache.keys().next().value);
+                }
+                localCache.set(turn.fingerprint, suggestion);
+              }
+              window.__ag_on_prompt_suggestion?.(reqId, {
+                ok: true,
+                suggestion,
+                transient: false
+              });
+            })
+            .catch(() => {
+              if (disposed || reqId !== inflightReqId) return;
+              window.__ag_on_prompt_suggestion?.(reqId, {
+                ok: false,
+                suggestion: '',
+                transient: true
+              });
+            });
+          return;
+        }
+
+        if (typeof window.__agRequestPromptSuggestion !== 'function') {
+          inflightReqId = '';
+          inflightFingerprint = '';
+          inflightStartedAt = 0;
+          clearPendingTabState();
+          return;
+        }
+
         try {
           window.__agRequestPromptSuggestion(
             JSON.stringify({
-              reqId: inflightReqId,
+              reqId,
               fingerprint: turn.fingerprint,
               lastUser: turn.lastUser,
               lastAssistant: turn.lastAssistant,
@@ -265,6 +430,7 @@
         } catch {
           inflightReqId = '';
           inflightFingerprint = '';
+          inflightStartedAt = 0;
           clearPendingTabState();
         }
       }
@@ -282,51 +448,104 @@
         } catch {}
       }
 
+      function findLexicalCommand(lex, typeName) {
+        if (!lex || !lex._commands || typeof lex._commands.keys !== 'function') return null;
+        try {
+          for (const key of lex._commands.keys()) {
+            if (key && key.type === typeName) return key;
+          }
+        } catch {}
+        return null;
+      }
+
       function insertTextIntoLexical(editor, text, onDone) {
         if (!editor || !text || isAccepting) return false;
         isAccepting = true;
-        editor.focus();
-        moveCaretToEnd(editor);
 
-        try {
-          editor.dispatchEvent(
-            new InputEvent('beforeinput', {
+        const finish = () => {
+          moveCaretToEnd(editor);
+          isAccepting = false;
+          if (typeof onDone === 'function') onDone(!isEditorEmpty(editor));
+        };
+
+        const runFallbackBeforeInput = () => {
+          editor.focus();
+          moveCaretToEnd(editor);
+          let handled = false;
+          try {
+            const ev = new InputEvent('beforeinput', {
               inputType: 'insertText',
               data: text,
               bubbles: true,
               cancelable: true
-            })
-          );
-        } catch {}
-
-        if (isEditorEmpty(editor)) {
-          try {
-            editor.focus();
-            moveCaretToEnd(editor);
-            document.execCommand('insertText', false, text);
+            });
+            editor.dispatchEvent(ev);
+            handled = Boolean(ev.defaultPrevented);
           } catch {}
+
+          // 等待 Lexical 微任务调和刷新 DOM，避免同步误判为空后重复写入
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (!isEditorEmpty(editor)) {
+                finish();
+                return;
+              }
+              if (!handled) {
+                try {
+                  editor.focus();
+                  moveCaretToEnd(editor);
+                  document.execCommand('insertText', false, text);
+                } catch {}
+              }
+              requestAnimationFrame(() => {
+                if (isEditorEmpty(editor)) {
+                  try {
+                    const dt = new DataTransfer();
+                    dt.setData('text/plain', text);
+                    editor.dispatchEvent(
+                      new ClipboardEvent('paste', {
+                        clipboardData: dt,
+                        bubbles: true,
+                        cancelable: true
+                      })
+                    );
+                  } catch {}
+                }
+                finish();
+              });
+            }, 0);
+          });
+        };
+
+        const lex = editor.__lexicalEditor;
+        const controlledInsertCmd = findLexicalCommand(lex, 'CONTROLLED_TEXT_INSERTION_COMMAND');
+        if (lex && typeof lex.focus === 'function' && typeof lex.dispatchCommand === 'function' && controlledInsertCmd) {
+          editor.focus();
+          try {
+            lex.focus(undefined, { defaultSelection: 'rootEnd' });
+          } catch {}
+          requestAnimationFrame(() => {
+            if (!isEditorEmpty(editor)) {
+              finish();
+              return;
+            }
+            try {
+              lex.dispatchCommand(controlledInsertCmd, text);
+            } catch {}
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                if (!isEditorEmpty(editor)) {
+                  finish();
+                  return;
+                }
+                runFallbackBeforeInput();
+              }, 0);
+            });
+          });
+          return true;
         }
 
-        moveCaretToEnd(editor);
-
-        requestAnimationFrame(() => {
-          if (isEditorEmpty(editor)) {
-            try {
-              const dt = new DataTransfer();
-              dt.setData('text/plain', text);
-              editor.dispatchEvent(
-                new ClipboardEvent('paste', {
-                  clipboardData: dt,
-                  bubbles: true,
-                  cancelable: true
-                })
-              );
-            } catch {}
-          }
-          moveCaretToEnd(editor);
-          isAccepting = false;
-          if (typeof onDone === 'function') onDone(!isEditorEmpty(editor));
-        });
+        runFallbackBeforeInput();
         return true;
       }
 
@@ -348,9 +567,12 @@
           kbd.className = 'ag-prompt-ghost-kbd';
           kbd.textContent = 'Tab';
           kbd.title = '按 Tab 或 → 填入预测输入';
-          kbd.addEventListener('mousedown', (ev) => {
+          const suppressKbdEvent = (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
+          };
+          kbd.addEventListener('pointerdown', (ev) => {
+            suppressKbdEvent(ev);
             if (overlay.classList.contains('is-loading')) {
               clearPendingTabState();
               syncOverlays();
@@ -358,6 +580,8 @@
             }
             acceptSuggestion(editor);
           });
+          kbd.addEventListener('mousedown', suppressKbdEvent);
+          kbd.addEventListener('click', suppressKbdEvent);
 
           overlay.appendChild(textEl);
           overlay.appendChild(kbd);
@@ -577,12 +801,9 @@
         dismissedFingerprint = '';
         inflightReqId = '';
         inflightFingerprint = '';
+        inflightStartedAt = 0;
+        localCache.clear();
         clearPendingTabState();
-        try {
-          if (typeof window.__agRequestPromptSuggestion === 'function') {
-            window.__agRequestPromptSuggestion(JSON.stringify({ action: 'restart' }));
-          }
-        } catch {}
         syncOverlays();
         scheduleTick(450);
       }

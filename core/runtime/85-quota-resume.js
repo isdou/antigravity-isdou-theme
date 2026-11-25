@@ -263,48 +263,79 @@
 
         editor.focus();
         if (isEditorTextEmpty(editor)) {
+          const lex = editor.__lexicalEditor || ctx?.inputBoxRef?.current?.lexicalRef?.current;
+          let insertCmd = null;
           try {
-            const sel = window.getSelection();
-            if (sel) {
-              const range = document.createRange();
-              const target = editor.querySelector('p') || editor;
-              range.selectNodeContents(target);
-              range.collapse(false);
-              sel.removeAllRanges();
-              sel.addRange(range);
+            if (lex?._commands && typeof lex._commands.keys === 'function') {
+              for (const k of lex._commands.keys()) {
+                if (k && k.type === 'CONTROLLED_TEXT_INSERTION_COMMAND') {
+                  insertCmd = k;
+                  break;
+                }
+              }
             }
           } catch {}
-          try {
-            editor.dispatchEvent(
-              new InputEvent('beforeinput', {
+
+          if (lex && typeof lex.dispatchCommand === 'function' && insertCmd) {
+            try {
+              lex.focus?.(undefined, { defaultSelection: 'rootEnd' });
+            } catch {}
+            await new Promise((r) => requestAnimationFrame(r));
+            if (isEditorTextEmpty(editor)) {
+              try {
+                lex.dispatchCommand(insertCmd, text);
+              } catch {}
+              await new Promise((r) => setTimeout(r, 40));
+            }
+          }
+
+          if (isEditorTextEmpty(editor)) {
+            try {
+              const sel = window.getSelection();
+              if (sel) {
+                const range = document.createRange();
+                const target = editor.querySelector('p') || editor;
+                range.selectNodeContents(target);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            } catch {}
+            let handled = false;
+            try {
+              const ev = new InputEvent('beforeinput', {
                 inputType: 'insertText',
                 data: text,
                 bubbles: true,
                 cancelable: true
-              })
-            );
-          } catch {}
-
-          if (isEditorTextEmpty(editor)) {
-            try {
-              editor.focus();
-              document.execCommand('insertText', false, text);
+              });
+              editor.dispatchEvent(ev);
+              handled = Boolean(ev.defaultPrevented);
             } catch {}
-          }
 
-          await new Promise((r) => requestAnimationFrame(r));
-          if (isEditorTextEmpty(editor)) {
-            try {
-              const dt = new DataTransfer();
-              dt.setData('text/plain', text);
-              editor.dispatchEvent(
-                new ClipboardEvent('paste', {
-                  clipboardData: dt,
-                  bubbles: true,
-                  cancelable: true
-                })
-              );
-            } catch {}
+            // 等待 Lexical 异步冲刷 DOM 后再决定是否走降级写入
+            await new Promise((r) => setTimeout(r, 35));
+            if (isEditorTextEmpty(editor) && !handled) {
+              try {
+                editor.focus();
+                document.execCommand('insertText', false, text);
+              } catch {}
+              await new Promise((r) => requestAnimationFrame(r));
+            }
+
+            if (isEditorTextEmpty(editor)) {
+              try {
+                const dt = new DataTransfer();
+                dt.setData('text/plain', text);
+                editor.dispatchEvent(
+                  new ClipboardEvent('paste', {
+                    clipboardData: dt,
+                    bubbles: true,
+                    cancelable: true
+                  })
+                );
+              } catch {}
+            }
           }
         }
 

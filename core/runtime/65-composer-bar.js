@@ -2,10 +2,8 @@
  * Part 65: Linear Responsive Inline Effort Switcher & Live Quota/Context Meter
  *
  * - Supports every visible `.agy-composer-footer` (Main pane + Side Question pane)
- * - Uses ResizeObserver for zero-overlap responsive layout:
- *     - Wide (>= 600px): `Model ▾  |  低  中  高  极高`  ...  `◔ 71% · Ctx 32%`  `Permissions`
- *     - Narrow (< 600px, split view): compact Effort cycler pill `[ 高 ]` & compact `◔ 71%`
- *       so nothing ever collides or gets crushed
+ * - Adapts independent quota and session controls to the measured footer width.
+ * - Shares one anchored, non-modal usage dialog between main and side composers.
  */
   if (!IS_SWARM_PLUGIN_FRAME && ENABLED && MODULES.theme !== false) {
     (function initLinearComposerBar() {
@@ -23,10 +21,11 @@
       let syncTimer = null;
       let hoverTimer = null;
       let pinnedOpen = false;
-      let popoverOpen = false;
       let popoverEl = null;
-      let lastPopoverCtrl = null;
-      let lastPopoverFooter = null;
+      let anchor = null;
+      let view = 'quota';
+      let frame = 0;
+      let lastSnapshot = '';
       const observedFooters = new Set();
       let footerRo = null;
 
@@ -49,23 +48,10 @@
       function formatShortTier(tier) {
         const s = String(tier || '').trim();
         if (!s) return '';
-        if (/google\s+ai\s+ultra/i.test(s)) return 'ULTRA';
-        if (/google\s+ai\s+pro/i.test(s)) return 'PRO';
-        if (/google\s+ai\s+plus/i.test(s)) return 'PLUS';
+        if (/google\s+ai\s+ultra/i.test(s)) return 'Ultra';
+        if (/google\s+ai\s+pro/i.test(s)) return 'Pro';
+        if (/google\s+ai\s+plus/i.test(s)) return 'Plus';
         return s.replace(/^Google\s+AI\s+/i, '').trim();
-      }
-
-      function formatShortCountdown(resetSeconds) {
-        const sec = Number(resetSeconds) || 0;
-        if (!sec) return '';
-        const diffSec = Math.max(0, Math.round(sec - Date.now() / 1000));
-        if (diffSec <= 0) return '即将';
-        const d = Math.floor(diffSec / 86400);
-        const h = Math.floor((diffSec % 86400) / 3600);
-        const m = Math.floor((diffSec % 3600) / 60);
-        if (d > 0) return `${d}d ${h}h`;
-        if (h > 0) return `${h}h ${m}m`;
-        return `${m}m`;
       }
 
       function normalizeEffortKey(raw) {
@@ -123,99 +109,132 @@
         return String(num);
       }
 
-      function formatResetCountdown(resetSeconds) {
-        const sec = Number(resetSeconds) || 0;
-        if (!sec) return '';
-        const diffSec = Math.max(0, Math.round(sec - Date.now() / 1000));
-        if (diffSec <= 0) return '即将重置';
-        const d = Math.floor(diffSec / 86400);
-        const h = Math.floor((diffSec % 86400) / 3600);
-        const m = Math.floor((diffSec % 3600) / 60);
-        if (d > 0) return `${d}d ${h}h 后重置`;
-        if (h > 0) return `${h}h ${m}m 后重置`;
-        return `${m}m 后重置`;
-      }
-
-      function readQuotaFraction(modelObj) {
-        if (!modelObj || !modelObj.quotaInfo) return null;
-        const q = modelObj.quotaInfo;
-        const frac =
-          typeof q.remainingFraction === 'number'
-            ? q.remainingFraction
-            : typeof q.remaining === 'number'
-              ? q.remaining
-              : modelObj.disabled
-                ? 0
-                : null;
-        if (frac === null || Number.isNaN(frac)) return null;
-        const resetSec =
-          q.resetTime && typeof q.resetTime.seconds !== 'undefined'
-            ? Number(q.resetTime.seconds)
-            : 0;
+      function readQuotaFraction(option) {
+        const info = option?.quotaInfo;
+        const fraction = [info?.remainingFraction, info?.remaining].find(
+          (n) => Number.isFinite(n) && n >= 0 && n <= 1
+        );
+        if (fraction === undefined) return null;
+        const seconds = Number(info.resetTime?.seconds);
+        const nanos = Number(info.resetTime?.nanos ?? 0);
         return {
-          pct: Math.max(0, Math.min(100, Math.round(frac * 100))),
-          resetSec
+          fraction,
+          pct: Math.round(fraction * 100),
+          resetSec: Number.isSafeInteger(seconds) && seconds > 0 ? seconds : 0,
+          nanos: Number.isInteger(nanos) && nanos >= 0 && nanos < 1e9 ? nanos : 0
         };
       }
 
-      function stripDisplayNoise(name) {
-        return String(name || '')
-          .replace(/\s*\((thinking|low|medium|high|xhigh|extra|max|ultra)\)\s*$/i, '')
-          .trim();
+      function quotaLabel(q) {
+        if (!q) return '—';
+        if (q.fraction > 0 && q.pct === 0) return '<1%';
+        if (q.fraction < 1 && q.pct === 100) return '>99%';
+        return q.pct + '%';
       }
 
-      function collectQuotaRows(ctrl) {
-        const rawConfigs = ctrl?.userStatus?.cascadeModelConfigData?.clientModelConfigs;
-        const rawOptions = ctrl?.modelOptions;
-        const merged = [];
-        const seenLabels = new Set();
+      function modelBase(label) {
+        const clean = String(label || '').replace(/\s+/g, ' ').trim().replace(/\s*\(thinking\)$/i, '');
+        return splitModelFamilyAndEffort(clean).family.replace(/\s*\(thinking\)$/i, '').trim();
+      }
 
-        for (const list of [rawOptions, rawConfigs]) {
+      function providerOf(name) {
+        if (/^Gemini\b/i.test(name) || /^(?:4\s+(?:Neon|Carbon|Argon|Hydrogen)|3\.8\s+Flash)$/i.test(name)) return 'Gemini';
+        if (/^(?:Claude\b|GPT(?:\b|[- ]OSS\b))/i.test(name)) return 'Claude / GPT';
+        return '';
+      }
+
+      function sameReading(a, b) {
+        return Boolean(a.q && b.q && a.q.resetSec && a.q.resetSec === b.q.resetSec &&
+          a.q.nanos === b.q.nanos && a.q.fraction === b.q.fraction && a.disabled === b.disabled);
+      }
+
+      function readUsageModels(ctrl) {
+        const models = new Map();
+        const selected = ctrl?.selectedModel;
+        const lists = [[selected], ctrl?.modelOptions, ctrl?.userStatus?.cascadeModelConfigData?.clientModelConfigs];
+        for (const list of lists) {
           if (!Array.isArray(list)) continue;
-          for (const item of list) {
-            if (!item || !item.label) continue;
-            if (seenLabels.has(item.label)) continue;
-            seenLabels.add(item.label);
-            merged.push(item);
+          for (const option of list) {
+            const label = typeof option?.label === 'string' ? option.label.trim() : '';
+            if (!label || /^Orchestrator\b/i.test(label)) continue;
+            const key = label.toLowerCase();
+            const prev = models.get(key);
+            const q = readQuotaFraction(option);
+            if (prev) {
+              if (!prev.q && q) prev.q = q;
+              if (prev.disabled == null && option.disabled != null) prev.disabled = Boolean(option.disabled);
+            } else {
+              models.set(key, { label, base: modelBase(label), q, disabled: option.disabled });
+            }
           }
         }
+        // Resolve the full selected label before considering an Orchestrator alias.
+        const label = selected?.label?.trim() || '';
+        const direct = models.get(label.toLowerCase());
+        let targetBase = '';
+        if (!direct && /^Orchestrator\b/i.test(label)) {
+          const target = label.match(/^Orchestrator\s*\(([^)]+)\)/i)?.[1] ||
+            label.replace(/^Orchestrator\s*/i, '');
+          const normalized = (s) => modelBase(s).replace(/^Gemini\s+/i, '').toLowerCase();
+          const wanted = normalized(target);
+          const matching = new Set();
+          for (const m of models.values()) {
+            const base = normalized(m.base);
+            if (wanted && (base === wanted || base.endsWith(' ' + wanted))) matching.add(m.base);
+          }
+          if (matching.size === 1) targetBase = [...matching][0];
+          const exact = models.get(target.toLowerCase());
+          if (exact) exact.active = true;
+        }
+        if (direct) direct.active = true;
+        const entries = [...models.values()];
+        for (const m of entries) m.disabled = Boolean(m.disabled);
+        const activeFamilyOnly = Boolean(targetBase && !entries.some((m) => m.active));
+        const byBase = new Map();
+        for (const model of entries) {
+          if (!byBase.has(model.base)) byBase.set(model.base, []);
+          byBase.get(model.base).push(model);
+        }
+        const rows = [];
+        for (const [base, variants] of byBase) {
+          const first = variants[0];
+          const active = variants.some((v) => v.active) || (activeFamilyOnly && base === targetBase);
+          if (variants.length === 1 || variants.every((v) => sameReading(first, v))) {
+            rows.push({ name: base, q: first.q, disabled: first.disabled, active, provider: providerOf(base) });
+          } else {
+            for (const v of variants) rows.push({
+              name: v.label, q: v.q, disabled: v.disabled, active: Boolean(v.active), provider: providerOf(base)
+            });
+          }
+        }
+        return rows;
+      }
 
-        const selLabel = ctrl?.selectedModel?.label || '';
-        const orchMatch = selLabel.match(/^Orchestrator\s*\(([^)]+)\)/i);
-        const orchSub = orchMatch ? orchMatch[1].trim().toLowerCase() : '';
-        const curFamily = selLabel
-          ? stripDisplayNoise(splitModelFamilyAndEffort(selLabel).family)
-          : '';
-
-        const families = [];
-        const seenFamily = new Set();
-        for (const opt of merged) {
-          const base = stripDisplayNoise(splitModelFamilyAndEffort(opt.label).family);
-          if (!base || seenFamily.has(base)) continue;
-          if (/^Orchestrator\b/i.test(base)) continue;
-          const q = readQuotaFraction(opt);
-          if (!q) continue;
-          seenFamily.add(base);
-          const isOrchTarget = Boolean(orchSub && base.toLowerCase().includes(orchSub));
-          families.push({
-            family: base,
-            pct: q.pct,
-            disabled: Boolean(opt.disabled) || q.pct <= 0,
-            resetSec: q.resetSec,
-            resetStr: q.resetSec ? formatShortCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
-            resetFull: q.resetSec ? formatResetCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
-            active: base === curFamily || isOrchTarget
+      function groupUsageModels(rows) {
+        const groups = [];
+        const emitted = new Set();
+        for (const row of rows) {
+          if (emitted.has(row)) continue;
+          const providerPeers = row.provider ? rows.filter((r) => r.provider === row.provider) : [row];
+          const matchingPeers = providerPeers.length > 1 ? providerPeers.filter((r) => sameReading(row, r)) : [row];
+          const grouped = matchingPeers.length > 1;
+          const allProviderMatched = grouped && matchingPeers.length === providerPeers.length;
+          const members = grouped ? matchingPeers.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric: true })) : [row];
+          members.forEach((r) => emitted.add(r));
+          const groupTitle = !grouped
+            ? formatCompactModelDisplay(row.name)
+            : allProviderMatched
+              ? row.provider
+              : members.map((m) => formatCompactModelDisplay(m.name)).join(' / ');
+          groups.push({
+            name: groupTitle,
+            members, q: row.q, disabled: row.disabled, active: members.some((r) => r.active)
           });
         }
-
-        families.sort((a, b) => {
-          if (a.active !== b.active) return a.active ? -1 : 1;
-          const aDepleted = a.disabled || a.pct <= 0;
-          const bDepleted = b.disabled || b.pct <= 0;
-          if (aDepleted !== bDepleted) return aDepleted ? 1 : -1;
-          return 0;
-        });
-        return families;
+        // Keep the provider order stable when switching the selected model.
+        const rank = (g) => ({ Gemini: 0, 'Claude / GPT': 1 })[g.members[0].provider] ?? 2;
+        return groups.sort((a, b) => rank(a) - rank(b) ||
+          a.name.localeCompare(b.name, 'zh-CN', { numeric: true }));
       }
 
       function getActiveMetricsStats(footer) {
@@ -244,216 +263,361 @@
         );
       }
 
-      function syncAccountSnapshot(ctrl, quota, families) {
-        const sw = window.__isdouAccountSwitcher;
-        if (!sw || typeof sw.recordAccountSnapshot !== 'function') return { email: '', tier: '' };
-        const info = typeof sw.getCurrentAccountInfo === 'function' ? sw.getCurrentAccountInfo() : null;
-        const email = ctrl?.userStatus?.email || info?.email || '';
-        const tier = ctrl?.userStatus?.userTier?.name || info?.tier || '';
-        if (email) {
-          const list = Array.isArray(families) ? families : collectQuotaRows(ctrl);
-          const activeFam = list.find((f) => f.active) || list[0] || null;
-          const pct = quota ? quota.pct : activeFam ? activeFam.pct : null;
-          const resetSec = quota?.resetSec || activeFam?.resetSec || 0;
-          sw.recordAccountSnapshot({ email, tier, pct, resetSec });
-        }
-        return { email, tier };
+      function toneFor(q) {
+        if (!q) return 'normal';
+        return q.fraction <= .10 ? 'critical' : q.fraction <= .30 ? 'warning' : 'normal';
       }
 
-      function onPopoverClick(ev) {
-        const target = ev.target && ev.target.closest ? ev.target.closest('[data-isdou-action]') : null;
-        if (!target) return;
-        const action = target.getAttribute('data-isdou-action');
-        const email = target.getAttribute('data-email') || '';
-        if (action === 'switch-account') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          hidePopover();
-          window.__isdouAccountSwitcher?.switchAccount?.(email);
-        } else if (action === 'reopen-auth') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          hidePopover();
-          window.__isdouAccountSwitcher?.reopenAuthUrl?.();
-        } else if (action === 'copy-auth') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          window.__isdouAccountSwitcher?.copyAuthUrl?.();
-        } else if (action === 'cancel-auth') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          window.__isdouAccountSwitcher?.cancelAccountSwitch?.();
-        } else if (action === 'remove-account') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          if (email && window.__isdouAccountSwitcher?.removeKnownAccount?.(email)) {
-            if (popoverOpen) renderPopoverContent(lastPopoverCtrl, lastPopoverFooter);
-          }
+      function contextTone(pct) {
+        return pct >= 90 ? 'critical' : pct >= 75 ? 'warning' : 'normal';
+      }
+
+      function resetText(sec) {
+        if (!sec) return '';
+        const mins = Math.ceil((sec - Date.now() / 1000) / 60);
+        if (mins <= 0) return '等待额度更新';
+        if (mins < 60) return `${mins} 分钟后重置`;
+        const hours = Math.floor(mins / 60);
+        if (hours >= 24) return `${Math.floor(hours / 24)} 天 ${hours % 24} 小时后重置`;
+        return `${hours} 小时${mins % 60 ? ' ' + mins % 60 + ' 分' : ''}后重置`;
+      }
+
+      function getIdentity(ctrl) {
+        const fallback = window.__isdouAccountSwitcher?.getCurrentAccountInfo?.();
+        return {
+          email: ctrl?.userStatus?.email || fallback?.email || '',
+          tier: ctrl?.userStatus?.userTier?.name || fallback?.tier || ''
+        };
+      }
+
+      function usageState(ctrl, footer) {
+        const rows = readUsageModels(ctrl);
+        const q = readQuotaFraction(ctrl?.selectedModel) || rows.find((r) => r.active)?.q || null;
+        return { rows, q, stats: getActiveMetricsStats(footer), ...getIdentity(ctrl) };
+      }
+
+      function recordSnapshot(state) {
+        const sw = window.__isdouAccountSwitcher;
+        if (!state.email || !sw?.recordAccountSnapshot) return;
+        const { email, tier, q } = state;
+        const sig = JSON.stringify([email, tier, q?.pct, q?.resetSec]);
+        if (sig === lastSnapshot) return;
+        sw.recordAccountSnapshot({ email, tier, pct: q?.pct ?? null, resetSec: q?.resetSec ?? 0 });
+        lastSnapshot = sig;
+      }
+
+      function action(id, label, email = '', description = '') {
+        return `<button type="button" data-isdou-action="${id}" data-email="${escapeHtml(email)}"` +
+          (description ? ` aria-label="${escapeHtml(description)}"` : '') +
+          `>${escapeHtml(label)}</button>`;
+      }
+
+      function meter(value, tone) {
+        const width = Math.min(100, Math.max(0, value));
+        return `<span class="iu-track" aria-hidden="true"><i data-tone="${tone}" style="width:${width}%"></i></span>`;
+      }
+
+      function quotaRow(group) {
+        const { name, q, disabled, members, active } = group;
+        const multiple = members.length > 1;
+        const state = [active ? '当前' : '', disabled ? '不可用' : q?.fraction === 0 ? '已耗尽' : ''].filter(Boolean).join(' · ');
+        const head = `<span class="iu-rowhead"><span class="iu-name">${escapeHtml(name)}</span>` +
+          (multiple ? '<i class="iu-chevron" aria-hidden="true"></i>' : '') +
+          `<strong data-tone="${toneFor(q)}">${escapeHtml(quotaLabel(q))}</strong></span>`;
+        const caption = [state, q ? resetText(q.resetSec) : '暂无配额数据'].filter(Boolean).join(' · ');
+        const body = head + (q ? meter(q.fraction * 100, toneFor(q)) : '') +
+          (caption ? `<small>${escapeHtml(caption)}</small>` : '');
+        if (!multiple) return `<li class="iu-pool"><div class="iu-reading">${body}</div></li>`;
+        const items = members.map((m) => `<li><span>${escapeHtml(m.name)}</span>` +
+          (m.active ? '<small>当前</small>' : '') + '</li>').join('');
+        return `<li class="iu-pool"><details data-key="${escapeHtml(name)}"><summary>${body}</summary>` +
+          `<ul class="iu-members" aria-label="同额度型号">${items}</ul></details></li>`;
+      }
+
+      function quotaView(state) {
+        const groups = groupUsageModels(state.rows);
+        const list = groups.length ? `<ul class="iu-pools">${groups.map(quotaRow).join('')}</ul>` :
+          '<p class="iu-empty">暂无模型配额数据</p>';
+        const { email, tier } = state;
+        const identity = `<span class="iu-name" title="${escapeHtml(email)}">${escapeHtml(email || '账号')}</span>` +
+          (tier ? `<small>${escapeHtml(formatShortTier(tier))}</small>` : '');
+        const sw = window.__isdouAccountSwitcher;
+        let account = '';
+        if (sw?.switchAccount || sw?.isAuthenticating?.()) {
+          const pending = sw.isAuthenticating?.();
+          account = `<footer><button class="iu-identity" type="button" data-isdou-action="accounts" aria-label="账号管理">` +
+            identity + (pending ? '<small>等待验证</small>' : '') + '<i class="iu-next" aria-hidden="true"></i></button></footer>';
+        } else if (email) {
+          account = `<footer><div class="iu-identity">${identity}</div></footer>`;
         }
+        return `<header><h2>剩余额度</h2>${action('session', '会话用量')}</header>${list}${account}`;
+      }
+
+      function contextInfo(stats) {
+        if (stats?.compactingNow) return { label: '压缩中', pct: null };
+        if (stats?.compactedPending) return { label: '已压缩', pct: null };
+        const pct = stats?.ctxPct;
+        return Number.isFinite(pct) && pct >= 0 ? { label: pct + '%', pct } : { label: '—', pct: null };
+      }
+
+      function sessionView({ stats }) {
+        const header = `<header><h2>会话用量</h2>${action('quota', '剩余额度')}</header>`;
+        if (!stats) return header + '<p class="iu-empty">此会话暂无统计</p>';
+        const ctx = contextInfo(stats);
+        const limit = stats.limitStr || (Number.isFinite(stats.contextLimit) ? formatCompactTokens(stats.contextLimit) : '');
+        const usage = Number.isFinite(stats.ctx) && limit ? formatCompactTokens(stats.ctx) + ' / ' + limit : '';
+        const note = ctx.pct !== null ? usage : stats.compactedPending ? '下一次调用后更新' : '';
+        const lines = [
+          ['缓存命中', /^\d+(?:\.\d+)?%$/.test(stats.sessionCacheRate) ? stats.sessionCacheRate : '—'],
+          ['生成速度', Number.isFinite(stats.tps) && stats.tps >= 0 ? stats.tps + ' tok/s' : '—'],
+          ['首 Token 延迟', Number.isFinite(stats.ttft) && stats.ttft >= 0 ? stats.ttft + ' s' : '—']
+        ];
+        return header + `<section class="iu-context" aria-label="上下文窗口"><div class="iu-rowhead">上下文已用` +
+          `<strong data-tone="${contextTone(ctx.pct)}">${escapeHtml(ctx.label)}</strong></div>` +
+          (ctx.pct === null ? '' : meter(ctx.pct, contextTone(ctx.pct))) +
+          (note ? `<small>${escapeHtml(note)}</small>` : '') + '</section>' +
+          `<dl class="iu-stats">${lines.map(([k, v]) => `<div><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join('')}</dl>`;
+      }
+
+      function accountsView({ email, tier }) {
+        const sw = window.__isdouAccountSwitcher;
+        const head = `<header><h2>账号</h2>${action('quota', '返回额度')}</header>`;
+        const identity = `<div class="iu-current"><span class="iu-name" title="${escapeHtml(email)}">${escapeHtml(email || '当前账号')}</span>` +
+          `<small>${escapeHtml([formatShortTier(tier), '当前'].filter(Boolean).join(' · '))}</small></div>`;
+        if (sw?.isAuthenticating?.()) {
+          return head + identity + `<footer><p class="iu-note">等待浏览器验证</p><div class="iu-actions">` +
+            action('reopen-auth', '重新打开') + action('copy-auth', '复制链接') + action('cancel-auth', '取消验证') + '</div></footer>';
+        }
+        const accounts = sw?.getKnownAccounts?.(email) || [];
+        const items = accounts.map((acct) => {
+          const stored = acct.isReset ? '重置时间已过' :
+            Number.isFinite(acct.pct) ? `上次剩余 ${acct.pct}%` : '暂无配额快照';
+          const note = [formatShortTier(acct.tier), stored, !acct.isReset && resetText(acct.resetSec)].filter(Boolean).join(' · ');
+          const addr = escapeHtml(acct.email);
+          return `<li><button type="button" class="iu-account" data-isdou-action="switch-account" data-email="${addr}" aria-label="切换到 ${addr}">` +
+            `<span class="iu-name" title="${addr}">${addr}</span><small>${escapeHtml(note)}</small></button>` +
+            action('remove-account', '移除', acct.email, '移除 ' + acct.email + ' 的本地记录') + '</li>';
+        }).join('');
+        return head + identity + (items ? `<ul class="iu-accounts" aria-label="已记录的账号">${items}</ul>` : '') +
+          (sw?.switchAccount ? `<footer>${action('switch-account', '使用其他账号…')}</footer>` : '');
       }
 
       function ensurePopover() {
-        if (popoverEl && document.body.contains(popoverEl)) return popoverEl;
+        if (popoverEl?.isConnected) return popoverEl;
         const el = document.createElement('div');
         el.id = 'isdou-usage-popover';
-        el.addEventListener('mouseenter', () => {
-          if (hoverTimer) clearTimeout(hoverTimer);
-        });
-        el.addEventListener('mouseleave', () => {
-          if (!pinnedOpen) scheduleHidePopover();
-        });
+        el.setAttribute('data-ag-i18n-exclude', 'true');
+        el.hidden = true;
+        el.tabIndex = -1;
+        el.setAttribute('role', 'dialog');
+        el.addEventListener('pointerenter', cancelHover);
+        el.addEventListener('pointerleave', () => scheduleClose(anchor));
+        el.addEventListener('focusin', () => { pinnedOpen = true; cancelHover(); });
         el.addEventListener('click', onPopoverClick);
-        document.body.appendChild(el);
+        el.addEventListener('toggle', schedulePosition, true);
+        document.body.append(el);
         popoverEl = el;
         return el;
       }
 
-      function renderPopoverContent(ctrl, footer) {
-        lastPopoverCtrl = ctrl;
-        lastPopoverFooter = footer;
+      function focusKey(el) {
+        if (el?.matches('summary')) return 'summary:' + el.parentElement.dataset.key;
+        return el?.dataset.isdouAction ? JSON.stringify([el.dataset.isdouAction, el.dataset.email || '']) : '';
+      }
+
+      function renderPopover(state, reset = false) {
         const el = ensurePopover();
-        const families = collectQuotaRows(ctrl);
-        const stats = getActiveMetricsStats(footer);
-        const selQuota = ctrl?.selectedModel ? readQuotaFraction(ctrl.selectedModel) : null;
-        const { email, tier } = syncAccountSnapshot(ctrl, selQuota, families);
-        const otherAccounts = window.__isdouAccountSwitcher?.getKnownAccounts?.(email) || [];
-        const isPendingAuth = Boolean(window.__isdouAccountSwitcher?.isAuthenticating?.());
-        const shortTier = formatShortTier(tier);
-
-        let html = `<div class="isdou-up-acct-sec">`;
-        html +=
-          `<div class="isdou-up-acct-bar">` +
-          `<div class="isdou-up-acct-cur">` +
-          `<span class="isdou-up-acct-dot" aria-hidden="true"></span>` +
-          `<span class="isdou-up-acct-email" title="${escapeHtml(email || '')}">${escapeHtml(email || '当前账号')}</span>` +
-          (shortTier ? `<span class="isdou-up-tier" title="${escapeHtml(tier)}">${escapeHtml(shortTier)}</span>` : '') +
-          `</div>` +
-          (isPendingAuth
-            ? `<div class="isdou-up-acct-meta">` +
-              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="reopen-auth" title="重新打开浏览器验证页">重开</button>` +
-              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="copy-auth" title="复制验证链接">复制</button>` +
-              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="cancel-auth" title="取消验证并恢复当前账号">取消</button>` +
-              `</div>`
-            : `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换</button>`) +
-          `</div>`;
-
-        if (otherAccounts.length > 0) {
-          html += `<div class="isdou-up-acct-list">`;
-          for (const acc of otherAccounts) {
-            const accPct = acc.effectivePct;
-            const accTone = accPct === null || accPct === undefined ? 'ok' : accPct <= 10 ? 'crit' : accPct <= 30 ? 'warn' : 'ok';
-            const statusStr = acc.isReset ? '已重置' : acc.resetSec ? formatShortCountdown(acc.resetSec) : '';
-            const pctStr = accPct !== null && accPct !== undefined ? `${accPct}%` : '--';
-            const accShortTier = formatShortTier(acc.tier);
-            html +=
-              `<div class="isdou-up-acct-item">` +
-              `<button type="button" class="isdou-up-acct-main" data-isdou-action="switch-account" data-email="${escapeHtml(acc.email)}" title="点击复制邮箱并打开浏览器切换到 ${escapeHtml(acc.email)}">` +
-              `<span class="isdou-up-acct-arrow" aria-hidden="true">↪</span>` +
-              `<span class="isdou-up-acct-subemail">${escapeHtml(acc.email)}</span>` +
-              (accShortTier ? `<span class="isdou-up-tier isdou-up-tier-muted" title="${escapeHtml(acc.tier)}">${escapeHtml(accShortTier)}</span>` : '') +
-              `<span class="isdou-up-acct-meta">` +
-              (statusStr ? `<span class="isdou-up-reset">${escapeHtml(statusStr)}</span>` : '') +
-              `<span class="isdou-up-val" data-tone="${accTone}">${pctStr}</span>` +
-              `</span>` +
-              `</button>` +
-              `<button type="button" class="isdou-up-acct-del" data-isdou-action="remove-account" data-email="${escapeHtml(acc.email)}" aria-label="移除账号记录" title="移除此账号记录">×</button>` +
-              `</div>`;
-          }
-          html += `</div>`;
+        const titles = { quota: '剩余额度', session: '会话用量', accounts: '账号' };
+        const html = view === 'session' ? sessionView(state) : view === 'accounts' ? accountsView(state) : quotaView(state);
+        el.setAttribute('aria-label', titles[view]);
+        if (!reset && el.__lastHtml === html) return;
+        const scroll = reset ? 0 : el.scrollTop;
+        const oldFocus = document.activeElement;
+        const hadFocus = el.contains(oldFocus);
+        const key = !reset && hadFocus ? focusKey(oldFocus) : '';
+        const expanded = new Set(reset ? [] : [...el.querySelectorAll('details[open]')].map((d) => d.dataset.key));
+        el.innerHTML = html;
+        el.__lastHtml = html;
+        for (const detail of el.querySelectorAll('details')) detail.open = expanded.has(detail.dataset.key);
+        if (hadFocus) {
+          const next = key && [...el.querySelectorAll('summary,button')].find((n) => focusKey(n) === key);
+          (next || el).focus({ preventScroll: true });
         }
-        html += `</div>`;
+        el.scrollTop = scroll;
+        schedulePosition();
+      }
 
-        const inactiveDepleted = families.filter((f) => !f.active && (f.pct <= 0 || f.disabled));
-        const shouldCollapseDepleted = inactiveDepleted.length >= 2;
-        const visibleRows = shouldCollapseDepleted
-          ? families.filter((f) => f.active || (f.pct > 0 && !f.disabled))
-          : families;
-        const collapsedDepleted = shouldCollapseDepleted ? inactiveDepleted : [];
-
-        html += `<div class="isdou-up-sec">`;
-        html += `<div class="isdou-up-hdr"><span>模型配额</span><span class="isdou-up-sub">重置 · 剩余</span></div>`;
-        if (families.length === 0) {
-          html += `<div class="isdou-up-empty">暂无配额数据</div>`;
-        } else {
-          for (const f of visibleRows) {
-            const tone = f.pct <= 10 ? 'crit' : f.pct <= 30 ? 'warn' : 'ok';
-            const displayFamily = formatCompactModelDisplay(f.family);
-            const barWidth = f.pct > 0 ? Math.max(4, Math.min(100, f.pct)) : 0;
-            html +=
-              `<div class="isdou-up-row ${f.active ? 'is-active' : ''} ${f.disabled ? 'is-depleted' : ''}">` +
-              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">` +
-              (f.active ? `<span class="isdou-up-active-dot" aria-hidden="true"></span>` : '') +
-              `<span>${escapeHtml(displayFamily)}</span>` +
-              `</span>` +
-              `<span class="isdou-up-reset" title="${escapeHtml(f.resetFull || '')}">${escapeHtml(f.resetStr || '--')}</span>` +
-              `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${barWidth}%"></div></div>` +
-              `<span class="isdou-up-val" data-tone="${tone}">${f.pct}%</span>` +
-              `</div>`;
-          }
-          if (collapsedDepleted.length > 0) {
-            html += `<div class="isdou-up-depleted-group">`;
-            html += `<span class="isdou-up-depleted-lbl">已耗尽 0%</span>`;
-            html += `<div class="isdou-up-depleted-tags">`;
-            for (const d of collapsedDepleted) {
-              const shortName = formatCompactModelDisplay(d.family);
-              const tip = d.resetFull && d.resetFull !== '已耗尽' ? `${d.family} · ${d.resetFull}` : `${d.family} · 已耗尽`;
-              html += `<span class="isdou-up-depleted-chip" title="${escapeHtml(tip)}">${escapeHtml(shortName)}</span>`;
-            }
-            html += `</div></div>`;
-          }
-        }
-        html += `</div>`;
-
-        if (stats) {
-          const ctxTone = stats.ctxPct >= 90 ? 'crit' : stats.ctxPct >= 75 ? 'warn' : 'ok';
-          const ctxWidth = Math.max(0, Math.min(100, Number(stats.ctxPct) || 0));
-          html += `<div class="isdou-up-sec isdou-up-divider">`;
-          html +=
-            `<div class="isdou-up-hdr">` +
-            `<span>会话上下文</span>` +
-            `<span class="isdou-up-sub">${formatCompactTokens(stats.ctx)} / ${escapeHtml(stats.limitStr || '256k')} · <strong class="isdou-up-ctx-pct" data-tone="${ctxTone}">${stats.ctxPct}%</strong></span>` +
-            `</div>`;
-          html += `<div class="isdou-up-ctx-track"><div class="isdou-up-ctx-fill" data-tone="${ctxTone}" style="width:${ctxWidth}%"></div></div>`;
-          html +=
-            `<div class="isdou-up-stat-grid">` +
-            `<div class="isdou-up-stat-card"><span>缓存命中</span><strong>${escapeHtml(stats.sessionCacheRate || '--')}</strong></div>` +
-            `<div class="isdou-up-stat-card"><span>生成速度</span><strong>${stats.tps ? stats.tps + ' tok/s' : '--'}</strong></div>` +
-            `<div class="isdou-up-stat-card"><span>首字延迟</span><strong>${stats.ttft ? stats.ttft + 's' : '--'}</strong></div>` +
-            `</div>`;
-          html += `</div>`;
-        }
-
-        if (el.__lastHtml !== html) {
-          el.__lastHtml = html;
-          el.innerHTML = html;
+      function onPopoverClick(event) {
+        const button = event.target.closest('button[data-isdou-action]');
+        if (!button) return;
+        const { isdouAction: id, email = '' } = button.dataset;
+        const sw = window.__isdouAccountSwitcher;
+        if (['accounts', 'quota', 'session'].includes(id)) {
+          pinnedOpen = true;
+          view = id;
+          renderPopover(anchor.__usageState, true);
+          popoverEl.focus({ preventScroll: true });
+        } else if (id === 'remove-account') {
+          if (email && sw?.removeKnownAccount?.(email)) renderPopover(anchor.__usageState);
+        } else if (id === 'switch-account' || id === 'reopen-auth') {
+          hidePopover(true);
+          if (id === 'switch-account') sw?.switchAccount?.(email);
+          else sw?.reopenAuthUrl?.();
+        } else if (id === 'copy-auth') {
+          sw?.copyAuthUrl?.();
+        } else if (id === 'cancel-auth') {
+          sw?.cancelAccountSwitch?.();
+          scheduleSync(50);
         }
       }
 
-      function showPopover(anchorEl, ctrl, footer) {
-        if (hoverTimer) clearTimeout(hoverTimer);
-        renderPopoverContent(ctrl, footer);
-        const el = ensurePopover();
-        const r = anchorEl.getBoundingClientRect();
-        const popW = Math.min(368, Math.max(260, window.innerWidth - 24));
-        const left = Math.max(12, Math.min(window.innerWidth - popW - 12, r.right - popW));
-        const bottom = Math.max(12, window.innerHeight - r.top + 8);
-        el.style.left = `${left}px`;
-        el.style.bottom = `${bottom}px`;
-        el.setAttribute('data-open', 'true');
-        popoverOpen = true;
+      function positionPopover() {
+        frame = 0;
+        if (!anchor) return;
+        if (!anchor.isConnected || !anchor.getClientRects().length) return hidePopover();
+        const box = anchor.getBoundingClientRect();
+        const el = popoverEl;
+        const W = document.documentElement.clientWidth;
+        const H = document.documentElement.clientHeight;
+        if (box.bottom <= 0 || box.top >= H || box.right <= 0 || box.left >= W) return hidePopover();
+        const edge = 8, gap = 6;
+        const above = box.top - gap - edge;
+        const below = H - box.bottom - gap - edge;
+        const useAbove = above >= el.scrollHeight + 2 || above >= below;
+        el.style.maxHeight = Math.max(1, useAbove ? above : below) + 'px';
+        const width = el.offsetWidth;
+        const left = Math.max(edge, Math.min(box.right - width, W - width - edge));
+        el.style.left = Math.round(left) + 'px';
+        el.style.top = Math.round(useAbove ? box.top - gap - el.offsetHeight : box.bottom + gap) + 'px';
       }
 
-      function hidePopover() {
+      function schedulePosition() {
+        if (anchor && !frame) frame = requestAnimationFrame(positionPopover);
+      }
+
+      function cancelHover() {
+        clearTimeout(hoverTimer);
+        hoverTimer = null;
+      }
+
+      function hidePopover(restore = false) {
+        cancelHover();
+        const owner = anchor;
+        if (owner) owner.setAttribute('aria-expanded', 'false');
+        anchor = null;
         pinnedOpen = false;
-        popoverOpen = false;
-        if (popoverEl) popoverEl.removeAttribute('data-open');
+        if (popoverEl) {
+          popoverEl.hidden = true;
+          delete popoverEl.dataset.open;
+        }
+        if (restore && owner?.isConnected && !owner.hidden) owner.focus({ preventScroll: true });
       }
 
-      function scheduleHidePopover() {
-        if (hoverTimer) clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(() => {
-          if (!pinnedOpen) hidePopover();
-        }, 140);
+      function openPopover(button, pin) {
+        if (!button.__usageState || button.hidden || !button.isConnected) return;
+        if (!pin && pinnedOpen) return;
+        cancelHover();
+        const reset = anchor !== button || view !== button.dataset.view;
+        if (anchor && anchor !== button) anchor.setAttribute('aria-expanded', 'false');
+        anchor = button;
+        view = button.dataset.view;
+        pinnedOpen = pin;
+        const el = ensurePopover();
+        el.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        renderPopover(button.__usageState, reset || !el.dataset.open);
+        el.dataset.open = 'true';
+        if (frame) cancelAnimationFrame(frame);
+        positionPopover();
+        if (pin) el.focus({ preventScroll: true });
+      }
+
+      function scheduleClose(button) {
+        if (pinnedOpen) return;
+        cancelHover();
+        if (anchor && button === anchor) hoverTimer = setTimeout(() => hidePopover(), 180);
+      }
+
+      function initBadge(kind) {
+        const button = document.createElement('button');
+        button.className = 'isdou-usage-badge';
+        button.type = 'button';
+        button.dataset.view = kind;
+        button.setAttribute('aria-haspopup', 'dialog');
+        button.setAttribute('aria-controls', 'isdou-usage-popover');
+        button.setAttribute('aria-expanded', 'false');
+        button.addEventListener('pointerenter', (e) => {
+          if (e.pointerType !== 'mouse' || pinnedOpen) return;
+          cancelHover();
+          hoverTimer = setTimeout(() => openPopover(button, false), 160);
+        });
+        button.addEventListener('pointerleave', () => {
+          if (anchor && anchor !== button && !pinnedOpen) {
+            cancelHover();
+            hoverTimer = setTimeout(() => hidePopover(), 180);
+          } else scheduleClose(button);
+        });
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (anchor === button && pinnedOpen) hidePopover(true);
+          else openPopover(button, true);
+        });
+        return button;
+      }
+
+      function updateBadge(button, state, shown, html, label, tone) {
+        button.__usageState = state;
+        button.setAttribute('aria-label', label);
+        button.hidden = !shown;
+        button.dataset.tone = tone;
+        if (button.__lastHtml !== html) {
+          button.innerHTML = html;
+          button.__lastHtml = html;
+        }
+      }
+
+      function syncUsage(footer, ctrl, compact) {
+        const right = footer.lastElementChild;
+        if (!right) return;
+        right.querySelectorAll(':scope > .isdou-usage-badge').forEach((el) => el.remove());
+        let controls = right.querySelector(':scope > .isdou-usage-controls');
+        if (!controls) {
+          controls = document.createElement('div');
+          controls.className = 'isdou-usage-controls';
+          controls.setAttribute('data-ag-i18n-exclude', 'true');
+          ensurePopover();
+          controls.append(initBadge('quota'), initBadge('session'));
+          right.prepend(controls);
+        } else if (right.firstElementChild !== controls) {
+          right.prepend(controls);
+        }
+        const [quotaBtn, sessionBtn] = controls.children;
+        const state = usageState(ctrl, footer);
+        if (!footer.closest('[data-testid="side-question-tab-content"]') || footer.contains(document.activeElement)) {
+          recordSnapshot(state);
+        }
+        const { q, stats } = state;
+        const ctx = contextInfo(stats);
+        const quotaText = q ? quotaLabel(q) : '额度';
+        const sessionText = ctx.pct === null && ctx.label === '—' ? '会话' : '上下文 ' + ctx.label;
+        // A single trigger on narrow footers still provides both pages via the header.
+        const showSession = Boolean(stats && (!compact || !q));
+        const showQuota = !compact || !showSession;
+        const quotaMarkup = (q ? buildRingSvg(q.fraction * 100, toneFor(q)) : '') + `<span>${escapeHtml(quotaText)}</span>`;
+        updateBadge(quotaBtn, state, showQuota, quotaMarkup, '模型剩余额度' + (q ? ' ' + quotaText : ''), toneFor(q));
+        updateBadge(sessionBtn, state, showSession, `<span>${escapeHtml(sessionText)}</span>`,
+          '会话用量，' + sessionText, contextTone(ctx.pct));
+        if (anchor && controls.contains(anchor)) {
+          if (anchor.hidden) {
+            const replacement = anchor === quotaBtn ? sessionBtn : quotaBtn;
+            anchor.setAttribute('aria-expanded', 'false');
+            anchor = replacement;
+            anchor.setAttribute('aria-expanded', 'true');
+          }
+          renderPopover(state);
+          schedulePosition();
+        }
       }
 
       function tidyModelTriggerLabel(modelBtn, hasEffortSeg, family, restoreOnly = false) {
@@ -522,7 +686,8 @@
         const sourceText = rawCur !== primaryNode.__isdouShortLabel ? rawCur : primaryNode.__isdouOrigLabel || rawCur;
         const baseName =
           hasEffortSeg && family && textNodes.length === 1 ? family : sourceText;
-        const shortLabel = formatCompactModelDisplay(baseName);
+        const trailingSpace = textNodes.length >= 2 && /\s$/.test(sourceText) ? ' ' : '';
+        const shortLabel = formatCompactModelDisplay(baseName) + trailingSpace;
 
         if (shortLabel) {
           if (rawCur !== primaryNode.__isdouShortLabel) {
@@ -654,77 +819,22 @@
           tidyModelTriggerLabel(modelBtn, false, family);
         }
 
-        // 2. 外置实时用量徽章（宽屏 `◔ 71% · Ctx 32%` / 窄屏 `◔ 71%`）
-        const rightGroup = footer.lastElementChild;
-        if (!rightGroup) return;
-
-        let badgeEl = footer.querySelector('.isdou-usage-badge');
-        if (!badgeEl) {
-          badgeEl = document.createElement('button');
-          badgeEl.className = 'isdou-usage-badge';
-          badgeEl.type = 'button';
-          badgeEl.addEventListener('mouseenter', () => {
-            const latestCtrl = readModelFiberController(modelBtn);
-            showPopover(badgeEl, latestCtrl, footer);
-          });
-          badgeEl.addEventListener('mouseleave', () => {
-            if (!pinnedOpen) scheduleHidePopover();
-          });
-          badgeEl.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            const latestCtrl = readModelFiberController(modelBtn);
-            if (pinnedOpen) {
-              hidePopover();
-            } else {
-              pinnedOpen = true;
-              showPopover(badgeEl, latestCtrl, footer);
-            }
-          });
-          rightGroup.insertBefore(badgeEl, rightGroup.firstChild);
-        } else if (badgeEl.parentElement !== rightGroup || rightGroup.firstChild !== badgeEl) {
-          rightGroup.insertBefore(badgeEl, rightGroup.firstChild);
-        }
-
-        const quota = readQuotaFraction(sel);
-        const stats = getActiveMetricsStats(footer);
-        syncAccountSnapshot(ctrl, quota, null);
-
-        const parts = [];
-        if (quota) {
-          const qTone = quota.pct <= 10 ? 'crit' : quota.pct <= 30 ? 'warn' : 'ok';
-          parts.push(
-            `<span class="isdou-ub-item" data-tone="${qTone}">${buildRingSvg(quota.pct, qTone)}<span>${quota.pct}%</span></span>`
-          );
-        }
-        if (!compactUsage && stats && typeof stats.ctxPct === 'number') {
-          const cTone = stats.ctxPct >= 90 ? 'crit' : stats.ctxPct >= 75 ? 'warn' : 'ok';
-          parts.push(
-            `<span class="isdou-ub-item" data-tone="${cTone}"><span>Ctx ${stats.ctxPct}%</span></span>`
-          );
-        }
-
-        if (parts.length > 0) {
-          const nextHtml = parts.join('<span class="isdou-ub-sep">·</span>');
-          if (badgeEl.__lastHtml !== nextHtml) {
-            badgeEl.__lastHtml = nextHtml;
-            badgeEl.innerHTML = nextHtml;
-          }
-          badgeEl.hidden = false;
-        } else {
-          badgeEl.hidden = true;
-        }
-
-        if (popoverOpen) {
-          renderPopoverContent(ctrl, footer);
-        }
+        syncUsage(footer, ctrl, compactUsage);
       }
 
       function syncAllFooters() {
         if (disposed) return;
         const footers = document.querySelectorAll('.agy-composer-footer, [data-agent-composer-root]');
+        for (const f of observedFooters) {
+          if (!f.isConnected) {
+            footerRo?.unobserve(f);
+            observedFooters.delete(f);
+          }
+        }
+        if (anchor && !anchor.isConnected) hidePopover();
         for (const f of footers) {
-          syncSingleFooter(f);
+          const model = f.querySelector('[data-testid="model-selector-trigger"]');
+          if (model?.closest('.agy-composer-footer, [data-agent-composer-root]') === f) syncSingleFooter(f);
         }
       }
 
@@ -737,14 +847,32 @@
       }
 
       function onDocPointerDown(e) {
-        if (!popoverOpen) return;
-        if (popoverEl && popoverEl.contains(e.target)) return;
-        if (e.target && e.target.closest && e.target.closest('.isdou-usage-badge')) return;
+        if (popoverEl?.contains(e.target) || e.target.closest?.('.isdou-usage-badge')) return;
         hidePopover();
       }
 
+      function onDocFocusIn(e) {
+        if (anchor && e.target !== anchor && !popoverEl.contains(e.target)) hidePopover();
+      }
+
       function onDocKeyDown(e) {
-        if (popoverOpen && e.key === 'Escape') hidePopover();
+        if (!anchor) return;
+        if (e.key === 'Escape') {
+          const restore = popoverEl.contains(document.activeElement);
+          hidePopover(restore);
+          e.preventDefault();
+          e.stopPropagation();
+        } else if (e.key === 'Tab' && popoverEl.contains(document.activeElement)) {
+          const stops = [...popoverEl.querySelectorAll('button, summary')].filter((n) => n.getClientRects().length);
+          const active = document.activeElement;
+          if (e.shiftKey && (active === stops[0] || active === popoverEl)) {
+            e.preventDefault();
+            hidePopover(true);
+          } else if (!e.shiftKey && (!stops.length || active === stops.at(-1))) {
+            // Let native Tab advance from the owning footer button.
+            hidePopover(true);
+          }
+        }
       }
 
       if (typeof ResizeObserver !== 'undefined') {
@@ -763,6 +891,9 @@
       }
 
       const pollId = setInterval(() => syncAllFooters(), 1800);
+      window.addEventListener('resize', schedulePosition);
+      document.addEventListener('scroll', schedulePosition, true);
+      document.addEventListener('focusin', onDocFocusIn, true);
       document.addEventListener('pointerdown', onDocPointerDown, true);
       document.addEventListener('keydown', onDocKeyDown, true);
       window.addEventListener('isdou:account-switched', onAccountSwitched);
@@ -776,10 +907,14 @@
         if (hoverTimer) clearTimeout(hoverTimer);
         if (footerRo) footerRo.disconnect();
         if (obs) obs.disconnect();
+        if (frame) cancelAnimationFrame(frame);
+        window.removeEventListener('resize', schedulePosition);
+        document.removeEventListener('scroll', schedulePosition, true);
+        document.removeEventListener('focusin', onDocFocusIn, true);
         document.removeEventListener('pointerdown', onDocPointerDown, true);
         document.removeEventListener('keydown', onDocKeyDown, true);
         window.removeEventListener('isdou:account-switched', onAccountSwitched);
-        document.querySelectorAll('.isdou-effort-seg, .isdou-usage-badge').forEach((el) => el.remove());
+        document.querySelectorAll('.isdou-effort-seg, .isdou-usage-controls').forEach((el) => el.remove());
         if (popoverEl) popoverEl.remove();
         document.querySelectorAll('[data-testid="model-selector-trigger"]').forEach((btn) => {
           tidyModelTriggerLabel(btn, false, '', true);

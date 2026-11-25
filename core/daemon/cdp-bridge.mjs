@@ -591,10 +591,10 @@ export function createCdpManager({
     try {
       if (syncTickCount % 24 === 1) trimDaemonLogsIfNeeded(runOnce);
       const bundleChanged = bundleCtrl.rebuildBundleIfNeeded();
-      if (promptSuggester && typeof promptSuggester.syncState === 'function') {
-        promptSuggester.syncState();
-      }
       const { activeConfig } = bundleCtrl.getState();
+      if (promptSuggester && (!activeConfig.enabled || !activeConfig.modules.promptSuggestions)) {
+        promptSuggester.stop?.();
+      }
       if (!activeConfig.enabled) {
         targetThemeModes.clear();
       }

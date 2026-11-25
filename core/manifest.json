@@ -9,8 +9,8 @@
       "bytes": 4376
     },
     "daemon/cdp-bridge.mjs": {
-      "sha256": "143690619e85eac3896f634717c972a1940cde333a8e6e9147e7bc829894fa58",
-      "bytes": 29546
+      "sha256": "21f63ee95344bd25b3713fa88fe06199014811f49553ca1fd2473f64de26ebf6",
+      "bytes": 29562
     },
     "daemon/cdp-relaunch.mjs": {
       "sha256": "51e9a4212942252547594c3294a6cccba426d081b5934a69fab3068aa21370c1",
@@ -101,20 +101,20 @@
       "bytes": 23895
     },
     "runtime/65-composer-bar.js": {
-      "sha256": "dba8b927c5f7fe4f966cedcd93028036f866f0832c0a71526aced8e7a7346757",
-      "bytes": 34754
+      "sha256": "f0e65475d62fbc766f2d359f6e411809d25289da4d652d1c058d96dec50aec10",
+      "bytes": 42363
     },
     "runtime/70-prompt-suggestions.js": {
-      "sha256": "051b82f853b823f3514926b6fa36f142ae292d23a948de5aaf679be2ea00a10e",
-      "bytes": 21785
+      "sha256": "f69319befaa1112b3a299a3cf8e20c7e5315c04edba3f147131415f00fd97f91",
+      "bytes": 30178
     },
     "runtime/80-folder-drop.js": {
       "sha256": "1efb0b8b0cc21bcbbf2e0bebbd594a3f842a7d6ca2569701bc7cb32f36cebae1",
       "bytes": 15066
     },
     "runtime/85-quota-resume.js": {
-      "sha256": "37a629b78291271f29ccda4296942bb412777d7dcf3806175546e53cfb2ccbe2",
-      "bytes": 27310
+      "sha256": "1f8ad9084a84f9196cd95f03052f5010211e484afeebd7314c4da77a96876433",
+      "bytes": 28637
     },
     "runtime/90-tail.js": {
       "sha256": "9e9ab5e1219797d146d9c1cf62144aa629cf057a83796c0ddab64c3e47c858b3",
@@ -125,8 +125,8 @@
       "bytes": 7088
     },
     "styles/00-tokens.css": {
-      "sha256": "a9a2a9871e60bba5e8e34beef78a4efb084972e033f5e2bcae735b1f4b37d3a3",
-      "bytes": 7354
+      "sha256": "c64dc944f8e77f792321448e52810712cdd68b54cf1332d52a6b5c22ad3041fa",
+      "bytes": 7711
     },
     "styles/10-sidebar.css": {
       "sha256": "ae324eb3c25cf0203ec020f7aa185353a93dc154ce80ddd639cef56cedf5784d",
@@ -141,8 +141,8 @@
       "bytes": 15760
     },
     "styles/30-composer.css": {
-      "sha256": "b3bbcbeed6501cc946ffac89705a4965c2d680ae86caebe565a759399b0803e3",
-      "bytes": 29387
+      "sha256": "0d0ae94b98509bcd0e382d1663e1bd001e7448be970ed9f7a043b99a01cfceab",
+      "bytes": 24943
     },
     "styles/40-modals-home.css": {
       "sha256": "eca2f9e61cae30ed1431da596b323b55a2f2d7303119c0b6a94ebd091dd72301",
