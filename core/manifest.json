@@ -25,8 +25,8 @@
       "bytes": 13694
     },
     "daemon/prompt-suggest.mjs": {
-      "sha256": "fd13e3ec259581c59f56386423bc19fa953ffac4d589b6b54a58e2b1c2c88e45",
-      "bytes": 10773
+      "sha256": "bf9337b669f7808eb4cb12760ec631317ae6ade262196ab8f7b0241bb25066e0",
+      "bytes": 13225
     },
     "daemon/protobuf.mjs": {
       "sha256": "9e1cff0e22d8361fc80a9b7d4076a0071b64bbab036386d644713e2d82cf3367",

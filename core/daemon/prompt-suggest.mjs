@@ -92,11 +92,57 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
   let ready = false;
   let warmed = false;
   let turns = 0;
-  let buf = '';
   let pending = null;
   let starting = false;
+  let pendingStart = false;
+  let restartTimer = null;
+  const stoppingProcs = new Set();
   const queue = [];
   const cache = new Map();
+
+  function destroyChildStreams(child) {
+    if (!child) return;
+    for (const stream of [child.stdin, child.stdout, child.stderr]) {
+      try {
+        if (stream && !stream.destroyed && typeof stream.destroy === 'function') {
+          stream.destroy();
+        }
+      } catch {}
+    }
+  }
+
+  function retireChildProcess(child) {
+    if (!child) return;
+    if (child.exitCode !== null || child.signalCode !== null) {
+      destroyChildStreams(child);
+      return;
+    }
+    stoppingProcs.add(child);
+    let killTimer = null;
+    const cleanupStopping = () => {
+      if (killTimer) clearTimeout(killTimer);
+      stoppingProcs.delete(child);
+      destroyChildStreams(child);
+      if (stoppingProcs.size === 0 && pendingStart && isEnabled()) {
+        pendingStart = false;
+        ensureStarted();
+      }
+    };
+    child.once('exit', cleanupStopping);
+    try {
+      child.stdin?.end();
+      child.kill('SIGTERM');
+    } catch {}
+    killTimer = setTimeout(() => {
+      if (stoppingProcs.has(child)) {
+        try {
+          child.kill('SIGKILL');
+        } catch {}
+        cleanupStopping();
+      }
+    }, 2500);
+    if (typeof killTimer.unref === 'function') killTimer.unref();
+  }
 
   function getAgyBin() {
     if (agyBinCache !== undefined) return agyBinCache;
@@ -116,12 +162,17 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     return m || 'gemini-3.8-flash-low';
   }
 
-  function stop() {
+  function stop({ wantRestart = false } = {}) {
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+      restartTimer = null;
+    }
     const old = proc;
     proc = null;
     ready = false;
     warmed = false;
     turns = 0;
+    pendingStart = Boolean(wantRestart);
     if (pending) {
       const cur = pending;
       pending = null;
@@ -131,22 +182,31 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
         cur.resolve('');
       }
     }
-    while (queue.length > 0) {
-      const dropped = queue.shift();
-      dropped.resolve('');
+    if (!wantRestart) {
+      while (queue.length > 0) {
+        const dropped = queue.shift();
+        dropped.resolve('');
+      }
     }
     if (old) {
-      try {
-        old.stdin.end();
-        old.kill('SIGTERM');
-      } catch {}
+      retireChildProcess(old);
     }
   }
 
   function restart() {
-    stop();
-    if (isEnabled()) {
-      setTimeout(() => ensureStarted(), 300);
+    if (!isEnabled()) {
+      stop({ wantRestart: false });
+      return;
+    }
+    stop({ wantRestart: true });
+    if (stoppingProcs.size === 0) {
+      restartTimer = setTimeout(() => {
+        restartTimer = null;
+        if (isEnabled()) {
+          pendingStart = false;
+          ensureStarted();
+        }
+      }, 200);
     }
   }
 
@@ -161,6 +221,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     }, WARMUP_TIMEOUT_MS);
 
     pending = {
+      owner: proc,
       isWarmup: true,
       settled: true,
       chunks: [],
@@ -197,6 +258,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     }, TURN_TIMEOUT_MS);
 
     pending = {
+      owner: proc,
       isWarmup: false,
       settled: false,
       chunks: [],
@@ -218,18 +280,23 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     const model = getTargetModel();
     if (proc && !proc.killed && proc.exitCode === null) {
       if (activeModel === model) return true;
-      stop();
+      stop({ wantRestart: true });
+      return true;
+    }
+    if (stoppingProcs.size > 0) {
+      pendingStart = true;
+      return true;
     }
     if (starting) return true;
     const bin = getAgyBin();
     if (!bin) return false;
 
     starting = true;
+    pendingStart = false;
     activeModel = model;
     ready = false;
     warmed = false;
     turns = 0;
-    buf = '';
 
     let child;
     try {
@@ -262,17 +329,27 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
       );
     } catch {
       starting = false;
+      while (queue.length > 0) {
+        const dropped = queue.shift();
+        dropped.resolve('');
+      }
       return false;
     }
 
     proc = child;
     starting = false;
+    let childBuf = '';
+    if (child.stderr && typeof child.stderr.resume === 'function') {
+      child.stderr.resume();
+    }
 
     child.stdout.on('data', (chunk) => {
-      buf += chunk.toString('utf8');
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
+      if (proc !== child) return;
+      childBuf += chunk.toString('utf8');
+      const lines = childBuf.split('\n');
+      childBuf = lines.pop() || '';
       for (const line of lines) {
+        if (proc !== child) return;
         if (!line.trim()) continue;
         let evt;
         try {
@@ -285,7 +362,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
           sendWarmup();
         } else if (evt.event === 'step_update') {
           const su = evt.step_update;
-          if (su && su.step_type === 'agent_response' && pending) {
+          if (su && su.step_type === 'agent_response' && pending && pending.owner === child) {
             if (su.text_delta) pending.chunks.push(String(su.text_delta));
             if (su.state === 'DONE' && !pending.settled && pending.chunks.length > 0) {
               pending.settled = true;
@@ -293,9 +370,9 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
             }
           }
         } else if (evt.event === 'result') {
-          const cur = pending;
-          pending = null;
+          const cur = pending && pending.owner === child ? pending : null;
           if (cur) {
+            pending = null;
             clearTimeout(cur.timer);
             if (!cur.settled) {
               cur.settled = true;
@@ -310,19 +387,24 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
           }
           if (turns >= MAX_TURNS_PER_WORKER) {
             restart();
-          } else {
-            drain();
+            return;
           }
+          drain();
         }
       }
     });
 
-    child.on('error', () => stop());
+    child.on('error', () => {
+      if (proc !== child) return;
+      stop();
+    });
     child.on('exit', () => {
+      destroyChildStreams(child);
+      if (proc !== child) return;
       ready = false;
       warmed = false;
       proc = null;
-      if (pending) {
+      if (pending && pending.owner === child) {
         const cur = pending;
         pending = null;
         clearTimeout(cur.timer);
@@ -388,6 +470,12 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     syncState,
     suggest,
     stop,
-    getStatus: () => ({ ready, warmed, turns, cacheSize: cache.size })
+    getStatus: () => ({
+      ready,
+      warmed,
+      turns,
+      stoppingCount: stoppingProcs.size,
+      cacheSize: cache.size
+    })
   };
 }
