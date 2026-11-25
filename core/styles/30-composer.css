@@ -1,43 +1,258 @@
 /* ============================================================================
- * 30-composer.css — Linear Minimal Composer & Claude-style Ghost Suggestions
+ * 30-composer.css — Linear Precision Composer, Action Chips & Popover Menus
+ *
+ * 设计准则：
+ * - 无顶部附栏时消除双层套娃外框，收敛为单层 10px 精密几何微卡
+ * - 书写区与底部控制栏通过 1px 极淡发丝线建立清晰秩序
+ * - 全面淘汰臃肿圆球（rounded-full），模型/权限选择器化为 6px Linear 属性芯片（12px 字号）
+ * - 发送/取消与图标按钮统一为 26×26px 的 6px 精密小方钮
  * ============================================================================ */
 
-/* 输入框外托盘与悬浮内卡 */
-:is(#antigravity\.agentSidePanelInputBox, [id="antigravity.agentSidePanelInputBox"], .surface-composer.bg-card-border) {
+/* ----------------------------------------------------------------------------
+ * 1. 输入框容器（单层纯净模式 vs 含顶部项目条托盘模式）
+ * ---------------------------------------------------------------------------- */
+:is(#antigravity\.agentSidePanelInputBox, [id="antigravity.agentSidePanelInputBox"], .surface-composer) {
   background-color: var(--isdou-composer-tray) !important;
   border: 1px solid var(--isdou-sidebar-border) !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   box-shadow: none !important;
+  transition: border-color 140ms ease !important;
 }
 
+/* 无顶部上下文条时：彻底隐去外层套娃框，仅保留单层纯净输入卡 */
+:is(#antigravity\.agentSidePanelInputBox, [id="antigravity.agentSidePanelInputBox"], .surface-composer):has(> .surface-composer-card:only-child) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+}
+
+/* 顶部项目/分支附栏（存在时）收紧为 6px 利落小按钮 */
+[id="antigravity.agentSidePanelInputBox"] > div:first-child:not(.surface-composer-card) {
+  padding: 4px 8px !important;
+}
+
+[id="antigravity.agentSidePanelInputBox"] > div:first-child:not(.surface-composer-card) button {
+  border-radius: var(--isdou-radius-sm) !important;
+  font-size: 12px !important;
+  font-weight: 480 !important;
+  color: var(--isdou-fg-secondary) !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+[id="antigravity.agentSidePanelInputBox"] > div:first-child:not(.surface-composer-card) button:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 输入框主卡片 */
 body[data-agy-theme] .surface-composer > .surface-composer-card,
 .surface-composer-card.bg-card,
 [id="antigravity.agentSidePanelInputBox"] .surface-composer-card,
 [id="antigravity.agentSidePanelInputBox"] > div.bg-card {
   background-color: var(--isdou-composer-card) !important;
   border: 1px solid var(--isdou-composer-border) !important;
-  border-radius: 11px !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
   box-shadow: var(--isdou-composer-shadow) !important;
-  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+  transition: border-color 140ms ease, box-shadow 140ms ease !important;
 }
 
 .surface-composer:focus-within > .surface-composer-card,
 [id="antigravity.agentSidePanelInputBox"]:focus-within .surface-composer-card {
   border-color: var(--isdou-composer-focus-border) !important;
+  box-shadow: var(--isdou-composer-shadow), 0 0 0 3px var(--isdou-composer-focus-ring) !important;
 }
 
-/* 发送按钮：Linear 靛紫蓝点睛 */
+/* ----------------------------------------------------------------------------
+ * 2. Lexical 文本编辑区与原生占位符
+ * ---------------------------------------------------------------------------- */
+#antigravity\.agentSidePanelInputBox [data-lexical-editor="true"],
+.surface-composer-card [data-lexical-editor="true"] {
+  padding: 10px 12px 8px 12px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important;
+  font-weight: 420 !important;
+  line-height: 1.56 !important;
+  letter-spacing: -0.006em !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#antigravity\.agentSidePanelInputBox div:has(> [data-lexical-editor="true"]) > p.pointer-events-none,
+.surface-composer-card [data-lexical-editor="true"] ~ p.pointer-events-none {
+  left: 12px !important;
+  right: 12px !important;
+  top: 10px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.56 !important;
+  color: var(--isdou-fg-subtle) !important;
+  opacity: 1 !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 3. 底部控制工具栏（.agy-composer-footer — Linear Action Bar）
+ * ---------------------------------------------------------------------------- */
+.agy-composer-footer,
+[data-agent-composer-root] {
+  padding: 5px 8px !important;
+  border-top: 1px solid var(--isdou-composer-divider) !important;
+  gap: 6px !important;
+}
+
+.agy-composer-footer > div:first-child {
+  gap: 4px !important;
+}
+
+/* 模型选择器与权限选择器：6px Linear 精密属性芯片（淘汰圆球） */
+.agy-composer-footer :is(
+  button[data-testid="model-selector-trigger"],
+  button[data-testid="permissions-selector-trigger"]
+) {
+  height: 25px !important;
+  padding: 0 7px !important;
+  gap: 4px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 480 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--isdou-fg-secondary) !important;
+  box-shadow: none !important;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease !important;
+}
+
+.agy-composer-footer :is(
+  button[data-testid="model-selector-trigger"],
+  button[data-testid="permissions-selector-trigger"]
+):is(:hover, [aria-expanded="true"], [data-state="open"]) {
+  background-color: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+.agy-composer-footer :is(
+  button[data-testid="model-selector-trigger"],
+  button[data-testid="permissions-selector-trigger"]
+) span {
+  font-size: 12px !important;
+  font-weight: 480 !important;
+  color: inherit !important;
+}
+
+.agy-composer-footer :is(
+  button[data-testid="model-selector-trigger"],
+  button[data-testid="permissions-selector-trigger"]
+) svg {
+  width: 13.5px !important;
+  height: 13.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+/* 纯图标辅助按钮（添加上下文 +、语音输入、开启语音模式）：统一 26×26px 6px 圆角 */
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]) {
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--isdou-fg-muted) !important;
+  transition: background-color 100ms ease, color 100ms ease !important;
+}
+
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):hover:not(:disabled) {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]) svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+/* 主发送按钮（Linear 靛紫蓝 6px 小方钮）与禁用空状态 */
+#antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button) {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  box-shadow: none !important;
+  transition: background-color 110ms ease, border-color 110ms ease, opacity 110ms ease !important;
+}
+
 #antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button):not(:disabled) {
   background-color: var(--isdou-accent) !important;
-  border-color: var(--isdou-accent) !important;
+  border: 1px solid var(--isdou-accent) !important;
   color: #FFFFFF !important;
 }
 
 #antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button):not(:disabled):hover {
   background-color: var(--isdou-accent-hover) !important;
+  border-color: var(--isdou-accent-hover) !important;
 }
 
-/* Claude Code 风格输入框下一句预测（浅灰细体 Ghost Text + Tab 键帽） */
+#antigravity\.agentSidePanelInputBox :is(button[data-testid="send-button"], .agy-send-button):disabled {
+  background-color: var(--isdou-chip-bg) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  color: var(--isdou-fg-subtle) !important;
+  opacity: 0.75 !important;
+}
+
+/* 取消生成按钮（6px 石板灰小方钮） */
+#antigravity\.agentSidePanelInputBox button[data-testid="input-cancel-button"] {
+  width: 26px !important;
+  height: 26px !important;
+  margin-left: 4px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: var(--isdou-sidebar-selected) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#antigravity\.agentSidePanelInputBox button[data-testid="input-cancel-button"]:hover {
+  background-color: var(--isdou-chip-hover-bg) !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 4. 关联弹出菜单（模型选择列表 / 权限菜单 / 上下文菜单）统一 Linear 质感
+ * ---------------------------------------------------------------------------- */
+[role="menu"],
+[role="listbox"],
+[data-select-popup],
+[data-radix-menu-content],
+.agy-overlay {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
+  font-family: var(--font-sans) !important;
+}
+
+:is([role="menu"], [role="listbox"], .agy-overlay) :is([role="menuitem"], [role="option"], .agy-overlay-item) {
+  border-radius: 5px !important;
+  font-size: 12.75px !important;
+  font-weight: 440 !important;
+  letter-spacing: -0.008em !important;
+}
+
+/* 去除弹出搜索框多余聚焦粗外环 */
+[role="menu"] input,
+[role="listbox"] input,
+.agy-overlay input {
+  font-size: 12.75px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 5. Claude Code 风格输入框下一句预测（浅灰细体 Ghost Text + Tab 键帽）
+ * ---------------------------------------------------------------------------- */
 [data-ag-has-suggestion="true"] > p.pointer-events-none,
 [data-ag-has-suggestion="true"] [data-lexical-editor="true"] ~ p.pointer-events-none {
   opacity: 0 !important;
@@ -62,12 +277,12 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
 
 #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-text,
 .ag-prompt-ghost-text {
-  color: rgba(138, 143, 152, 0.72) !important;
+  color: var(--isdou-fg-subtle) !important;
   font-family: var(--font-sans) !important;
   font-weight: 400 !important;
   font-size: inherit !important;
   line-height: inherit !important;
-  letter-spacing: normal !important;
+  letter-spacing: -0.006em !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -89,20 +304,17 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   border-radius: 4px;
   font-family: var(--font-mono) !important;
   font-size: 10px !important;
-  font-weight: 450 !important;
+  font-weight: 480 !important;
   line-height: 1 !important;
   color: var(--isdou-fg-muted) !important;
-  background: rgba(0, 0, 0, 0.04) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: var(--isdou-chip-bg) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease;
 }
 
-html[data-ag-theme-mode="dark"] #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-text,
-html[data-ag-theme-mode="dark"] .ag-prompt-ghost-text {
-  color: rgba(156, 161, 170, 0.50) !important;
-}
-
-html[data-ag-theme-mode="dark"] #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-kbd,
-html[data-ag-theme-mode="dark"] .ag-prompt-ghost-kbd {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.11) !important;
+#antigravity\.agentSidePanelInputBox .ag-prompt-ghost-kbd:hover,
+.ag-prompt-ghost-kbd:hover {
+  color: var(--isdou-fg-primary) !important;
+  background: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
 }

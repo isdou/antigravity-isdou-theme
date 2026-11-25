@@ -105,8 +105,8 @@
       "bytes": 7088
     },
     "styles/00-tokens.css": {
-      "sha256": "71065e543c2012e719a57bd24a8300a8c5732e8d37ef55c6db89e22fcdd45789",
-      "bytes": 6628
+      "sha256": "a9a2a9871e60bba5e8e34beef78a4efb084972e033f5e2bcae735b1f4b37d3a3",
+      "bytes": 7354
     },
     "styles/10-sidebar.css": {
       "sha256": "c22e1a74876f0c7a7ca9bb38a301e8cab14d9ad1cf0acd5fd85a262b8cb60e64",
@@ -117,8 +117,8 @@
       "bytes": 7932
     },
     "styles/30-composer.css": {
-      "sha256": "afbf1731538fa0f88755d46e355acf62218b26670fbf8944acce266c8f222dfe",
-      "bytes": 3763
+      "sha256": "603e355e1e529c4501bcdec558c8a72cf19ff88b3ecee3424a4f746301a85e84",
+      "bytes": 12620
     }
   }
 }
