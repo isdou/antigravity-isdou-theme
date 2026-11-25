@@ -381,3 +381,8 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   background-color: var(--isdou-sidebar-hover) !important;
   color: var(--isdou-fg-primary) !important;
 }
+
+#isdou-resume-bar .isdou-resume-switch:hover {
+  border-color: var(--isdou-accent) !important;
+  color: var(--isdou-accent) !important;
+}

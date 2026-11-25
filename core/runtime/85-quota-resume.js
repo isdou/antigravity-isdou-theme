@@ -511,6 +511,22 @@
           });
           right.appendChild(cancelBtn);
         } else if (!hasRecovered) {
+          const switchBtn = document.createElement('button');
+          switchBtn.type = 'button';
+          switchBtn.className = 'isdou-resume-chip isdou-resume-switch';
+          switchBtn.textContent = '⇄ 切换账号';
+          switchBtn.title = '切换 Google 会员账号并在恢复配额后自动继续';
+          switchBtn.addEventListener('click', () => {
+            const latest = readStateStore();
+            if (latest.pendingByCid[cid]) {
+              latest.pendingByCid[cid].autoResumeArmed = true;
+              writeStateStore(latest);
+            }
+            renderBar();
+            window.__isdouAccountSwitcher?.switchAccount?.();
+          });
+          right.appendChild(switchBtn);
+
           const armBtn = document.createElement('button');
           armBtn.type = 'button';
           armBtn.className = 'isdou-resume-chip' + (rec.autoResumeArmed ? ' is-armed' : '');
@@ -565,7 +581,13 @@
         }
       }
 
+      function onAccountSwitchedOrFocus() {
+        renderBar();
+      }
+
       window.addEventListener('keydown', onKeyDown, true);
+      window.addEventListener('isdou:account-switched', onAccountSwitchedOrFocus);
+      window.addEventListener('focus', onAccountSwitchedOrFocus, true);
       pollTimer = setInterval(renderBar, 1200);
       setTimeout(renderBar, 600);
 
@@ -573,6 +595,8 @@
         if (pollTimer) clearInterval(pollTimer);
         cancelAutoCountdown();
         window.removeEventListener('keydown', onKeyDown, true);
+        window.removeEventListener('isdou:account-switched', onAccountSwitchedOrFocus);
+        window.removeEventListener('focus', onAccountSwitchedOrFocus, true);
         removeBarElement();
       });
     })();

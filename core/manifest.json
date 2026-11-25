@@ -53,8 +53,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "7acde2d5a3a6438a977d6ec585449bf23fea617e7c2b8899b987395405653db8",
-      "bytes": 5691
+      "sha256": "7c4c9ff2f70cacacd5a94c97f9f7736b6abdec7333f026480ee93846ef38ba4b",
+      "bytes": 5838
     },
     "installer/manifest.mjs": {
       "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "5cb5f2de4cd6656be24dea759bb2fd135268713d50615538018ce14f8a107b0d",
-      "bytes": 12523
+      "sha256": "c977062d7525fefb9bc803176b062bef74d49f0cb92515295dffc2b74c84a134",
+      "bytes": 12552
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -92,9 +92,13 @@
       "sha256": "cd47a833fe2df838b3a33ab6fa967c71d70707fd175650c098e8e3d58f1f53d2",
       "bytes": 37588
     },
+    "runtime/62-account-switcher.js": {
+      "sha256": "0dd261518a3be238182a3e9cf993c5c14cf8bfd062bf0293e20c688ff941ea21",
+      "bytes": 11126
+    },
     "runtime/65-composer-bar.js": {
-      "sha256": "ee0153ce3d899dfd9c6524134d7a29b754af6efabac92a0acd3ebb08b3ec384d",
-      "bytes": 22722
+      "sha256": "591f8e0f3d18a4504f9cbf048dcbe08adc9cc28f24594108cb1c557a00fccc58",
+      "bytes": 27716
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
@@ -105,8 +109,8 @@
       "bytes": 14996
     },
     "runtime/85-quota-resume.js": {
-      "sha256": "d15376282ab14bae3b99409884584c0813df333d3a29ebfc9036e8de4424e704",
-      "bytes": 22184
+      "sha256": "31e53f6605cfca2e67fbe15c3f76e3fef53d704b63618bcd358936a6b1b2068d",
+      "bytes": 23296
     },
     "runtime/90-tail.js": {
       "sha256": "9e9ab5e1219797d146d9c1cf62144aa629cf057a83796c0ddab64c3e47c858b3",
@@ -133,12 +137,12 @@
       "bytes": 11675
     },
     "styles/30-composer.css": {
-      "sha256": "a8ee9ede9662131eae8e41ddea0ef885b109aea677b33319237cb85214c5d30e",
-      "bytes": 22535
+      "sha256": "442cfd0cacf88edd65fd0c3d2159ce75763c105ae9a11ba0768378461abefe58",
+      "bytes": 26092
     },
     "styles/40-modals-home.css": {
-      "sha256": "4e452a093e104a8fbd89ae38c4f67630065d6ed51135ea99c8fff3775e1f8c9b",
-      "bytes": 13502
+      "sha256": "7591ca5e6b0e754f1f3c4db6254ab5c043451b11fd734d2ca2580907cadec49a",
+      "bytes": 13641
     }
   }
 }

@@ -24,8 +24,19 @@
       let pinnedOpen = false;
       let popoverOpen = false;
       let popoverEl = null;
+      let lastPopoverCtrl = null;
+      let lastPopoverFooter = null;
       const observedFooters = new Set();
       let footerRo = null;
+
+      function escapeHtml(str) {
+        return String(str ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
 
       function normalizeEffortKey(raw) {
         const s = String(raw || '').toLowerCase();
@@ -179,6 +190,41 @@
         );
       }
 
+      function syncAccountSnapshot(ctrl, quota, families) {
+        const sw = window.__isdouAccountSwitcher;
+        if (!sw || typeof sw.recordAccountSnapshot !== 'function') return { email: '', tier: '' };
+        const info = typeof sw.getCurrentAccountInfo === 'function' ? sw.getCurrentAccountInfo() : null;
+        const email = ctrl?.userStatus?.email || info?.email || '';
+        const tier = ctrl?.userStatus?.userTier?.name || info?.tier || '';
+        if (email) {
+          const list = Array.isArray(families) ? families : collectQuotaRows(ctrl);
+          const activeFam = list.find((f) => f.active) || list[0] || null;
+          const pct = quota ? quota.pct : activeFam ? activeFam.pct : null;
+          const resetSec = quota?.resetSec || activeFam?.resetSec || 0;
+          sw.recordAccountSnapshot({ email, tier, pct, resetSec });
+        }
+        return { email, tier };
+      }
+
+      function onPopoverClick(ev) {
+        const target = ev.target && ev.target.closest ? ev.target.closest('[data-isdou-action]') : null;
+        if (!target) return;
+        const action = target.getAttribute('data-isdou-action');
+        const email = target.getAttribute('data-email') || '';
+        if (action === 'switch-account') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          hidePopover();
+          window.__isdouAccountSwitcher?.switchAccount?.(email);
+        } else if (action === 'remove-account') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (email && window.__isdouAccountSwitcher?.removeKnownAccount?.(email)) {
+            if (popoverOpen) renderPopoverContent(lastPopoverCtrl, lastPopoverFooter);
+          }
+        }
+      }
+
       function ensurePopover() {
         if (popoverEl && document.body.contains(popoverEl)) return popoverEl;
         const el = document.createElement('div');
@@ -189,18 +235,59 @@
         el.addEventListener('mouseleave', () => {
           if (!pinnedOpen) scheduleHidePopover();
         });
+        el.addEventListener('click', onPopoverClick);
         document.body.appendChild(el);
         popoverEl = el;
         return el;
       }
 
       function renderPopoverContent(ctrl, footer) {
+        lastPopoverCtrl = ctrl;
+        lastPopoverFooter = footer;
         const el = ensurePopover();
         const families = collectQuotaRows(ctrl);
         const stats = getActiveMetricsStats(footer);
+        const selQuota = ctrl?.selectedModel ? readQuotaFraction(ctrl.selectedModel) : null;
+        const { email, tier } = syncAccountSnapshot(ctrl, selQuota, families);
+        const otherAccounts = window.__isdouAccountSwitcher?.getKnownAccounts?.(email) || [];
 
-        let html = `<div class="isdou-up-sec">`;
-        html += `<div class="isdou-up-hdr"><span>模型配额池</span><span class="isdou-up-sub">${ctrl?.userStatus?.userTier?.name || ''}</span></div>`;
+        let html = `<div class="isdou-up-acct-sec">`;
+        html +=
+          `<div class="isdou-up-acct-bar">` +
+          `<div class="isdou-up-acct-cur">` +
+          `<span class="isdou-up-acct-dot" aria-hidden="true"></span>` +
+          `<span class="isdou-up-acct-email" title="${escapeHtml(email || '')}">${escapeHtml(email || '当前账号')}</span>` +
+          (tier ? `<span class="isdou-up-tier">${escapeHtml(tier)}</span>` : '') +
+          `</div>` +
+          `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换账号</button>` +
+          `</div>`;
+
+        if (otherAccounts.length > 0) {
+          html += `<div class="isdou-up-acct-list">`;
+          for (const acc of otherAccounts) {
+            const accPct = acc.effectivePct;
+            const accTone = accPct === null || accPct === undefined ? 'ok' : accPct <= 10 ? 'crit' : accPct <= 30 ? 'warn' : 'ok';
+            const statusStr = acc.isReset ? '已重置' : acc.resetSec ? formatResetCountdown(acc.resetSec) : '';
+            const pctStr = accPct !== null && accPct !== undefined ? `${accPct}%` : '--';
+            html +=
+              `<div class="isdou-up-acct-item">` +
+              `<button type="button" class="isdou-up-acct-main" data-isdou-action="switch-account" data-email="${escapeHtml(acc.email)}" title="点击复制邮箱并打开浏览器切换">` +
+              `<span class="isdou-up-acct-subemail">${escapeHtml(acc.email)}</span>` +
+              (acc.tier ? `<span class="isdou-up-tier isdou-up-tier-muted">${escapeHtml(acc.tier)}</span>` : '') +
+              `<span class="isdou-up-acct-meta">` +
+              (statusStr ? `<span class="isdou-up-reset">${escapeHtml(statusStr)}</span>` : '') +
+              `<span class="isdou-up-val" data-tone="${accTone}">${pctStr}</span>` +
+              `</span>` +
+              `</button>` +
+              `<button type="button" class="isdou-up-acct-del" data-isdou-action="remove-account" data-email="${escapeHtml(acc.email)}" aria-label="移除账号记录" title="移除此账号记录">×</button>` +
+              `</div>`;
+          }
+          html += `</div>`;
+        }
+        html += `</div>`;
+
+        html += `<div class="isdou-up-sec">`;
+        html += `<div class="isdou-up-hdr"><span>模型配额池</span></div>`;
         if (families.length === 0) {
           html += `<div class="isdou-up-empty">暂无配额数据</div>`;
         } else {
@@ -208,8 +295,8 @@
             const tone = f.pct <= 10 ? 'crit' : f.pct <= 30 ? 'warn' : 'ok';
             html +=
               `<div class="isdou-up-row ${f.active ? 'is-active' : ''} ${f.disabled ? 'is-depleted' : ''}">` +
-              `<span class="isdou-up-name" title="${f.family}">${f.family}</span>` +
-              `<span class="isdou-up-reset">${f.resetStr || '--'}</span>` +
+              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">${escapeHtml(f.family)}</span>` +
+              `<span class="isdou-up-reset">${escapeHtml(f.resetStr || '--')}</span>` +
               `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${f.pct}%"></div></div>` +
               `<span class="isdou-up-val" data-tone="${tone}">${f.pct}%</span>` +
               `</div>`;
@@ -220,18 +307,21 @@
         if (stats) {
           const ctxTone = stats.ctxPct >= 90 ? 'crit' : stats.ctxPct >= 75 ? 'warn' : 'ok';
           html += `<div class="isdou-up-sec isdou-up-divider">`;
-          html += `<div class="isdou-up-hdr"><span>当前会话上下文</span><span class="isdou-up-sub">${formatCompactTokens(stats.ctx)} / ${stats.limitStr || '256k'}</span></div>`;
+          html += `<div class="isdou-up-hdr"><span>当前会话上下文</span><span class="isdou-up-sub">${formatCompactTokens(stats.ctx)} / ${escapeHtml(stats.limitStr || '256k')}</span></div>`;
           html +=
             `<div class="isdou-up-grid">` +
             `<div class="isdou-up-kv"><span>上下文占比</span><strong data-tone="${ctxTone}">${stats.ctxPct}%</strong></div>` +
-            `<div class="isdou-up-kv"><span>缓存命中</span><strong>${stats.sessionCacheRate || '--'}</strong></div>` +
+            `<div class="isdou-up-kv"><span>缓存命中</span><strong>${escapeHtml(stats.sessionCacheRate || '--')}</strong></div>` +
             `<div class="isdou-up-kv"><span>生成速度</span><strong>${stats.tps ? stats.tps + ' tok/s' : '--'}</strong></div>` +
             `<div class="isdou-up-kv"><span>首字延迟</span><strong>${stats.ttft ? stats.ttft + 's' : '--'}</strong></div>` +
             `</div>`;
           html += `</div>`;
         }
 
-        el.innerHTML = html;
+        if (el.__lastHtml !== html) {
+          el.__lastHtml = html;
+          el.innerHTML = html;
+        }
       }
 
       function showPopover(anchorEl, ctrl, footer) {
@@ -454,6 +544,7 @@
 
         const quota = readQuotaFraction(sel);
         const stats = getActiveMetricsStats(footer);
+        syncAccountSnapshot(ctrl, quota, null);
 
         const parts = [];
         if (quota) {
@@ -523,9 +614,14 @@
       if (obs && document.body) {
         obs.observe(document.body, { childList: true, subtree: true, characterData: true });
       }
+      function onAccountSwitched() {
+        scheduleSync(50);
+      }
+
       const pollId = setInterval(() => syncAllFooters(), 1800);
       document.addEventListener('pointerdown', onDocPointerDown, true);
       document.addEventListener('keydown', onDocKeyDown, true);
+      window.addEventListener('isdou:account-switched', onAccountSwitched);
 
       syncAllFooters();
 
@@ -538,6 +634,7 @@
         if (obs) obs.disconnect();
         document.removeEventListener('pointerdown', onDocPointerDown, true);
         document.removeEventListener('keydown', onDocKeyDown, true);
+        window.removeEventListener('isdou:account-switched', onAccountSwitched);
         document.querySelectorAll('.isdou-effort-seg, .isdou-usage-badge').forEach((el) => el.remove());
         if (popoverEl) popoverEl.remove();
         document.querySelectorAll('[data-testid="model-selector-trigger"]').forEach((btn) => {

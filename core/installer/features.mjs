@@ -89,19 +89,21 @@ export const FEATURE_GROUPS = Object.freeze({
   },
   fixes: {
     id: 'fixes',
-    label: '设置死锁修复、拖拽打开文件夹、配额恢复续跑与界面缩放快捷键',
-    configKeys: ['deadlockHealer', 'zoomShortcuts', 'folderDrop', 'quotaResume'],
+    label: '设置死锁修复、原生一键切号、拖拽打开文件夹、配额恢复续跑与界面缩放快捷键',
+    configKeys: ['deadlockHealer', 'zoomShortcuts', 'accountSwitcher', 'folderDrop', 'quotaResume'],
     sparsePaths: [
       '/core/runtime/10-guards.js',
+      '/core/runtime/62-account-switcher.js',
       '/core/runtime/80-folder-drop.js',
       '/core/runtime/85-quota-resume.js'
     ],
     coreRelPaths: [
       'runtime/10-guards.js',
+      'runtime/62-account-switcher.js',
       'runtime/80-folder-drop.js',
       'runtime/85-quota-resume.js'
     ],
-    aliases: ['fixes', 'fix', 'guards', 'deadlock', 'deadlockhealer', 'zoom', 'zoomshortcuts', 'drop', 'resume']
+    aliases: ['fixes', 'fix', 'guards', 'deadlock', 'deadlockhealer', 'zoom', 'zoomshortcuts', 'account', 'switch', 'drop', 'resume']
   }
 });
 

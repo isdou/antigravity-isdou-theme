@@ -23,6 +23,7 @@
       i18n: true,
       metrics: true,
       promptSuggestions: true,
+      accountSwitcher: true,
       folderDrop: true,
       quotaResume: true,
       deadlockHealer: true,
