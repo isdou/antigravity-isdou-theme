@@ -272,6 +272,9 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
 
 /* 外置实时模型配额 & 上下文用量徽章 */
 .agy-composer-footer button.isdou-usage-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: auto !important;
   height: 24px !important;
   padding: 0 6px !important;
@@ -283,6 +286,7 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
   font-family: var(--font-mono) !important;
   font-size: 11px !important;
   font-weight: 480 !important;
+  line-height: 1 !important;
   font-variant-numeric: tabular-nums !important;
   color: var(--isdou-fg-muted) !important;
   white-space: nowrap !important;
@@ -301,9 +305,16 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
 }
 
 .isdou-usage-badge .isdou-ub-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  line-height: 1 !important;
+}
+
+.isdou-usage-badge .isdou-ub-item > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
 }
 
 .isdou-usage-badge .isdou-ub-item[data-tone="warn"] {
@@ -315,6 +326,7 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
 }
 
 .isdou-usage-badge .isdou-quota-ring {
+  display: block !important;
   width: 12px !important;
   height: 12px !important;
   flex-shrink: 0;
@@ -330,6 +342,9 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
 }
 
 .isdou-usage-badge .isdou-ub-sep {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
   opacity: 0.45;
   margin: 0 1px;
 }
