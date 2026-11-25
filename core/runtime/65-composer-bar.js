@@ -278,7 +278,14 @@
         const sel = ctrl?.selectedModel || null;
         const { family, effort } = splitModelFamilyAndEffort(sel?.label || modelBtn.innerText || '');
 
-        // 1. 外置 Thinking Effort 分段直切器
+        // 1. 外置 Thinking Effort 单行水平直切器（挂载到左侧横向 flex 行中，严禁竖排叠行）
+        const leftGroup = footer.firstElementChild;
+        let modelSlot = modelBtn;
+        while (modelSlot && modelSlot.parentElement && modelSlot.parentElement !== leftGroup) {
+          modelSlot = modelSlot.parentElement;
+        }
+        const anchorNode = modelSlot && modelSlot.parentElement === leftGroup ? modelSlot : modelBtn;
+
         let segEl = box.querySelector('#isdou-effort-seg');
         const siblingTiers = [];
         if (ctrl && family) {
@@ -303,9 +310,9 @@
             segEl.id = 'isdou-effort-seg';
             segEl.setAttribute('role', 'group');
             segEl.setAttribute('aria-label', '推理强度档位');
-            modelBtn.insertAdjacentElement('afterend', segEl);
-          } else if (segEl.previousElementSibling !== modelBtn) {
-            modelBtn.insertAdjacentElement('afterend', segEl);
+            anchorNode.insertAdjacentElement('afterend', segEl);
+          } else if (segEl.parentElement !== anchorNode.parentElement || segEl.previousElementSibling !== anchorNode) {
+            anchorNode.insertAdjacentElement('afterend', segEl);
           }
 
           const sig = siblingTiers.map((t) => `${t.effort}:${t.effort === effort ? 1 : 0}`).join('|');
