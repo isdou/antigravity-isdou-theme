@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "c977062d7525fefb9bc803176b062bef74d49f0cb92515295dffc2b74c84a134",
-      "bytes": 12552
+      "sha256": "223275a3f07a62e53287143fc107339ef3249b7c981dd443a1afb93709cd0b98",
+      "bytes": 12580
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -93,12 +93,12 @@
       "bytes": 37588
     },
     "runtime/62-account-switcher.js": {
-      "sha256": "0dd261518a3be238182a3e9cf993c5c14cf8bfd062bf0293e20c688ff941ea21",
-      "bytes": 11126
+      "sha256": "826bb8bea09e899f9307a938de0c65e4ba7f1153ab44c46dc0f31c027b21026d",
+      "bytes": 23895
     },
     "runtime/65-composer-bar.js": {
-      "sha256": "591f8e0f3d18a4504f9cbf048dcbe08adc9cc28f24594108cb1c557a00fccc58",
-      "bytes": 27716
+      "sha256": "a03497186405746c7ef260548a203e085035a2e812ecbc60b791dd8fe8a69e04",
+      "bytes": 28903
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
@@ -141,8 +141,8 @@
       "bytes": 26092
     },
     "styles/40-modals-home.css": {
-      "sha256": "7591ca5e6b0e754f1f3c4db6254ab5c043451b11fd734d2ca2580907cadec49a",
-      "bytes": 13641
+      "sha256": "0f4bf2dbb1596028b26d8b57b0b05bbc7dc7d1d3b06c1e1e9fe756df275c1747",
+      "bytes": 15724
     }
   }
 }

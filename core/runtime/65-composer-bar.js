@@ -216,6 +216,19 @@
           ev.stopPropagation();
           hidePopover();
           window.__isdouAccountSwitcher?.switchAccount?.(email);
+        } else if (action === 'reopen-auth') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          hidePopover();
+          window.__isdouAccountSwitcher?.reopenAuthUrl?.();
+        } else if (action === 'copy-auth') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          window.__isdouAccountSwitcher?.copyAuthUrl?.();
+        } else if (action === 'cancel-auth') {
+          ev.preventDefault();
+          ev.stopPropagation();
+          window.__isdouAccountSwitcher?.cancelAccountSwitch?.();
         } else if (action === 'remove-account') {
           ev.preventDefault();
           ev.stopPropagation();
@@ -250,6 +263,7 @@
         const selQuota = ctrl?.selectedModel ? readQuotaFraction(ctrl.selectedModel) : null;
         const { email, tier } = syncAccountSnapshot(ctrl, selQuota, families);
         const otherAccounts = window.__isdouAccountSwitcher?.getKnownAccounts?.(email) || [];
+        const isPendingAuth = Boolean(window.__isdouAccountSwitcher?.isAuthenticating?.());
 
         let html = `<div class="isdou-up-acct-sec">`;
         html +=
@@ -259,7 +273,13 @@
           `<span class="isdou-up-acct-email" title="${escapeHtml(email || '')}">${escapeHtml(email || '当前账号')}</span>` +
           (tier ? `<span class="isdou-up-tier">${escapeHtml(tier)}</span>` : '') +
           `</div>` +
-          `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换账号</button>` +
+          (isPendingAuth
+            ? `<div class="isdou-up-acct-meta">` +
+              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="reopen-auth" title="重新打开浏览器验证页">重开</button>` +
+              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="copy-auth" title="复制验证链接">复制</button>` +
+              `<button type="button" class="isdou-up-switch-btn" data-isdou-action="cancel-auth" title="取消验证并恢复当前账号">取消</button>` +
+              `</div>`
+            : `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换账号</button>`) +
           `</div>`;
 
         if (otherAccounts.length > 0) {

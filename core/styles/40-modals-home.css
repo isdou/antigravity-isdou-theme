@@ -386,3 +386,67 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   border-color: var(--isdou-accent) !important;
   color: var(--isdou-accent) !important;
 }
+
+/* 原生 Authenticating 横幅右侧内联操作区（重开/复制链接/输授权码/取消） */
+[data-testid="feature-banner"]:has(#isdou-auth-banner-actions) {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+#isdou-auth-banner-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-left: auto !important;
+  flex-wrap: wrap !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-btn {
+  height: 22px !important;
+  padding: 0 8px !important;
+  border-radius: 5px !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  color: var(--isdou-fg-secondary) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: background-color 100ms ease, border-color 100ms ease, color 100ms ease !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-btn:hover {
+  background-color: var(--isdou-chip-hover-bg) !important;
+  border-color: var(--isdou-chip-hover-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-primary {
+  border-color: color-mix(in srgb, var(--isdou-accent) 45%, var(--isdou-chip-border)) !important;
+  color: var(--isdou-accent) !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-cancel:hover {
+  border-color: #DC2626 !important;
+  color: #DC2626 !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-input {
+  width: 140px !important;
+  height: 22px !important;
+  padding: 0 7px !important;
+  border-radius: 5px !important;
+  border: 1px solid var(--isdou-hairline-strong) !important;
+  background-color: var(--isdou-surface-elevated) !important;
+  color: var(--isdou-fg-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  outline: none !important;
+}
+
+#isdou-auth-banner-actions .isdou-ab-input:focus {
+  border-color: var(--isdou-accent) !important;
+}
