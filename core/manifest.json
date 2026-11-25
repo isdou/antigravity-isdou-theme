@@ -93,8 +93,8 @@
       "bytes": 37588
     },
     "runtime/65-composer-bar.js": {
-      "sha256": "90c2d02070906fd46155c69e96b0e5c434b522378dfa37f9ee4d9d8b7f9bae96",
-      "bytes": 21716
+      "sha256": "ee0153ce3d899dfd9c6524134d7a29b754af6efabac92a0acd3ebb08b3ec384d",
+      "bytes": 22722
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
@@ -125,8 +125,8 @@
       "bytes": 11675
     },
     "styles/30-composer.css": {
-      "sha256": "a3c963e59fa0eebb2ecded65261d2c7ae08d4201c2604d6e02c8e31c3dc8dac3",
-      "bytes": 21842
+      "sha256": "5d98372be51515a326517fab37c20a287fb4396e4e13290423e10f9cfd0bc10e",
+      "bytes": 22066
     },
     "styles/40-modals-home.css": {
       "sha256": "e2783a8ad393ef17d6eadde1ed67b8ed7cec3346036b484041477631e3fb2e97",

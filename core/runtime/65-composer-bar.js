@@ -93,7 +93,9 @@
             ? q.remainingFraction
             : typeof q.remaining === 'number'
               ? q.remaining
-              : null;
+              : modelObj.disabled
+                ? 0
+                : null;
         if (frac === null || Number.isNaN(frac)) return null;
         const resetSec =
           q.resetTime && typeof q.resetTime.seconds !== 'undefined'
@@ -103,6 +105,52 @@
           pct: Math.max(0, Math.min(100, Math.round(frac * 100))),
           resetSec
         };
+      }
+
+      function stripDisplayNoise(name) {
+        return String(name || '')
+          .replace(/\s*\((thinking|low|medium|high|xhigh|extra|max|ultra)\)\s*$/i, '')
+          .trim();
+      }
+
+      function collectQuotaRows(ctrl) {
+        const rawConfigs = ctrl?.userStatus?.cascadeModelConfigData?.clientModelConfigs;
+        const rawOptions = ctrl?.modelOptions;
+        const merged = [];
+        const seenLabels = new Set();
+
+        for (const list of [rawOptions, rawConfigs]) {
+          if (!Array.isArray(list)) continue;
+          for (const item of list) {
+            if (!item || !item.label) continue;
+            if (seenLabels.has(item.label)) continue;
+            seenLabels.add(item.label);
+            merged.push(item);
+          }
+        }
+
+        const curFamily = ctrl?.selectedModel
+          ? stripDisplayNoise(splitModelFamilyAndEffort(ctrl.selectedModel.label).family)
+          : '';
+
+        const families = [];
+        const seenFamily = new Set();
+        for (const opt of merged) {
+          const base = stripDisplayNoise(splitModelFamilyAndEffort(opt.label).family);
+          if (!base || seenFamily.has(base)) continue;
+          const q = readQuotaFraction(opt);
+          if (!q) continue;
+          seenFamily.add(base);
+          families.push({
+            family: base,
+            pct: q.pct,
+            disabled: Boolean(opt.disabled) || q.pct <= 0,
+            resetSec: q.resetSec,
+            resetStr: q.resetSec ? formatResetCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
+            active: base === curFamily
+          });
+        }
+        return families;
       }
 
       function getActiveMetricsStats(footer) {
@@ -148,42 +196,20 @@
 
       function renderPopoverContent(ctrl, footer) {
         const el = ensurePopover();
-        const families = [];
-        const seen = new Set();
-        const opts = (ctrl && Array.isArray(ctrl.modelOptions) ? ctrl.modelOptions : []).filter(
-          (o) => o && !o.disabled
-        );
-        const curFamily = ctrl?.selectedModel
-          ? splitModelFamilyAndEffort(ctrl.selectedModel.label).family
-          : '';
-
-        for (const opt of opts) {
-          const { family } = splitModelFamilyAndEffort(opt.label);
-          if (!family || seen.has(family)) continue;
-          const q = readQuotaFraction(opt);
-          if (!q) continue;
-          seen.add(family);
-          families.push({
-            family,
-            pct: q.pct,
-            resetStr: formatResetCountdown(q.resetSec),
-            active: family === curFamily
-          });
-        }
-
+        const families = collectQuotaRows(ctrl);
         const stats = getActiveMetricsStats(footer);
-        const resetHint = families.find((f) => f.active)?.resetStr || families[0]?.resetStr || '';
 
         let html = `<div class="isdou-up-sec">`;
-        html += `<div class="isdou-up-hdr"><span>模型配额池</span><span class="isdou-up-sub">${resetHint}</span></div>`;
+        html += `<div class="isdou-up-hdr"><span>模型配额池</span><span class="isdou-up-sub">${ctrl?.userStatus?.userTier?.name || ''}</span></div>`;
         if (families.length === 0) {
           html += `<div class="isdou-up-empty">暂无配额数据</div>`;
         } else {
-          for (const f of families.slice(0, 7)) {
+          for (const f of families) {
             const tone = f.pct <= 10 ? 'crit' : f.pct <= 30 ? 'warn' : 'ok';
             html +=
-              `<div class="isdou-up-row ${f.active ? 'is-active' : ''}">` +
-              `<span class="isdou-up-name">${f.family}</span>` +
+              `<div class="isdou-up-row ${f.active ? 'is-active' : ''} ${f.disabled ? 'is-depleted' : ''}">` +
+              `<span class="isdou-up-name" title="${f.family}">${f.family}</span>` +
+              `<span class="isdou-up-reset">${f.resetStr || '--'}</span>` +
               `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${f.pct}%"></div></div>` +
               `<span class="isdou-up-val" data-tone="${tone}">${f.pct}%</span>` +
               `</div>`;
@@ -213,7 +239,7 @@
         renderPopoverContent(ctrl, footer);
         const el = ensurePopover();
         const r = anchorEl.getBoundingClientRect();
-        const popW = 286;
+        const popW = 336;
         const left = Math.max(12, Math.min(window.innerWidth - popW - 12, r.right - popW));
         const bottom = Math.max(12, window.innerHeight - r.top + 8);
         el.style.left = `${left}px`;
