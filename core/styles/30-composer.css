@@ -152,8 +152,265 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   color: var(--isdou-fg-muted) !important;
 }
 
+/* 隐藏旧版冗余统计条，交由 Linear 外置用量微徽章统一展示 */
+#ag-live-metrics-pill,
+.ag-live-metrics-pill,
+#ag-side-metrics-pill,
+.ag-turn-metrics {
+  display: none !important;
+}
+
+/* 模型按钮内已被右侧外置档位器接管的重复档位标签自动隐藏 */
+button[data-testid="model-selector-trigger"] [data-isdou-effort-hidden="true"] {
+  display: none !important;
+}
+
+/* 外置 Thinking Effort 分段直切器（[ 低 | 中 | 高 | 极高 ]） */
+#isdou-effort-seg {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 25px !important;
+  padding: 2px !important;
+  gap: 1px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  flex-shrink: 0 !important;
+}
+
+#isdou-effort-seg[hidden] {
+  display: none !important;
+}
+
+#ag-codex-theme ~ * #isdou-effort-seg .isdou-effort-btn,
+.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn {
+  width: auto !important;
+  min-width: 24px !important;
+  height: 19px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  background: transparent !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11.5px !important;
+  font-weight: 460 !important;
+  line-height: 1 !important;
+  color: var(--isdou-fg-muted) !important;
+  cursor: pointer !important;
+  transition: background-color 100ms ease, color 100ms ease, box-shadow 100ms ease !important;
+}
+
+.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn:hover:not([data-active="true"]) {
+  color: var(--isdou-fg-primary) !important;
+  background-color: var(--isdou-sidebar-hover) !important;
+}
+
+.agy-composer-footer #isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
+  background-color: var(--isdou-composer-card) !important;
+  color: var(--isdou-fg-primary) !important;
+  font-weight: 540 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-ag-theme-mode="dark"] .agy-composer-footer #isdou-effort-seg button.isdou-effort-btn[data-active="true"] {
+  background-color: rgba(255, 255, 255, 0.11) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* 外置实时模型配额 & 上下文用量徽章 */
+.agy-composer-footer button#isdou-usage-badge {
+  width: auto !important;
+  height: 25px !important;
+  padding: 0 7px !important;
+  margin-right: 2px !important;
+  gap: 5px !important;
+  border-radius: var(--isdou-radius-sm) !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 480 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--isdou-fg-muted) !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+
+.agy-composer-footer button#isdou-usage-badge[hidden] {
+  display: none !important;
+}
+
+.agy-composer-footer button#isdou-usage-badge:hover {
+  background-color: var(--isdou-chip-bg) !important;
+  border-color: var(--isdou-chip-border) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-usage-badge .isdou-ub-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#isdou-usage-badge .isdou-ub-item[data-tone="warn"] {
+  color: #D97706 !important;
+}
+
+#isdou-usage-badge .isdou-ub-item[data-tone="crit"] {
+  color: #DC2626 !important;
+}
+
+#isdou-usage-badge .isdou-quota-ring {
+  width: 12px !important;
+  height: 12px !important;
+  flex-shrink: 0;
+  color: var(--isdou-accent) !important;
+}
+
+#isdou-usage-badge .isdou-quota-ring[data-tone="warn"] {
+  color: #D97706 !important;
+}
+
+#isdou-usage-badge .isdou-quota-ring[data-tone="crit"] {
+  color: #DC2626 !important;
+}
+
+#isdou-usage-badge .isdou-ub-sep {
+  opacity: 0.45;
+  margin: 0 1px;
+}
+
+/* Linear 极简配额 & 会话用量悬浮明细卡 */
+#isdou-usage-popover {
+  position: fixed;
+  z-index: 2147483000;
+  width: 286px;
+  padding: 11px 12px;
+  border-radius: var(--isdou-radius-md);
+  border: 1px solid var(--isdou-composer-border);
+  background-color: var(--isdou-composer-card);
+  box-shadow: var(--isdou-popover-shadow);
+  font-family: var(--font-sans);
+  color: var(--isdou-fg-primary);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+}
+
+#isdou-usage-popover[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#isdou-usage-popover .isdou-up-divider {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--isdou-composer-divider);
+}
+
+#isdou-usage-popover .isdou-up-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  font-size: 11.5px;
+  font-weight: 560;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-usage-popover .isdou-up-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 450;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-usage-popover .isdou-up-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 68px 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+  color: var(--isdou-fg-secondary);
+}
+
+#isdou-usage-popover .isdou-up-row.is-active {
+  color: var(--isdou-fg-primary);
+  font-weight: 520;
+}
+
+#isdou-usage-popover .isdou-up-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#isdou-usage-popover .isdou-up-bar {
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--isdou-chip-border);
+  overflow: hidden;
+}
+
+#isdou-usage-popover .isdou-up-fill {
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--isdou-accent);
+}
+
+#isdou-usage-popover .isdou-up-fill[data-tone="warn"] {
+  background-color: #D97706;
+}
+
+#isdou-usage-popover .isdou-up-fill[data-tone="crit"] {
+  background-color: #DC2626;
+}
+
+#isdou-usage-popover .isdou-up-val {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-usage-popover .isdou-up-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+}
+
+#isdou-usage-popover .isdou-up-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-usage-popover .isdou-up-kv strong {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 520;
+  font-variant-numeric: tabular-nums;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-usage-popover .isdou-up-kv strong[data-tone="warn"] {
+  color: #D97706;
+}
+
+#isdou-usage-popover .isdou-up-kv strong[data-tone="crit"] {
+  color: #DC2626;
+}
+
 /* 纯图标辅助按钮（添加上下文 +、语音输入、开启语音模式）：统一 26×26px 6px 圆角 */
-.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]) {
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(#isdou-usage-badge) {
   width: 26px !important;
   height: 26px !important;
   padding: 0 !important;
@@ -167,7 +424,7 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   transition: background-color 100ms ease, color 100ms ease !important;
 }
 
-.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):hover:not(:disabled) {
+.agy-composer-footer button:not([data-testid="model-selector-trigger"]):not([data-testid="permissions-selector-trigger"]):not([data-testid="send-button"]):not(.agy-send-button):not([data-testid="input-cancel-button"]):not([data-testid="voice-live-pill"]):not(.isdou-effort-btn):not(#isdou-usage-badge):hover:not(:disabled) {
   background-color: var(--isdou-sidebar-hover) !important;
   color: var(--isdou-fg-primary) !important;
 }

@@ -9,7 +9,7 @@
   "modules": {
     "theme": true,
     "i18n": true,
-    "metrics": false,
+    "metrics": true,
     "promptSuggestions": true,
     "deadlockHealer": true,
     "zoomShortcuts": true,

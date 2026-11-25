@@ -166,7 +166,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     modules: {
       theme: true,
       i18n: true,
-      metrics: false,
+      metrics: Boolean(hasSqlite),
       promptSuggestions: true,
       deadlockHealer: true,
       zoomShortcuts: true,
@@ -230,7 +230,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       {
         theme: true,
         i18n: true,
-        metrics: false,
+        metrics: true,
         promptSuggestions: true,
         deadlockHealer: true,
         zoomShortcuts: true,

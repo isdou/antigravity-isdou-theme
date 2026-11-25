@@ -21,8 +21,8 @@
       "bytes": 2123
     },
     "daemon/paths.mjs": {
-      "sha256": "7b6621ed9e25db04f3991285629b92db26c60160fc8d9bfe3d0fc2b60d8b1fd7",
-      "bytes": 13682
+      "sha256": "77a3ae39ee9955a7db6236608fb0e57b439f38b4df77a1abdedf489d3e3de659",
+      "bytes": 13694
     },
     "daemon/prompt-suggest.mjs": {
       "sha256": "fd13e3ec259581c59f56386423bc19fa953ffac4d589b6b54a58e2b1c2c88e45",
@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "92a99983fddf52fd572a04141901319b6a9351a5ff1c92b5eb0b7057a6d62fa3",
-      "bytes": 12355
+      "sha256": "4b21cdc17edd8c39e544cd9ccd9ab72a52785f1ac586db1ee2a4fe01ce027d4b",
+      "bytes": 12415
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -91,6 +91,10 @@
     "runtime/60-i18n-engine.js": {
       "sha256": "cd47a833fe2df838b3a33ab6fa967c71d70707fd175650c098e8e3d58f1f53d2",
       "bytes": 37588
+    },
+    "runtime/65-composer-bar.js": {
+      "sha256": "9ae4ee8ebb3b414fc4a7c19e121d55f28a634cf7d3b956084ab4af58d4b20fab",
+      "bytes": 18195
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
@@ -121,8 +125,8 @@
       "bytes": 11675
     },
     "styles/30-composer.css": {
-      "sha256": "599987540df5ca3a465898318a5d039f33cc9dddb84be7d68abf897e6237a275",
-      "bytes": 13209
+      "sha256": "4d2463def4bffad00f1985638fec36f2d3a2efc635af48ec6f06cfe2f2720e8c",
+      "bytes": 20101
     },
     "styles/40-modals-home.css": {
       "sha256": "e2783a8ad393ef17d6eadde1ed67b8ed7cec3346036b484041477631e3fb2e97",
