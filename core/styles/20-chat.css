@@ -334,3 +334,141 @@ button[data-testid="step-plan-chip"]:hover {
   font-size: 12px !important;
   font-weight: 500 !important;
 }
+
+/* ----------------------------------------------------------------------------
+ * 6. 每轮对话尾部汇总（.ag-turn-metrics）与悬浮明细卡片（#ag-turn-metrics-tooltip）
+ * ---------------------------------------------------------------------------- */
+.ag-turn-metrics {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  margin-right: 8px !important;
+  padding: 1px 6px 1px 2px !important;
+  border-radius: 5px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11.5px !important;
+  font-weight: 450 !important;
+  line-height: 1.45 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--isdou-fg-muted) !important;
+  cursor: default !important;
+  user-select: text !important;
+  transition: background-color 110ms ease, color 110ms ease !important;
+}
+
+.ag-turn-metrics:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+.ag-turn-metrics .ag-turn-label {
+  color: var(--isdou-fg-subtle) !important;
+}
+
+.ag-turn-metrics .ag-turn-model {
+  font-weight: 520 !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+.ag-turn-metrics .ag-sep {
+  opacity: 0.55 !important;
+  padding: 0 2px !important;
+}
+
+#ag-turn-metrics-tooltip {
+  position: fixed !important;
+  z-index: 2147483000 !important;
+  min-width: 280px !important;
+  max-width: 390px !important;
+  padding: 10px 12px !important;
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
+  font-family: var(--font-sans) !important;
+  color: var(--isdou-fg-primary) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(3px) !important;
+  pointer-events: none !important;
+  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease !important;
+}
+
+#ag-turn-metrics-tooltip[data-visible="1"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+  pointer-events: auto !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-hdr {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding-bottom: 7px !important;
+  margin-bottom: 7px !important;
+  border-bottom: 1px solid var(--isdou-composer-divider) !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-model {
+  font-size: 12px !important;
+  font-weight: 560 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-chip {
+  height: 18px !important;
+  padding: 0 6px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid var(--isdou-chip-border) !important;
+  background-color: var(--isdou-chip-bg) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-row {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  font-size: 11.5px !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-lbl {
+  color: var(--isdou-fg-muted) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-val {
+  color: var(--isdou-fg-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  text-align: right !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-nowrap {
+  white-space: nowrap !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-sub {
+  color: var(--isdou-fg-muted) !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-ctx-warn {
+  color: #D97706 !important;
+}
+
+#ag-turn-metrics-tooltip .ag-tmt-ctx-crit {
+  color: #DC2626 !important;
+}

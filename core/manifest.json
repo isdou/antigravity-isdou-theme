@@ -85,8 +85,8 @@
       "bytes": 11902
     },
     "runtime/50-telemetry-ui.js": {
-      "sha256": "defdc3c471a38476e1a43642c0556ed204ee45fca1256e907da6157370e17eb8",
-      "bytes": 51173
+      "sha256": "bf9a683d8f23d4d5b4ad207b7c207650509426ad5724581734f1cf5955c325b4",
+      "bytes": 51714
     },
     "runtime/55-project-hider.js": {
       "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
@@ -137,12 +137,12 @@
       "bytes": 3432
     },
     "styles/20-chat.css": {
-      "sha256": "8ca9baada7bf2a86d361066aebd8cba3f5ed6cfd128488afa27b2164f7fe6771",
-      "bytes": 11675
+      "sha256": "4719e8ac8d8f32a308bcb15b305020f4ce7be78c19e433bb5104a8537455e83d",
+      "bytes": 15760
     },
     "styles/30-composer.css": {
-      "sha256": "ea08d347ac1f43d86b93cc912325979643d88ed6dde1879c84840c3c2184b764",
-      "bytes": 26312
+      "sha256": "98f4faef546085d6c0a8dc6d3d249e0cad5623dd235570cb794a6c7936ef79d4",
+      "bytes": 26358
     },
     "styles/40-modals-home.css": {
       "sha256": "0f4bf2dbb1596028b26d8b57b0b05bbc7dc7d1d3b06c1e1e9fe756df275c1747",

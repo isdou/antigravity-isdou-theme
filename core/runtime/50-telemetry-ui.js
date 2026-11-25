@@ -662,7 +662,7 @@
       let nrcProps = null;
       let iEcProps = null;
       let sliceProps = null;
-      for (let i = 0; i < 20 && f; i++) {
+      for (let i = 0; i < 35 && f; i++) {
         const p = f.memoizedProps;
         if (p) {
           if (!nrcProps && Array.isArray(p.steps) && 'showThumbsUpDown' in p) nrcProps = p;
@@ -706,7 +706,14 @@
         }
       }
       const fiberCid = iEcProps && iEcProps.cascadeId ? String(iEcProps.cascadeId).trim() : '';
-      const resolvedCid = AG_UUID_RE.test(domCid) ? domCid : fiberCid;
+      const fallbackCid = !tb.closest('[data-testid="side-question-panel"], [class*="side-question"]') ? extractCascadeId() : '';
+      const resolvedCid = AG_UUID_RE.test(domCid)
+        ? domCid
+        : AG_UUID_RE.test(fiberCid)
+        ? fiberCid
+        : AG_UUID_RE.test(fallbackCid)
+        ? fallbackCid
+        : '';
       if (!resolvedCid && maxStep < 0 && maxMeta < 0) return null;
       return {
         cascadeId: resolvedCid,
@@ -740,8 +747,13 @@
   }
 
   function formatTurnBadgeData(t) {
-    const parts = [];
-    if (t.model) parts.push('<span class="ag-turn-model">' + escapeStatusHtml(t.model) + '</span>');
+    const parts = ['<span class="ag-turn-label">本轮汇总</span>'];
+    if (t.model) {
+      const cleanModel = String(t.model)
+        .replace(/\s*\((?:Low|Medium|High|XHigh|Extra\s+High)\)\s*$/i, '')
+        .trim();
+      if (cleanModel) parts.push('<span class="ag-turn-model">' + escapeStatusHtml(cleanModel) + '</span>');
+    }
     const promptTok = typeof t.promptTok === 'number' ? t.promptTok : t.inTok + t.cacheWrite + t.cacheRead;
     const promptStr = t.promptStr || '';
     if (promptTok > 0 && promptStr) {
@@ -749,7 +761,7 @@
     }
     if (t.outTok > 0) parts.push('<span>Out ' + escapeStatusHtml(t.outStr) + '</span>');
     if (promptTok > 0 && t.cacheRate) {
-      parts.push('<span>Cache ' + escapeStatusHtml(t.cacheRate) + '</span>');
+      parts.push('<span>缓存 ' + escapeStatusHtml(t.cacheRate) + '</span>');
     }
     if (t.tps > 0) parts.push('<span>' + t.tps + ' tok/s</span>');
     const html = parts.join('<span class="ag-sep"> · </span>');
@@ -942,7 +954,7 @@
 
       for (let i = 0; i < toolbars.length; i++) {
         const tb = toolbars[i];
-        const row = tb.firstElementChild;
+        const row = tb.querySelector(':scope > div.flex-wrap') || tb.lastElementChild || tb.firstElementChild;
         if (!row) continue;
         let badge = row.querySelector(':scope > .ag-turn-metrics');
         if (!MODULES.metrics) {
