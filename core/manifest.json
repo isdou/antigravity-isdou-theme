@@ -9,8 +9,8 @@
       "bytes": 4376
     },
     "daemon/cdp-bridge.mjs": {
-      "sha256": "4505535b4adafc43ffb3d2488b69bdbf1ee23ea393828d7b80820b752f286808",
-      "bytes": 28982
+      "sha256": "143690619e85eac3896f634717c972a1940cde333a8e6e9147e7bc829894fa58",
+      "bytes": 29546
     },
     "daemon/cdp-relaunch.mjs": {
       "sha256": "51e9a4212942252547594c3294a6cccba426d081b5934a69fab3068aa21370c1",
@@ -21,12 +21,12 @@
       "bytes": 2123
     },
     "daemon/paths.mjs": {
-      "sha256": "77a3ae39ee9955a7db6236608fb0e57b439f38b4df77a1abdedf489d3e3de659",
-      "bytes": 13694
+      "sha256": "f089e8683166837bad99681aaf08507f56656ad54b6a1a6547024b8584330889",
+      "bytes": 14700
     },
     "daemon/prompt-suggest.mjs": {
-      "sha256": "bf9337b669f7808eb4cb12760ec631317ae6ade262196ab8f7b0241bb25066e0",
-      "bytes": 13225
+      "sha256": "5475ade6307a16edc0d1748d87834c8fbccd87e1e1d5dfee184a278296988edb",
+      "bytes": 13886
     },
     "daemon/protobuf.mjs": {
       "sha256": "9e1cff0e22d8361fc80a9b7d4076a0071b64bbab036386d644713e2d82cf3367",
@@ -105,8 +105,8 @@
       "bytes": 30084
     },
     "runtime/70-prompt-suggestions.js": {
-      "sha256": "7d012fb4b3e374b2934500640032c0388ec5f8e6d7b74bd8a242ebb0ce1a6378",
-      "bytes": 13115
+      "sha256": "051b82f853b823f3514926b6fa36f142ae292d23a948de5aaf679be2ea00a10e",
+      "bytes": 21785
     },
     "runtime/80-folder-drop.js": {
       "sha256": "1efb0b8b0cc21bcbbf2e0bebbd594a3f842a7d6ca2569701bc7cb32f36cebae1",
@@ -141,8 +141,8 @@
       "bytes": 11675
     },
     "styles/30-composer.css": {
-      "sha256": "442cfd0cacf88edd65fd0c3d2159ce75763c105ae9a11ba0768378461abefe58",
-      "bytes": 26092
+      "sha256": "ea08d347ac1f43d86b93cc912325979643d88ed6dde1879c84840c3c2184b764",
+      "bytes": 26312
     },
     "styles/40-modals-home.css": {
       "sha256": "0f4bf2dbb1596028b26d8b57b0b05bbc7dc7d1d3b06c1e1e9fe756df275c1747",

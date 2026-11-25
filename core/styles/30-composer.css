@@ -802,6 +802,12 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
   flex: 0 1 auto;
 }
 
+#antigravity\.agentSidePanelInputBox .ag-prompt-ghost-overlay.is-loading .ag-prompt-ghost-text,
+.ag-prompt-ghost-overlay.is-loading .ag-prompt-ghost-text {
+  opacity: 0.72 !important;
+  font-style: italic !important;
+}
+
 #antigravity\.agentSidePanelInputBox .ag-prompt-ghost-kbd,
 .ag-prompt-ghost-kbd {
   pointer-events: auto;

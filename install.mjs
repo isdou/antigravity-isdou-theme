@@ -235,6 +235,11 @@ async function runInstall() {
     'theme',
     'i18n',
     'metrics',
+    'promptSuggestions',
+    'projectHider',
+    'accountSwitcher',
+    'folderDrop',
+    'quotaResume',
     'deadlockHealer',
     'zoomShortcuts',
     'cdpAutoRelaunch',
@@ -261,6 +266,21 @@ async function runInstall() {
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '50-telemetry-ui.js'))) {
     currentCfg.modules.metrics = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '70-prompt-suggestions.js'))) {
+    currentCfg.modules.promptSuggestions = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '55-project-hider.js'))) {
+    currentCfg.modules.projectHider = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '62-account-switcher.js'))) {
+    currentCfg.modules.accountSwitcher = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '80-folder-drop.js'))) {
+    currentCfg.modules.folderDrop = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '85-quota-resume.js'))) {
+    currentCfg.modules.quotaResume = false;
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '10-guards.js'))) {
     currentCfg.modules.deadlockHealer = false;

@@ -168,6 +168,10 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       i18n: true,
       metrics: Boolean(hasSqlite),
       promptSuggestions: true,
+      projectHider: true,
+      accountSwitcher: true,
+      folderDrop: true,
+      quotaResume: true,
       deadlockHealer: true,
       zoomShortcuts: true,
       cdpAutoRelaunch: true,
@@ -232,6 +236,10 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
         i18n: true,
         metrics: true,
         promptSuggestions: true,
+        projectHider: true,
+        accountSwitcher: true,
+        folderDrop: true,
+        quotaResume: true,
         deadlockHealer: true,
         zoomShortcuts: true,
         cdpAutoRelaunch: true,
@@ -250,9 +258,19 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       fs.existsSync(path.join(RUNTIME_DIR, '50-telemetry-ui.js')) &&
       fs.existsSync(path.join(CORE_DIR, 'daemon', 'sqlite-metrics.mjs'));
     const hasGuardsFile = fs.existsSync(path.join(RUNTIME_DIR, '10-guards.js'));
+    const hasPromptSuggestionsFile = fs.existsSync(path.join(RUNTIME_DIR, '70-prompt-suggestions.js'));
+    const hasProjectHiderFile = fs.existsSync(path.join(RUNTIME_DIR, '55-project-hider.js'));
+    const hasAccountSwitcherFile = fs.existsSync(path.join(RUNTIME_DIR, '62-account-switcher.js'));
+    const hasFolderDropFile = fs.existsSync(path.join(RUNTIME_DIR, '80-folder-drop.js'));
+    const hasQuotaResumeFile = fs.existsSync(path.join(RUNTIME_DIR, '85-quota-resume.js'));
     if (!hasThemeFiles) modules.theme = false;
     if (!hasI18nFiles) modules.i18n = false;
     if (!hasSqlite || !hasMetricsFiles) modules.metrics = false;
+    if (!hasPromptSuggestionsFile) modules.promptSuggestions = false;
+    if (!hasProjectHiderFile) modules.projectHider = false;
+    if (!hasAccountSwitcherFile) modules.accountSwitcher = false;
+    if (!hasFolderDropFile) modules.folderDrop = false;
+    if (!hasQuotaResumeFile) modules.quotaResume = false;
     if (!hasGuardsFile) {
       modules.deadlockHealer = false;
       modules.zoomShortcuts = false;

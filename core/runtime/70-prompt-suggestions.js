@@ -1,5 +1,5 @@
 /**
- * Part 70: Claude Code-style Prompt Suggestions (Ghost Text + Tab/RightArrow Accept)
+ * Part 70: Claude Code-style Prompt Suggestions (Ghost Text + Tab/RightArrow Accept + On-Demand Tab Trigger)
  */
   function cleanupPromptSuggestionsDom() {
     try {
@@ -22,13 +22,18 @@
     (function initPromptSuggestions() {
       const OVERLAY_CLASS = 'ag-prompt-ghost-overlay';
       const HAS_SUGGESTION_ATTR = 'data-ag-has-suggestion';
+      const MANUAL_AUTO_FILL_WINDOW_MS = 6000;
 
       let disposed = false;
       let currentSuggestion = '';
       let currentFingerprint = '';
+      let currentScopeKey = '';
       let dismissedFingerprint = '';
       let inflightFingerprint = '';
       let inflightReqId = '';
+      let inflightManual = false;
+      let pendingTabEditor = null;
+      let pendingTabAt = 0;
       let reqSeq = 0;
       let isComposing = false;
       let isAccepting = false;
@@ -36,12 +41,32 @@
       let scanTimer = null;
       const createdOverlays = new Set();
 
-      function isGenerating() {
+      function isSideQuestionEl(el) {
         return Boolean(
-          document.querySelector(
-            '[data-testid="input-cancel-button"], [data-tooltip-id="input-send-button-cancel-tooltip"], [aria-label^="Cancel ("], [aria-label^="取消生成"]'
-          )
+          el &&
+            typeof el.closest === 'function' &&
+            el.closest('[data-testid="side-question-panel"], [class*="side-question"]')
         );
+      }
+
+      function getScopeRoot(editor) {
+        if (editor && isSideQuestionEl(editor)) {
+          return editor.closest('[data-testid="side-question-panel"], [class*="side-question"]');
+        }
+        return document;
+      }
+
+      function isGenerating(scopeRoot = document) {
+        const sel =
+          '[data-testid="input-cancel-button"], [data-tooltip-id="input-send-button-cancel-tooltip"], [aria-label^="Cancel ("], [aria-label^="取消生成"]';
+        if (scopeRoot && scopeRoot !== document) {
+          return Boolean(scopeRoot.querySelector(sel));
+        }
+        const matches = document.querySelectorAll(sel);
+        for (const el of matches) {
+          if (!isSideQuestionEl(el)) return true;
+        }
+        return false;
       }
 
       function hasOpenPopupMenu() {
@@ -53,11 +78,36 @@
         return false;
       }
 
+      function isNonChatEditableFocused(activeEl) {
+        if (!activeEl) return false;
+        if (activeEl.closest && activeEl.closest('[role="dialog"], [role="menu"], [role="listbox"], .agy-fastpick')) {
+          return true;
+        }
+        const tag = activeEl.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+        if (activeEl.isContentEditable && !(activeEl.closest && activeEl.closest('[data-lexical-editor="true"]'))) {
+          return true;
+        }
+        return false;
+      }
+
       function getEditors() {
         return Array.from(document.querySelectorAll('[data-lexical-editor="true"]')).filter((ed) => {
           const rect = ed.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
+      }
+
+      function getTargetEditor() {
+        const activeEl = document.activeElement;
+        const focused = activeEl && activeEl.closest ? activeEl.closest('[data-lexical-editor="true"]') : null;
+        if (focused) {
+          const r = focused.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0) return focused;
+        }
+        const eds = getEditors();
+        if (eds.length === 0) return null;
+        return eds.find((ed) => !isSideQuestionEl(ed)) || eds[0];
       }
 
       function isEditorEmpty(editor) {
@@ -77,13 +127,23 @@
         return (h >>> 0).toString(36);
       }
 
-      function extractLatestTurn() {
-        const userNodes = Array.from(
-          document.querySelectorAll('[data-testid="user-message-content"], .agy-user-bubble')
-        ).filter((el) => el.getBoundingClientRect().height > 0);
+      function extractLatestTurn(editor = getTargetEditor()) {
+        if (!editor) return null;
+        const inSide = isSideQuestionEl(editor);
+        const scopeRoot = getScopeRoot(editor) || document;
+        const belongsToPane = (el) => (inSide ? isSideQuestionEl(el) : !isSideQuestionEl(el));
 
-        const assistantNodes = Array.from(document.querySelectorAll('[data-markdown-root]')).filter((el) => {
-          if (el.closest('[data-testid="user-message-content"], .agy-user-bubble, [data-lexical-editor="true"]')) {
+        const userNodes = Array.from(
+          scopeRoot.querySelectorAll('[data-testid="user-message-content"], .agy-user-bubble')
+        ).filter((el) => belongsToPane(el) && el.getBoundingClientRect().height > 0);
+
+        const assistantNodes = Array.from(scopeRoot.querySelectorAll('[data-markdown-root]')).filter((el) => {
+          if (!belongsToPane(el)) return false;
+          if (
+            el.closest(
+              '[data-testid="user-message-content"], .agy-user-bubble, [data-lexical-editor="true"], [data-testid*="thought"], [class*="thought"], details:not([open])'
+            )
+          ) {
             return false;
           }
           return el.getBoundingClientRect().height > 0 && (el.innerText || '').trim().length > 0;
@@ -91,80 +151,142 @@
 
         if (assistantNodes.length === 0) return null;
 
-        const lastAssistantEl = assistantNodes[assistantNodes.length - 1];
         const lastUserEl = userNodes.length > 0 ? userNodes[userNodes.length - 1] : null;
-        if (
-          lastUserEl &&
-          (lastAssistantEl.compareDocumentPosition(lastUserEl) & Node.DOCUMENT_POSITION_FOLLOWING)
-        ) {
-          return null;
-        }
+        const postUserAssistant = lastUserEl
+          ? assistantNodes.filter((el) => Boolean(lastUserEl.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))
+          : [assistantNodes[assistantNodes.length - 1]];
 
-        const lastAssistant = (lastAssistantEl.innerText || '').trim();
+        if (postUserAssistant.length === 0) return null;
+
+        const lastAssistantFull = postUserAssistant
+          .map((el) => (el.innerText || '').trim())
+          .filter(Boolean)
+          .join('\n\n')
+          .trim();
         const lastUser = lastUserEl ? (lastUserEl.innerText || '').trim() : '';
-        if (!lastAssistant) return null;
+        if (!lastAssistantFull) return null;
 
-        const scopeKey = `${location.pathname || ''}|${document.title || ''}`;
-        const fingerprint = `${hashText(scopeKey)}_${hashText(lastUser.slice(-200) + '||' + lastAssistant.slice(-300))}`;
-        return { fingerprint, lastUser: lastUser.slice(-600), lastAssistant: lastAssistant.slice(-1400) };
+        const scopeKey = `${inSide ? 'side' : 'main'}|${location.pathname || ''}|${document.title || ''}`;
+        const fingerprint = `${hashText(scopeKey)}_${hashText(lastUser.slice(-200) + '||' + lastAssistantFull.slice(-300))}`;
+        return {
+          scopeKey,
+          fingerprint,
+          lastUser: lastUser.slice(-600),
+          lastAssistant: lastAssistantFull.slice(-1400)
+        };
+      }
+
+      function clearPendingTabState() {
+        pendingTabEditor = null;
+        pendingTabAt = 0;
+        inflightManual = false;
       }
 
       window.__ag_on_prompt_suggestion = (reqId, payload) => {
         if (disposed || !reqId || reqId !== inflightReqId) return;
         const fp = inflightFingerprint;
+        const wasManual = inflightManual;
+        const tabEditor = pendingTabEditor;
+        const tabAt = pendingTabAt;
+
         inflightReqId = '';
         inflightFingerprint = '';
-        currentFingerprint = fp;
-        currentSuggestion =
+        inflightManual = false;
+        pendingTabEditor = null;
+        pendingTabAt = 0;
+
+        const transient = Boolean(payload && payload.transient);
+        const text =
           payload && payload.ok && payload.suggestion ? String(payload.suggestion).trim() : '';
+
+        if (!transient) {
+          currentFingerprint = fp;
+          currentSuggestion = text;
+        }
+
+        if (
+          text &&
+          wasManual &&
+          tabEditor &&
+          tabEditor.isConnected &&
+          isEditorEmpty(tabEditor) &&
+          Date.now() - tabAt <= MANUAL_AUTO_FILL_WINDOW_MS &&
+          !isNonChatEditableFocused(document.activeElement)
+        ) {
+          acceptSuggestion(tabEditor);
+          return;
+        }
+
         syncOverlays();
       };
 
-      function requestSuggestion(turn) {
+      function requestSuggestion(turn, { force = false, autoAcceptEditor = null } = {}) {
         if (!turn || !turn.fingerprint) return;
-        if (
-          turn.fingerprint === currentFingerprint ||
-          turn.fingerprint === dismissedFingerprint ||
-          turn.fingerprint === inflightFingerprint
-        ) {
+        if (typeof window.__agRequestPromptSuggestion !== 'function') return;
+
+        if (turn.fingerprint === inflightFingerprint && inflightReqId) {
+          if (force && autoAcceptEditor) {
+            inflightManual = true;
+            pendingTabEditor = autoAcceptEditor;
+            pendingTabAt = Date.now();
+            syncOverlays();
+          }
           return;
         }
-        if (typeof window.__agRequestPromptSuggestion !== 'function') return;
+
+        if (!force) {
+          if (turn.fingerprint === currentFingerprint || turn.fingerprint === dismissedFingerprint) {
+            return;
+          }
+        } else {
+          if (dismissedFingerprint === turn.fingerprint) dismissedFingerprint = '';
+          if (autoAcceptEditor) {
+            inflightManual = true;
+            pendingTabEditor = autoAcceptEditor;
+            pendingTabAt = Date.now();
+          }
+        }
 
         reqSeq += 1;
         inflightReqId = `ps-${Date.now()}-${reqSeq}`;
         inflightFingerprint = turn.fingerprint;
+        currentScopeKey = turn.scopeKey || '';
         try {
           window.__agRequestPromptSuggestion(
             JSON.stringify({
               reqId: inflightReqId,
               fingerprint: turn.fingerprint,
               lastUser: turn.lastUser,
-              lastAssistant: turn.lastAssistant
+              lastAssistant: turn.lastAssistant,
+              force: Boolean(force)
             })
           );
+          if (force) syncOverlays();
         } catch {
           inflightReqId = '';
           inflightFingerprint = '';
+          clearPendingTabState();
         }
+      }
+
+      function moveCaretToEnd(editor) {
+        try {
+          const sel = window.getSelection();
+          if (!sel) return;
+          const range = document.createRange();
+          const target = editor.querySelector('p') || editor;
+          range.selectNodeContents(target);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch {}
       }
 
       function insertTextIntoLexical(editor, text, onDone) {
         if (!editor || !text || isAccepting) return false;
         isAccepting = true;
         editor.focus();
-
-        try {
-          const sel = window.getSelection();
-          if (sel) {
-            const range = document.createRange();
-            const target = editor.querySelector('p') || editor;
-            range.selectNodeContents(target);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-        } catch {}
+        moveCaretToEnd(editor);
 
         try {
           editor.dispatchEvent(
@@ -176,6 +298,16 @@
             })
           );
         } catch {}
+
+        if (isEditorEmpty(editor)) {
+          try {
+            editor.focus();
+            moveCaretToEnd(editor);
+            document.execCommand('insertText', false, text);
+          } catch {}
+        }
+
+        moveCaretToEnd(editor);
 
         requestAnimationFrame(() => {
           if (isEditorEmpty(editor)) {
@@ -191,72 +323,111 @@
               );
             } catch {}
           }
+          moveCaretToEnd(editor);
           isAccepting = false;
           if (typeof onDone === 'function') onDone(!isEditorEmpty(editor));
         });
         return true;
       }
 
+      function ensureOverlayDom(editor) {
+        const host = editor.parentElement;
+        if (!host) return null;
+        let overlay = host.querySelector('.' + OVERLAY_CLASS);
+        if (!overlay) {
+          if (getComputedStyle(host).position === 'static') {
+            host.style.position = 'relative';
+          }
+          overlay = document.createElement('div');
+          overlay.className = OVERLAY_CLASS;
+
+          const textEl = document.createElement('div');
+          textEl.className = 'ag-prompt-ghost-text';
+
+          const kbd = document.createElement('kbd');
+          kbd.className = 'ag-prompt-ghost-kbd';
+          kbd.textContent = 'Tab';
+          kbd.title = '按 Tab 或 → 填入预测输入';
+          kbd.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (overlay.classList.contains('is-loading')) {
+              clearPendingTabState();
+              syncOverlays();
+              return;
+            }
+            acceptSuggestion(editor);
+          });
+
+          overlay.appendChild(textEl);
+          overlay.appendChild(kbd);
+          host.appendChild(overlay);
+          createdOverlays.add(overlay);
+        }
+
+        const cs = getComputedStyle(editor);
+        overlay.style.paddingTop = cs.paddingTop;
+        overlay.style.paddingLeft = cs.paddingLeft;
+        overlay.style.paddingRight = cs.paddingRight;
+        overlay.style.fontSize = cs.fontSize;
+        overlay.style.lineHeight = cs.lineHeight;
+        return overlay;
+      }
+
       function syncOverlays() {
         if (disposed) return;
+        const primaryEditor = getTargetEditor();
         const editors = getEditors();
-        const activeText =
+        const hasReadySuggestion = Boolean(
           currentSuggestion &&
-          currentFingerprint &&
-          currentFingerprint !== dismissedFingerprint &&
-          !isGenerating()
-            ? currentSuggestion
-            : '';
+            currentFingerprint &&
+            currentFingerprint !== dismissedFingerprint &&
+            !isGenerating(getScopeRoot(primaryEditor))
+        );
 
         for (const editor of editors) {
           const host = editor.parentElement;
           if (!host) continue;
 
-          let overlay = host.querySelector('.' + OVERLAY_CLASS);
-          const show = Boolean(activeText) && !isComposing && isEditorEmpty(editor);
+          const isTarget = editor === primaryEditor;
+          const isLoadingThis = Boolean(
+            inflightManual && pendingTabEditor === editor && !hasReadySuggestion && !isGenerating(getScopeRoot(editor))
+          );
+          const showSuggestion = Boolean(isTarget && hasReadySuggestion && !isComposing && isEditorEmpty(editor));
+          const showLoading = Boolean(isLoadingThis && !isComposing && isEditorEmpty(editor));
 
-          if (!show) {
-            if (overlay) overlay.hidden = true;
+          let overlay = host.querySelector('.' + OVERLAY_CLASS);
+          if (!showSuggestion && !showLoading) {
+            if (overlay) {
+              overlay.hidden = true;
+              overlay.classList.remove('is-loading');
+            }
             host.removeAttribute(HAS_SUGGESTION_ATTR);
             continue;
           }
 
-          if (!overlay) {
-            if (getComputedStyle(host).position === 'static') {
-              host.style.position = 'relative';
-            }
-            overlay = document.createElement('div');
-            overlay.className = OVERLAY_CLASS;
-
-            const textEl = document.createElement('div');
-            textEl.className = 'ag-prompt-ghost-text';
-
-            const kbd = document.createElement('kbd');
-            kbd.className = 'ag-prompt-ghost-kbd';
-            kbd.textContent = 'Tab';
-            kbd.title = '按 Tab 或 → 填入预测输入';
-            kbd.addEventListener('mousedown', (ev) => {
-              ev.preventDefault();
-              ev.stopPropagation();
-              acceptSuggestion(editor);
-            });
-
-            overlay.appendChild(textEl);
-            overlay.appendChild(kbd);
-            host.appendChild(overlay);
-            createdOverlays.add(overlay);
-          }
-
-          const cs = getComputedStyle(editor);
-          overlay.style.paddingTop = cs.paddingTop;
-          overlay.style.paddingLeft = cs.paddingLeft;
-          overlay.style.paddingRight = cs.paddingRight;
-          overlay.style.fontSize = cs.fontSize;
-          overlay.style.lineHeight = cs.lineHeight;
+          overlay = ensureOverlayDom(editor);
+          if (!overlay) continue;
 
           const textEl = overlay.querySelector('.ag-prompt-ghost-text');
-          if (textEl && textEl.textContent !== activeText) {
-            textEl.textContent = activeText;
+          const kbd = overlay.querySelector('.ag-prompt-ghost-kbd');
+
+          if (showLoading) {
+            overlay.classList.add('is-loading');
+            if (textEl) textEl.textContent = '正在生成下一句提示…';
+            if (kbd) {
+              kbd.textContent = 'Esc';
+              kbd.title = '取消等待提示';
+            }
+          } else {
+            overlay.classList.remove('is-loading');
+            if (textEl && textEl.textContent !== currentSuggestion) {
+              textEl.textContent = currentSuggestion;
+            }
+            if (kbd) {
+              kbd.textContent = 'Tab';
+              kbd.title = '按 Tab 或 → 填入预测输入';
+            }
           }
 
           overlay.hidden = false;
@@ -269,6 +440,7 @@
         if (!editor || !text || isAccepting || !isEditorEmpty(editor)) return false;
         dismissedFingerprint = currentFingerprint;
         currentSuggestion = '';
+        clearPendingTabState();
         syncOverlays();
         return insertTextIntoLexical(editor, text, () => {
           syncOverlays();
@@ -277,26 +449,36 @@
 
       function tick() {
         if (disposed) return;
-        const generating = isGenerating();
+        const targetEditor = getTargetEditor();
+        const generating = isGenerating(getScopeRoot(targetEditor));
         if (generating) {
           if (!wasGenerating) {
             wasGenerating = true;
             currentSuggestion = '';
+            clearPendingTabState();
             syncOverlays();
           }
           return;
         }
 
         wasGenerating = false;
-        const turn = extractLatestTurn();
+        const turn = extractLatestTurn(targetEditor);
         if (!turn) {
-          if (currentSuggestion) {
+          if (currentSuggestion || inflightManual) {
             currentSuggestion = '';
             currentFingerprint = '';
+            clearPendingTabState();
           }
           syncOverlays();
           return;
         }
+
+        if (currentScopeKey && turn.scopeKey !== currentScopeKey) {
+          currentSuggestion = '';
+          currentFingerprint = '';
+          clearPendingTabState();
+        }
+        currentScopeKey = turn.scopeKey;
 
         if (turn.fingerprint !== currentFingerprint && turn.fingerprint !== dismissedFingerprint) {
           requestSuggestion(turn);
@@ -315,43 +497,65 @@
 
       function onKeyDown(e) {
         if (disposed || e.isComposing || isComposing) return;
-        if (
-          !currentSuggestion ||
-          !currentFingerprint ||
-          currentFingerprint === dismissedFingerprint ||
-          isGenerating()
-        ) {
-          return;
-        }
-
-        const activeEl = document.activeElement;
-        const editor =
-          (activeEl && activeEl.closest && activeEl.closest('[data-lexical-editor="true"]')) || null;
-        if (!editor || !isEditorEmpty(editor)) return;
-
-        if (
-          (e.key === 'Tab' || e.key === 'ArrowRight') &&
-          !e.shiftKey &&
-          !e.ctrlKey &&
-          !e.metaKey &&
-          !e.altKey
-        ) {
-          if (hasOpenPopupMenu()) return;
-          e.preventDefault();
-          e.stopPropagation();
-          acceptSuggestion(editor);
+        if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
+          if (e.key === 'Escape' && (currentSuggestion || inflightManual)) {
+            dismissedFingerprint = currentFingerprint;
+            currentSuggestion = '';
+            clearPendingTabState();
+            syncOverlays();
+          }
           return;
         }
 
         if (e.key === 'Escape') {
-          dismissedFingerprint = currentFingerprint;
-          currentSuggestion = '';
-          syncOverlays();
+          if (currentSuggestion || inflightManual) {
+            dismissedFingerprint = currentFingerprint;
+            currentSuggestion = '';
+            clearPendingTabState();
+            syncOverlays();
+          }
+          return;
+        }
+
+        if (e.key !== 'Tab' && e.key !== 'ArrowRight') return;
+        if (hasOpenPopupMenu() || isNonChatEditableFocused(document.activeElement)) return;
+
+        const activeEl = document.activeElement;
+        const focusedEditor =
+          activeEl && activeEl.closest ? activeEl.closest('[data-lexical-editor="true"]') : null;
+        const targetEditor = focusedEditor || getTargetEditor();
+        if (!targetEditor || !isEditorEmpty(targetEditor)) return;
+        if (isGenerating(getScopeRoot(targetEditor))) return;
+
+        const hasReadySuggestion = Boolean(
+          currentSuggestion && currentFingerprint && currentFingerprint !== dismissedFingerprint
+        );
+
+        // ArrowRight 仅在焦点位于空输入框且已有提示时生效；Tab 允许在页面任意非输入焦点直接采纳可见提示
+        if (e.key === 'ArrowRight' && !focusedEditor) return;
+
+        if (hasReadySuggestion) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          acceptSuggestion(targetEditor);
+          return;
+        }
+
+        // 在空输入框内直接按 Tab：即使尚无提示或上次被跳过，也立即触发按需预测并在就绪后填入
+        if (e.key === 'Tab' && focusedEditor) {
+          const turn = extractLatestTurn(focusedEditor);
+          if (!turn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          requestSuggestion(turn, { force: true, autoAcceptEditor: focusedEditor });
         }
       }
 
       function onCompositionStart() {
         isComposing = true;
+        clearPendingTabState();
         syncOverlays();
       }
 
@@ -360,19 +564,39 @@
         scheduleTick(60);
       }
 
-      function onInput() {
+      function onInput(ev) {
+        if (inflightManual && ev?.target?.closest?.('[data-lexical-editor="true"]')) {
+          clearPendingTabState();
+        }
         syncOverlays();
+      }
+
+      function onAccountSwitched() {
+        currentSuggestion = '';
+        currentFingerprint = '';
+        dismissedFingerprint = '';
+        inflightReqId = '';
+        inflightFingerprint = '';
+        clearPendingTabState();
+        try {
+          if (typeof window.__agRequestPromptSuggestion === 'function') {
+            window.__agRequestPromptSuggestion(JSON.stringify({ action: 'restart' }));
+          }
+        } catch {}
+        syncOverlays();
+        scheduleTick(450);
       }
 
       const observer =
         typeof MutationObserver !== 'undefined'
-          ? new MutationObserver(() => scheduleTick(280))
+          ? new MutationObserver(() => scheduleTick(260))
           : null;
       if (observer && document.body) {
         observer.observe(document.body, { childList: true, subtree: true });
       }
 
-      document.addEventListener('keydown', onKeyDown, true);
+      window.addEventListener('keydown', onKeyDown, true);
+      window.addEventListener('isdou:account-switched', onAccountSwitched);
       document.addEventListener('compositionstart', onCompositionStart, true);
       document.addEventListener('compositionend', onCompositionEnd, true);
       document.addEventListener('input', onInput, true);
@@ -383,7 +607,8 @@
         disposed = true;
         if (scanTimer) clearTimeout(scanTimer);
         if (observer) observer.disconnect();
-        document.removeEventListener('keydown', onKeyDown, true);
+        window.removeEventListener('keydown', onKeyDown, true);
+        window.removeEventListener('isdou:account-switched', onAccountSwitched);
         document.removeEventListener('compositionstart', onCompositionStart, true);
         document.removeEventListener('compositionend', onCompositionEnd, true);
         document.removeEventListener('input', onInput, true);

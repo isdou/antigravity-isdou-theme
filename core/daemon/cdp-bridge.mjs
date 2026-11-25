@@ -490,17 +490,31 @@ export function createCdpManager({
               try {
                 req = msg.params.payload ? JSON.parse(String(msg.params.payload)) : {};
               } catch {}
+              if (req && req.action === 'restart') {
+                try {
+                  promptSuggester.restart?.();
+                } catch {}
+                return;
+              }
               const reqId = String(req?.reqId || '');
               const fingerprint = String(req?.fingerprint || '').trim();
               const lastUser = String(req?.lastUser || '').trim().slice(-600);
               const lastAssistant = String(req?.lastAssistant || '').trim().slice(-1400);
+              const force = Boolean(req?.force);
               void (async () => {
                 let out;
                 try {
-                  const suggestion = await promptSuggester.suggest({ fingerprint, lastUser, lastAssistant });
-                  out = { ok: true, suggestion };
+                  const res = await promptSuggester.suggest({ fingerprint, lastUser, lastAssistant, force });
+                  const suggestion = typeof res === 'string' ? res : String(res?.suggestion || '');
+                  const transient = Boolean(res && typeof res === 'object' && res.transient);
+                  out = { ok: !transient, suggestion, transient };
                 } catch (err) {
-                  out = { ok: false, suggestion: '', error: err?.message || String(err || 'prompt suggestion failed') };
+                  out = {
+                    ok: false,
+                    suggestion: '',
+                    transient: true,
+                    error: err?.message || String(err || 'prompt suggestion failed')
+                  };
                 }
                 if (ws.readyState === WebSocket.OPEN) {
                   const payloadJson = JSON.stringify(out)

@@ -22,7 +22,7 @@ export const PROMPT_SUGGEST_SYSTEM_INSTRUCTION = [
   '严格遵守以下规则：',
   '1. 只输出预测的那一句话本身，不要任何前缀、引号、解释、编号、Markdown 标记或换行。',
   '2. 保持与用户语言一致，控制在 4~28 个字以内，具体且可直接执行。',
-  '3. 如果助手的回复已经是一个完整句号、或上下文没有明显高把握的下一步动作，直接输出 NONE（不要硬编废话）。',
+  '3. 优先结合上下文主动预判用户最顺手、最可能发出的下一句（如继续执行、验证测试、排查细节、推送提交、追问原因、修改实现等）；仅当对话已完全结束且无任何合理后续动作时，才输出 NONE。',
   '4. 绝对不要调用任何工具，直接输出文本。'
 ].join('\n');
 
@@ -179,13 +179,13 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
       clearTimeout(cur.timer);
       if (!cur.settled) {
         cur.settled = true;
-        cur.resolve('');
+        cur.resolve(null);
       }
     }
     if (!wantRestart) {
       while (queue.length > 0) {
         const dropped = queue.shift();
-        dropped.resolve('');
+        dropped.resolve(null);
       }
     }
     if (old) {
@@ -251,7 +251,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
         pending = null;
         if (!cur.settled) {
           cur.settled = true;
-          item.resolve('');
+          item.resolve(null);
         }
         restart();
       }
@@ -271,7 +271,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     } catch {
       clearTimeout(timer);
       pending = null;
-      item.resolve('');
+      item.resolve(null);
       restart();
     }
   }
@@ -331,7 +331,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
       starting = false;
       while (queue.length > 0) {
         const dropped = queue.shift();
-        dropped.resolve('');
+        dropped.resolve(null);
       }
       return false;
     }
@@ -410,7 +410,7 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
         clearTimeout(cur.timer);
         if (!cur.settled) {
           cur.settled = true;
-          cur.resolve('');
+          cur.resolve(null);
         }
       }
       if (queue.length > 0 && isEnabled()) {
@@ -429,13 +429,19 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
     ensureStarted();
   }
 
-  async function suggest({ fingerprint = '', lastUser = '', lastAssistant = '' } = {}) {
-    if (!isEnabled() || !lastAssistant) return '';
+  async function suggest({ fingerprint = '', lastUser = '', lastAssistant = '', force = false } = {}) {
+    if (!isEnabled() || !lastAssistant) return { suggestion: '', transient: false };
     if (fingerprint && cache.has(fingerprint)) {
-      return cache.get(fingerprint);
+      const cached = cache.get(fingerprint);
+      if (cached || !force) {
+        return { suggestion: cached, transient: false };
+      }
     }
+    const promptLead = force
+      ? '用户刚按下 Tab 请求提示，请结合以下刚结束的对话片段，务必给出最贴切、最顺手的一句简短后续指令（4~28字，无解释无引号，尽量不要输出 NONE）：'
+      : '根据以下刚结束的对话片段，输出用户下一步最可能发的简短指令（4~28字，无解释无引号，若无合理后续才输出 NONE）：';
     const promptText = [
-      '根据以下刚结束的对话片段，输出用户下一步最可能发的简短指令（4~28字，无解释无引号，若无高把握输出 NONE）：',
+      promptLead,
       lastUser ? `用户：${lastUser}` : '',
       `助手：${lastAssistant}`
     ]
@@ -444,16 +450,20 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
 
     const raw = await new Promise((resolve) => {
       if (!ensureStarted()) {
-        resolve('');
+        resolve(null);
         return;
       }
       while (queue.length > 0) {
         const dropped = queue.shift();
-        dropped.resolve('');
+        dropped.resolve(null);
       }
       queue.push({ promptText, resolve });
       if (warmed) drain();
     });
+
+    if (raw === null) {
+      return { suggestion: '', transient: true };
+    }
 
     const suggestion = cleanPromptSuggestionText(raw);
     if (fingerprint) {
@@ -463,12 +473,13 @@ export function createPromptSuggestionEngine({ getConfig, runOnce = false, resol
       }
       cache.set(fingerprint, suggestion);
     }
-    return suggestion;
+    return { suggestion, transient: false };
   }
 
   return {
     syncState,
     suggest,
+    restart,
     stop,
     getStatus: () => ({
       ready,
