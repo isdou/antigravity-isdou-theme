@@ -218,8 +218,8 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   padding: 22px 30px !important;
   border-radius: var(--isdou-radius-lg) !important;
   border: 1.5px dashed var(--isdou-accent) !important;
-  background-color: var(--isdou-surface-elevated) !important;
-  box-shadow: var(--isdou-shadow-popover) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
   font-family: var(--font-sans) !important;
   text-align: center !important;
 }
@@ -256,9 +256,9 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   pointer-events: none !important;
   padding: 6px 12px !important;
   border-radius: var(--isdou-radius-sm) !important;
-  border: 1px solid var(--isdou-hairline-strong) !important;
-  background-color: var(--isdou-surface-elevated) !important;
-  box-shadow: var(--isdou-shadow-popover) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-popover-shadow) !important;
   font-family: var(--font-sans) !important;
   font-size: 12px !important;
   font-weight: 500 !important;
@@ -279,16 +279,17 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   margin: 0 0 8px 0 !important;
   padding: 7px 10px !important;
   border-radius: var(--isdou-radius-md) !important;
-  border: 1px solid var(--isdou-hairline-strong) !important;
-  background-color: var(--isdou-surface-elevated) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
+  box-shadow: var(--isdou-composer-shadow) !important;
   font-family: var(--font-sans) !important;
   font-size: 12px !important;
   color: var(--isdou-fg-secondary) !important;
 }
 
 #isdou-resume-bar[data-state="ready"] {
-  border-color: color-mix(in srgb, var(--isdou-accent) 45%, var(--isdou-hairline-strong)) !important;
-  background-color: color-mix(in srgb, var(--isdou-accent) 6%, var(--isdou-surface-elevated)) !important;
+  border-color: color-mix(in srgb, var(--isdou-accent) 45%, var(--isdou-composer-border)) !important;
+  background-color: color-mix(in srgb, var(--isdou-accent) 6%, var(--isdou-composer-card)) !important;
 }
 
 #isdou-resume-bar .isdou-resume-left {
@@ -439,8 +440,8 @@ html[data-ag-theme-mode="dark"] .settings-modal-backdrop {
   height: 22px !important;
   padding: 0 7px !important;
   border-radius: 5px !important;
-  border: 1px solid var(--isdou-hairline-strong) !important;
-  background-color: var(--isdou-surface-elevated) !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background-color: var(--isdou-composer-card) !important;
   color: var(--isdou-fg-primary) !important;
   font-family: var(--font-mono) !important;
   font-size: 11px !important;

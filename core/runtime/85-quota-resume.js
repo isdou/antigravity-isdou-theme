@@ -5,11 +5,12 @@
  * - 模型配额耗尽停止后，切换账号或更换可用模型回来，原生无“继续执行”按钮，只能手打新消息
  * - 记录受阻会话与账号/配额快照（支持切号重载后跨页保留），恢复后高亮提供一键续跑
  * - 支持开启“配额恢复后自动继续”（切号/换模型且检测到可用配额后倒计时自动续跑）
- * - 优先尝试 Antigravity 原生重试指令（sendMessage type: 7）；若后端未重启则无缝回退为自动发送“继续”
+ * - 优先尝试 Antigravity 原生重试指令（sendMessage type: 7）；若未恢复运行则回退自动发送“继续”
  */
   if (!IS_SWARM_PLUGIN_FRAME && ENABLED && MODULES.quotaResume !== false) {
     (() => {
       const BAR_ID = 'isdou-resume-bar';
+      const TOAST_ID = 'isdou-drop-toast';
       const STORAGE_KEY = 'isdou.quotaResumeV1';
       const MAX_RECORD_AGE_MS = 6 * 3600 * 1000;
       const RECENT_ERROR_AGE_MS = 2 * 3600 * 1000;
@@ -19,7 +20,7 @@
       const ERROR_BANNER_RE =
         /Agent terminated due to error|Authentication expired|Session has expired|智能体因错误而终止|身份验证已过期/i;
       const BANNER_ACTION_RE =
-        /Upgrade|Select another model|Try again|Retry|Copy debug info|Log back in|升级|选择其他模型|重试|再试一次|复制调试信息/i;
+        /Upgrade|Select another model|Try again|Retry|Copy debug info|Log back in|升级|升级方案|选择其他模型|重试|再试一次|复制调试信息/i;
 
       let cachedStore = null;
       let lastSeenEmail = '';
@@ -29,7 +30,26 @@
       let autoCountdownTargetCid = '';
       let autoCountdownLeft = 0;
       let pollTimer = 0;
+      let toastTimer = 0;
       let dismissedByCid = new Map();
+
+      function showResumeToast(text, tone = 'info') {
+        if (!document.body || !text) return;
+        let toast = document.getElementById(TOAST_ID);
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.id = TOAST_ID;
+          toast.setAttribute('data-ag-i18n-exclude', 'true');
+          document.body.appendChild(toast);
+        }
+        toast.dataset.tone = tone;
+        toast.textContent = text;
+        toast.classList.add('is-visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('is-visible');
+        }, 2800);
+      }
 
       function readStateStore() {
         try {
@@ -72,7 +92,7 @@
           document.getElementById('root')?.firstElementChild;
         let cur = getFiber(anchor);
         let guard = 0;
-        while (cur && guard++ < 80) {
+        while (cur && guard++ < 85) {
           let dep = cur.dependencies?.firstContext;
           while (dep) {
             const val = dep.memoizedValue;
@@ -92,7 +112,7 @@
         if (!comp) return null;
         let cur = getFiber(comp);
         let guard = 0;
-        while (cur && guard++ < 45) {
+        while (cur && guard++ < 85) {
           let dep = cur.dependencies?.firstContext;
           while (dep) {
             const val = dep.memoizedValue;
@@ -144,7 +164,6 @@
             }
             const btnText = (btn.textContent || '').trim();
             if (!BANNER_ACTION_RE.test(btnText)) continue;
-            // 向上找卡片容器
             let box = btn.parentElement;
             let hops = 0;
             while (box && box !== scope && hops++ < 5) {
@@ -172,9 +191,20 @@
 
       function dismissStaleBanner(bannerEl) {
         if (!bannerEl) return;
-        const closeBtn = bannerEl.querySelector(
-          'button[aria-label="Close"], button[aria-label="Dismiss"], button[aria-label="关闭"], button[title="Dismiss"]'
+        let closeBtn = bannerEl.querySelector(
+          'button[aria-label*="Close" i], button[aria-label*="Dismiss" i], button[aria-label*="关闭"], button[title*="Dismiss" i], button[title*="关闭"]'
         );
+        if (!closeBtn) {
+          const buttons = bannerEl.querySelectorAll('button');
+          for (const btn of buttons) {
+            const btnText = (btn.textContent || '').trim();
+            if (BANNER_ACTION_RE.test(btnText)) continue;
+            if (btn.querySelector('svg') && btnText.length <= 2) {
+              closeBtn = btn;
+              break;
+            }
+          }
+        }
         if (closeBtn) {
           try {
             closeBtn.click();
@@ -221,15 +251,18 @@
         };
       }
 
-      function insertAndSendPrompt(ctx, text) {
+      function isEditorTextEmpty(editor) {
+        return !(editor?.textContent || '').replace(/[\u200B-\u200D\uFEFF\n\r]/g, '').trim();
+      }
+
+      async function insertAndSendPrompt(ctx, text) {
         const editor =
           ctx?.inputBoxRef?.current?.lexicalRef?.current?.getRootElement?.() ||
-          document.querySelector('.surface-composer [contenteditable="true"]');
+          document.querySelector('.surface-composer [data-lexical-editor="true"], .surface-composer [contenteditable="true"]');
         if (!editor) return false;
 
         editor.focus();
-        const existing = (editor.textContent || '').trim();
-        if (!existing) {
+        if (isEditorTextEmpty(editor)) {
           try {
             const sel = window.getSelection();
             if (sel) {
@@ -252,45 +285,65 @@
             );
           } catch {}
 
-          requestAnimationFrame(() => {
-            if (!(editor.textContent || '').trim()) {
-              try {
-                const dt = new DataTransfer();
-                dt.setData('text/plain', text);
-                editor.dispatchEvent(
-                  new ClipboardEvent('paste', {
-                    clipboardData: dt,
-                    bubbles: true,
-                    cancelable: true
-                  })
-                );
-              } catch {}
-            }
-            setTimeout(() => {
-              const submitFn = ctx?.inputBoxRef?.current?.submit;
-              const sendBtn = document.querySelector('[data-testid="input-send-button"]');
-              if (sendBtn && !sendBtn.disabled) {
-                sendBtn.click();
-              } else if (typeof submitFn === 'function') {
-                submitFn();
-              } else {
-                editor.dispatchEvent(
-                  new KeyboardEvent('keydown', {
-                    key: 'Enter',
-                    code: 'Enter',
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true,
-                    cancelable: true
-                  })
-                );
-              }
-            }, 90);
-          });
-        } else {
-          // 用户框里已自己写了补充说明，直接替他提交
-          const submitFn = ctx?.inputBoxRef?.current?.submit;
-          if (typeof submitFn === 'function') submitFn();
+          if (isEditorTextEmpty(editor)) {
+            try {
+              editor.focus();
+              document.execCommand('insertText', false, text);
+            } catch {}
+          }
+
+          await new Promise((r) => requestAnimationFrame(r));
+          if (isEditorTextEmpty(editor)) {
+            try {
+              const dt = new DataTransfer();
+              dt.setData('text/plain', text);
+              editor.dispatchEvent(
+                new ClipboardEvent('paste', {
+                  clipboardData: dt,
+                  bubbles: true,
+                  cancelable: true
+                })
+              );
+            } catch {}
+          }
+        }
+
+        let sendBtn = null;
+        for (let i = 0; i < 6; i++) {
+          sendBtn = document.querySelector(
+            '.surface-composer :is(button[data-testid="send-button"], button[data-testid="input-send-button"], button.agy-send-button):not(:disabled)'
+          );
+          if (sendBtn) break;
+          await new Promise((r) => setTimeout(r, 45));
+        }
+
+        const submitFn = ctx?.inputBoxRef?.current?.submit;
+        if (sendBtn && !sendBtn.disabled) {
+          sendBtn.click();
+        } else if (typeof submitFn === 'function') {
+          try {
+            await submitFn();
+          } catch {}
+        }
+
+        await new Promise((r) => setTimeout(r, 180));
+        if (
+          getSnapshot().runStatus !== 2 &&
+          !document.querySelector('[data-testid="input-cancel-button"]')
+        ) {
+          try {
+            editor.focus();
+            editor.dispatchEvent(
+              new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+              })
+            );
+          } catch {}
         }
         return true;
       }
@@ -312,34 +365,47 @@
 
         isResuming = true;
         renderBar();
+        showResumeToast('正在继续刚才中断的任务…', 'info');
         dismissStaleBanner(snap.domBanner.bannerEl);
 
         const stateStore = readStateStore();
         const prevPending = stateStore.pendingByCid[snap.cid];
-        const canTryNativeRetry = Boolean(snap.ctx?.sendMessage && snap.isErrorTerm);
+        const canTryNativeRetry = Boolean(
+          snap.ctx?.sendMessage && snap.isErrorTerm && snap.domBanner && !snap.domBanner.foundQuota
+        );
 
         try {
           if (canTryNativeRetry) {
             try {
               snap.ctx.sendMessage({ type: 7, cascadeId: snap.cid });
-              await new Promise((r) => setTimeout(r, 950));
+              await new Promise((r) => setTimeout(r, 700));
             } catch {}
           }
 
           const after = getSnapshot();
-          if (after.runStatus !== 2) {
-            // 切号或长配额错误时，原生 type:7 可能被服务端忽略，直接回退发送“继续”
-            insertAndSendPrompt(after.ctx || snap.ctx, '继续');
-            await new Promise((r) => setTimeout(r, 500));
+          if (after.runStatus !== 2 && !document.querySelector('[data-testid="input-cancel-button"]')) {
+            await insertAndSendPrompt(after.ctx || snap.ctx, '继续');
           }
 
-          const post = getSnapshot();
-          if (post.runStatus === 2 || !post.domBanner.foundQuota) {
+          let started = false;
+          for (let i = 0; i < 8; i++) {
+            const cur = getSnapshot();
+            if (cur.runStatus === 2 || Boolean(document.querySelector('[data-testid="input-cancel-button"]'))) {
+              started = true;
+              break;
+            }
+            await new Promise((r) => setTimeout(r, 200));
+          }
+
+          if (started) {
             delete stateStore.pendingByCid[snap.cid];
             writeStateStore(stateStore);
-          } else if (prevPending) {
-            prevPending.autoResumeArmed = false;
-            writeStateStore(stateStore);
+          } else {
+            if (prevPending) {
+              prevPending.autoResumeArmed = false;
+              writeStateStore(stateStore);
+            }
+            showResumeToast('当前模型暂未开始执行，请确认所选模型有可用配额后再试', 'warn');
           }
         } finally {
           isResuming = false;
@@ -364,6 +430,51 @@
         }, 1000);
       }
 
+      function onBarClick(ev) {
+        const btn = ev.target && ev.target.closest ? ev.target.closest('[data-resume-action]') : null;
+        if (!btn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        const act = btn.getAttribute('data-resume-action');
+        const bar = btn.closest('#' + BAR_ID);
+        const cid = bar?.dataset?.cid || getSnapshot().cid;
+        if (act === 'go') {
+          resumeExecution();
+        } else if (act === 'cancel-auto') {
+          const storeData = readStateStore();
+          if (cid && storeData.pendingByCid[cid]) {
+            storeData.pendingByCid[cid].autoResumeArmed = false;
+            writeStateStore(storeData);
+          }
+          cancelAutoCountdown();
+          renderBar();
+        } else if (act === 'switch') {
+          const latest = readStateStore();
+          if (cid && latest.pendingByCid[cid]) {
+            latest.pendingByCid[cid].autoResumeArmed = true;
+            writeStateStore(latest);
+          }
+          renderBar();
+          window.__isdouAccountSwitcher?.switchAccount?.();
+        } else if (act === 'arm') {
+          const latest = readStateStore();
+          if (cid && latest.pendingByCid[cid]) {
+            latest.pendingByCid[cid].autoResumeArmed = !latest.pendingByCid[cid].autoResumeArmed;
+            writeStateStore(latest);
+          }
+          renderBar();
+        } else if (act === 'close') {
+          cancelAutoCountdown();
+          const snap = getSnapshot();
+          if (cid) dismissedByCid.set(cid, snap.stepCount);
+          const latest = readStateStore();
+          if (cid) delete latest.pendingByCid[cid];
+          writeStateStore(latest);
+          removeBarElement();
+        }
+      }
+
       function ensureBarElement() {
         const composer = document.querySelector('.surface-composer');
         if (!composer) return null;
@@ -372,6 +483,7 @@
           bar = document.createElement('div');
           bar.id = BAR_ID;
           bar.setAttribute('data-ag-i18n-exclude', 'true');
+          bar.addEventListener('click', onBarClick);
         }
         const host = composer.parentElement;
         if (host && bar.parentElement !== host) {
@@ -467,13 +579,15 @@
         const bar = ensureBarElement();
         if (!bar) return;
 
-        bar.dataset.state = isResuming ? 'resuming' : hasRecovered ? 'ready' : 'blocked';
+        const barState = isResuming ? 'resuming' : hasRecovered ? 'ready' : 'blocked';
+        const showCancelAuto = Boolean(autoCountdownTimer && autoCountdownTargetCid === cid);
+        const showBlockedActions = !showCancelAuto && !hasRecovered;
 
         const pctText = remaining !== null ? `${Math.round(remaining * 100)}%` : '';
         let statusText = '';
         if (isResuming) {
           statusText = '正在恢复执行任务…';
-        } else if (autoCountdownTimer && autoCountdownTargetCid === cid) {
+        } else if (showCancelAuto) {
           statusText = `账号配额已恢复${pctText ? ` (${pctText})` : ''}，${autoCountdownLeft}s 后自动继续…`;
         } else if (hasRecovered) {
           statusText = switchedAccount
@@ -484,6 +598,23 @@
         } else {
           statusText = '任务因错误或异常中断 · 恢复后可一键继续';
         }
+
+        const goLabel = isResuming ? '恢复中…' : hasRecovered ? '▶ 继续执行' : '↻ 继续执行';
+        const renderSig = [
+          cid,
+          barState,
+          statusText,
+          showCancelAuto ? '1' : '0',
+          showBlockedActions ? '1' : '0',
+          rec.autoResumeArmed ? '1' : '0',
+          goLabel,
+          isResuming ? '1' : '0'
+        ].join('|');
+
+        bar.dataset.state = barState;
+        bar.dataset.cid = cid;
+        if (bar.dataset.renderSig === renderSig) return;
+        bar.dataset.renderSig = renderSig;
 
         bar.innerHTML = '';
         const left = document.createElement('div');
@@ -498,73 +629,46 @@
         const right = document.createElement('div');
         right.className = 'isdou-resume-actions';
 
-        if (autoCountdownTimer && autoCountdownTargetCid === cid) {
+        if (showCancelAuto) {
           const cancelBtn = document.createElement('button');
           cancelBtn.type = 'button';
           cancelBtn.className = 'isdou-resume-chip';
+          cancelBtn.setAttribute('data-resume-action', 'cancel-auto');
           cancelBtn.textContent = '取消自动';
-          cancelBtn.addEventListener('click', () => {
-            rec.autoResumeArmed = false;
-            writeStateStore(storeData);
-            cancelAutoCountdown();
-            renderBar();
-          });
           right.appendChild(cancelBtn);
-        } else if (!hasRecovered) {
+        } else if (showBlockedActions) {
           const switchBtn = document.createElement('button');
           switchBtn.type = 'button';
           switchBtn.className = 'isdou-resume-chip isdou-resume-switch';
+          switchBtn.setAttribute('data-resume-action', 'switch');
           switchBtn.textContent = '⇄ 切换账号';
           switchBtn.title = '切换 Google 会员账号并在恢复配额后自动继续';
-          switchBtn.addEventListener('click', () => {
-            const latest = readStateStore();
-            if (latest.pendingByCid[cid]) {
-              latest.pendingByCid[cid].autoResumeArmed = true;
-              writeStateStore(latest);
-            }
-            renderBar();
-            window.__isdouAccountSwitcher?.switchAccount?.();
-          });
           right.appendChild(switchBtn);
 
           const armBtn = document.createElement('button');
           armBtn.type = 'button';
           armBtn.className = 'isdou-resume-chip' + (rec.autoResumeArmed ? ' is-armed' : '');
+          armBtn.setAttribute('data-resume-action', 'arm');
           armBtn.textContent = rec.autoResumeArmed ? '已开启切号自动继续' : '切号后自动继续';
           armBtn.title = '开启后，当你切换账号或模型恢复配额时自动续跑';
-          armBtn.addEventListener('click', () => {
-            const latest = readStateStore();
-            if (latest.pendingByCid[cid]) {
-              latest.pendingByCid[cid].autoResumeArmed = !latest.pendingByCid[cid].autoResumeArmed;
-              writeStateStore(latest);
-            }
-            renderBar();
-          });
           right.appendChild(armBtn);
         }
 
         const goBtn = document.createElement('button');
         goBtn.type = 'button';
         goBtn.className = 'isdou-resume-btn';
+        goBtn.setAttribute('data-resume-action', 'go');
         goBtn.disabled = isResuming;
-        goBtn.textContent = isResuming ? '恢复中…' : hasRecovered ? '▶ 继续执行' : '↻ 继续执行';
+        goBtn.textContent = goLabel;
         goBtn.title = '继续完成中断的任务 (⌘⇧Enter)';
-        goBtn.addEventListener('click', () => resumeExecution());
         right.appendChild(goBtn);
 
         const closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'isdou-resume-close';
+        closeBtn.setAttribute('data-resume-action', 'close');
         closeBtn.setAttribute('aria-label', '关闭提示');
         closeBtn.textContent = '×';
-        closeBtn.addEventListener('click', () => {
-          cancelAutoCountdown();
-          dismissedByCid.set(cid, stepCount);
-          const latest = readStateStore();
-          delete latest.pendingByCid[cid];
-          writeStateStore(latest);
-          removeBarElement();
-        });
         right.appendChild(closeBtn);
 
         bar.append(left, right);
@@ -581,23 +685,39 @@
         }
       }
 
-      function onAccountSwitchedOrFocus() {
+      function onAccountSwitched() {
+        renderBar();
+      }
+
+      function onWindowFocus(e) {
+        // 只响应窗口级聚焦，忽略内部按钮 mousedown 导致的焦点切换，避免吞掉 click 事件
+        if (e && e.target && e.target !== window && e.target !== document) return;
         renderBar();
       }
 
       window.addEventListener('keydown', onKeyDown, true);
-      window.addEventListener('isdou:account-switched', onAccountSwitchedOrFocus);
-      window.addEventListener('focus', onAccountSwitchedOrFocus, true);
+      window.addEventListener('isdou:account-switched', onAccountSwitched);
+      window.addEventListener('focus', onWindowFocus);
       pollTimer = setInterval(renderBar, 1200);
       setTimeout(renderBar, 600);
 
+      window.__isdouQuotaResume = {
+        resumeExecution,
+        renderBar,
+        getSnapshot
+      };
+
       window.__ag_cleanup_fns.push(() => {
         if (pollTimer) clearInterval(pollTimer);
+        if (toastTimer) clearTimeout(toastTimer);
         cancelAutoCountdown();
         window.removeEventListener('keydown', onKeyDown, true);
-        window.removeEventListener('isdou:account-switched', onAccountSwitchedOrFocus);
-        window.removeEventListener('focus', onAccountSwitchedOrFocus, true);
+        window.removeEventListener('isdou:account-switched', onAccountSwitched);
+        window.removeEventListener('focus', onWindowFocus);
         removeBarElement();
+        if (window.__isdouQuotaResume) {
+          delete window.__isdouQuotaResume;
+        }
       });
     })();
   }

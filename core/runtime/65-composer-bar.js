@@ -46,6 +46,28 @@
           .trim();
       }
 
+      function formatShortTier(tier) {
+        const s = String(tier || '').trim();
+        if (!s) return '';
+        if (/google\s+ai\s+ultra/i.test(s)) return 'ULTRA';
+        if (/google\s+ai\s+pro/i.test(s)) return 'PRO';
+        if (/google\s+ai\s+plus/i.test(s)) return 'PLUS';
+        return s.replace(/^Google\s+AI\s+/i, '').trim();
+      }
+
+      function formatShortCountdown(resetSeconds) {
+        const sec = Number(resetSeconds) || 0;
+        if (!sec) return '';
+        const diffSec = Math.max(0, Math.round(sec - Date.now() / 1000));
+        if (diffSec <= 0) return '即将';
+        const d = Math.floor(diffSec / 86400);
+        const h = Math.floor((diffSec % 86400) / 3600);
+        const m = Math.floor((diffSec % 3600) / 60);
+        if (d > 0) return `${d}d ${h}h`;
+        if (h > 0) return `${h}h ${m}m`;
+        return `${m}m`;
+      }
+
       function normalizeEffortKey(raw) {
         const s = String(raw || '').replace(/\s+/g, ' ').trim().toLowerCase();
         if (
@@ -158,8 +180,11 @@
           }
         }
 
-        const curFamily = ctrl?.selectedModel
-          ? stripDisplayNoise(splitModelFamilyAndEffort(ctrl.selectedModel.label).family)
+        const selLabel = ctrl?.selectedModel?.label || '';
+        const orchMatch = selLabel.match(/^Orchestrator\s*\(([^)]+)\)/i);
+        const orchSub = orchMatch ? orchMatch[1].trim().toLowerCase() : '';
+        const curFamily = selLabel
+          ? stripDisplayNoise(splitModelFamilyAndEffort(selLabel).family)
           : '';
 
         const families = [];
@@ -167,18 +192,29 @@
         for (const opt of merged) {
           const base = stripDisplayNoise(splitModelFamilyAndEffort(opt.label).family);
           if (!base || seenFamily.has(base)) continue;
+          if (/^Orchestrator\b/i.test(base)) continue;
           const q = readQuotaFraction(opt);
           if (!q) continue;
           seenFamily.add(base);
+          const isOrchTarget = Boolean(orchSub && base.toLowerCase().includes(orchSub));
           families.push({
             family: base,
             pct: q.pct,
             disabled: Boolean(opt.disabled) || q.pct <= 0,
             resetSec: q.resetSec,
-            resetStr: q.resetSec ? formatResetCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
-            active: base === curFamily
+            resetStr: q.resetSec ? formatShortCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
+            resetFull: q.resetSec ? formatResetCountdown(q.resetSec) : q.pct <= 0 ? '已耗尽' : '',
+            active: base === curFamily || isOrchTarget
           });
         }
+
+        families.sort((a, b) => {
+          if (a.active !== b.active) return a.active ? -1 : 1;
+          const aDepleted = a.disabled || a.pct <= 0;
+          const bDepleted = b.disabled || b.pct <= 0;
+          if (aDepleted !== bDepleted) return aDepleted ? 1 : -1;
+          return 0;
+        });
         return families;
       }
 
@@ -282,6 +318,7 @@
         const { email, tier } = syncAccountSnapshot(ctrl, selQuota, families);
         const otherAccounts = window.__isdouAccountSwitcher?.getKnownAccounts?.(email) || [];
         const isPendingAuth = Boolean(window.__isdouAccountSwitcher?.isAuthenticating?.());
+        const shortTier = formatShortTier(tier);
 
         let html = `<div class="isdou-up-acct-sec">`;
         html +=
@@ -289,7 +326,7 @@
           `<div class="isdou-up-acct-cur">` +
           `<span class="isdou-up-acct-dot" aria-hidden="true"></span>` +
           `<span class="isdou-up-acct-email" title="${escapeHtml(email || '')}">${escapeHtml(email || '当前账号')}</span>` +
-          (tier ? `<span class="isdou-up-tier">${escapeHtml(tier)}</span>` : '') +
+          (shortTier ? `<span class="isdou-up-tier" title="${escapeHtml(tier)}">${escapeHtml(shortTier)}</span>` : '') +
           `</div>` +
           (isPendingAuth
             ? `<div class="isdou-up-acct-meta">` +
@@ -297,7 +334,7 @@
               `<button type="button" class="isdou-up-switch-btn" data-isdou-action="copy-auth" title="复制验证链接">复制</button>` +
               `<button type="button" class="isdou-up-switch-btn" data-isdou-action="cancel-auth" title="取消验证并恢复当前账号">取消</button>` +
               `</div>`
-            : `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换账号</button>`) +
+            : `<button type="button" class="isdou-up-switch-btn" data-isdou-action="switch-account" title="切换 Google 会员账号">⇄ 切换</button>`) +
           `</div>`;
 
         if (otherAccounts.length > 0) {
@@ -305,13 +342,15 @@
           for (const acc of otherAccounts) {
             const accPct = acc.effectivePct;
             const accTone = accPct === null || accPct === undefined ? 'ok' : accPct <= 10 ? 'crit' : accPct <= 30 ? 'warn' : 'ok';
-            const statusStr = acc.isReset ? '已重置' : acc.resetSec ? formatResetCountdown(acc.resetSec) : '';
+            const statusStr = acc.isReset ? '已重置' : acc.resetSec ? formatShortCountdown(acc.resetSec) : '';
             const pctStr = accPct !== null && accPct !== undefined ? `${accPct}%` : '--';
+            const accShortTier = formatShortTier(acc.tier);
             html +=
               `<div class="isdou-up-acct-item">` +
-              `<button type="button" class="isdou-up-acct-main" data-isdou-action="switch-account" data-email="${escapeHtml(acc.email)}" title="点击复制邮箱并打开浏览器切换">` +
+              `<button type="button" class="isdou-up-acct-main" data-isdou-action="switch-account" data-email="${escapeHtml(acc.email)}" title="点击复制邮箱并打开浏览器切换到 ${escapeHtml(acc.email)}">` +
+              `<span class="isdou-up-acct-arrow" aria-hidden="true">↪</span>` +
               `<span class="isdou-up-acct-subemail">${escapeHtml(acc.email)}</span>` +
-              (acc.tier ? `<span class="isdou-up-tier isdou-up-tier-muted">${escapeHtml(acc.tier)}</span>` : '') +
+              (accShortTier ? `<span class="isdou-up-tier isdou-up-tier-muted" title="${escapeHtml(acc.tier)}">${escapeHtml(accShortTier)}</span>` : '') +
               `<span class="isdou-up-acct-meta">` +
               (statusStr ? `<span class="isdou-up-reset">${escapeHtml(statusStr)}</span>` : '') +
               `<span class="isdou-up-val" data-tone="${accTone}">${pctStr}</span>` +
@@ -324,35 +363,62 @@
         }
         html += `</div>`;
 
+        const inactiveDepleted = families.filter((f) => !f.active && (f.pct <= 0 || f.disabled));
+        const shouldCollapseDepleted = inactiveDepleted.length >= 2;
+        const visibleRows = shouldCollapseDepleted
+          ? families.filter((f) => f.active || (f.pct > 0 && !f.disabled))
+          : families;
+        const collapsedDepleted = shouldCollapseDepleted ? inactiveDepleted : [];
+
         html += `<div class="isdou-up-sec">`;
-        html += `<div class="isdou-up-hdr"><span>模型配额池</span></div>`;
+        html += `<div class="isdou-up-hdr"><span>模型配额</span><span class="isdou-up-sub">重置 · 剩余</span></div>`;
         if (families.length === 0) {
           html += `<div class="isdou-up-empty">暂无配额数据</div>`;
         } else {
-          for (const f of families) {
+          for (const f of visibleRows) {
             const tone = f.pct <= 10 ? 'crit' : f.pct <= 30 ? 'warn' : 'ok';
             const displayFamily = formatCompactModelDisplay(f.family);
+            const barWidth = f.pct > 0 ? Math.max(4, Math.min(100, f.pct)) : 0;
             html +=
               `<div class="isdou-up-row ${f.active ? 'is-active' : ''} ${f.disabled ? 'is-depleted' : ''}">` +
-              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">${escapeHtml(displayFamily)}</span>` +
-              `<span class="isdou-up-reset">${escapeHtml(f.resetStr || '--')}</span>` +
-              `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${f.pct}%"></div></div>` +
+              `<span class="isdou-up-name" title="${escapeHtml(f.family)}">` +
+              (f.active ? `<span class="isdou-up-active-dot" aria-hidden="true"></span>` : '') +
+              `<span>${escapeHtml(displayFamily)}</span>` +
+              `</span>` +
+              `<span class="isdou-up-reset" title="${escapeHtml(f.resetFull || '')}">${escapeHtml(f.resetStr || '--')}</span>` +
+              `<div class="isdou-up-bar"><div class="isdou-up-fill" data-tone="${tone}" style="width:${barWidth}%"></div></div>` +
               `<span class="isdou-up-val" data-tone="${tone}">${f.pct}%</span>` +
               `</div>`;
+          }
+          if (collapsedDepleted.length > 0) {
+            html += `<div class="isdou-up-depleted-group">`;
+            html += `<span class="isdou-up-depleted-lbl">已耗尽 0%</span>`;
+            html += `<div class="isdou-up-depleted-tags">`;
+            for (const d of collapsedDepleted) {
+              const shortName = formatCompactModelDisplay(d.family);
+              const tip = d.resetFull && d.resetFull !== '已耗尽' ? `${d.family} · ${d.resetFull}` : `${d.family} · 已耗尽`;
+              html += `<span class="isdou-up-depleted-chip" title="${escapeHtml(tip)}">${escapeHtml(shortName)}</span>`;
+            }
+            html += `</div></div>`;
           }
         }
         html += `</div>`;
 
         if (stats) {
           const ctxTone = stats.ctxPct >= 90 ? 'crit' : stats.ctxPct >= 75 ? 'warn' : 'ok';
+          const ctxWidth = Math.max(0, Math.min(100, Number(stats.ctxPct) || 0));
           html += `<div class="isdou-up-sec isdou-up-divider">`;
-          html += `<div class="isdou-up-hdr"><span>当前会话上下文</span><span class="isdou-up-sub">${formatCompactTokens(stats.ctx)} / ${escapeHtml(stats.limitStr || '256k')}</span></div>`;
           html +=
-            `<div class="isdou-up-grid">` +
-            `<div class="isdou-up-kv"><span>上下文占比</span><strong data-tone="${ctxTone}">${stats.ctxPct}%</strong></div>` +
-            `<div class="isdou-up-kv"><span>缓存命中</span><strong>${escapeHtml(stats.sessionCacheRate || '--')}</strong></div>` +
-            `<div class="isdou-up-kv"><span>生成速度</span><strong>${stats.tps ? stats.tps + ' tok/s' : '--'}</strong></div>` +
-            `<div class="isdou-up-kv"><span>首字延迟</span><strong>${stats.ttft ? stats.ttft + 's' : '--'}</strong></div>` +
+            `<div class="isdou-up-hdr">` +
+            `<span>会话上下文</span>` +
+            `<span class="isdou-up-sub">${formatCompactTokens(stats.ctx)} / ${escapeHtml(stats.limitStr || '256k')} · <strong class="isdou-up-ctx-pct" data-tone="${ctxTone}">${stats.ctxPct}%</strong></span>` +
+            `</div>`;
+          html += `<div class="isdou-up-ctx-track"><div class="isdou-up-ctx-fill" data-tone="${ctxTone}" style="width:${ctxWidth}%"></div></div>`;
+          html +=
+            `<div class="isdou-up-stat-grid">` +
+            `<div class="isdou-up-stat-card"><span>缓存命中</span><strong>${escapeHtml(stats.sessionCacheRate || '--')}</strong></div>` +
+            `<div class="isdou-up-stat-card"><span>生成速度</span><strong>${stats.tps ? stats.tps + ' tok/s' : '--'}</strong></div>` +
+            `<div class="isdou-up-stat-card"><span>首字延迟</span><strong>${stats.ttft ? stats.ttft + 's' : '--'}</strong></div>` +
             `</div>`;
           html += `</div>`;
         }
@@ -368,7 +434,7 @@
         renderPopoverContent(ctrl, footer);
         const el = ensurePopover();
         const r = anchorEl.getBoundingClientRect();
-        const popW = 336;
+        const popW = Math.min(368, Math.max(260, window.innerWidth - 24));
         const left = Math.max(12, Math.min(window.innerWidth - popW - 12, r.right - popW));
         const bottom = Math.max(12, window.innerHeight - r.top + 8);
         el.style.left = `${left}px`;
@@ -414,13 +480,35 @@
           return;
         }
 
-        if (hasEffortSeg && family && textNodes.length >= 2) {
+        if (textNodes.length >= 2) {
           const lastNode = textNodes[textNodes.length - 1];
           const lastTxt = (lastNode.nodeValue || '').trim();
-          if (normalizeEffortKey(lastTxt)) {
+          const lastEffort = normalizeEffortKey(lastTxt);
+          if (hasEffortSeg && family && lastEffort) {
             const parentSpan = lastNode.parentElement;
             if (parentSpan && parentSpan !== modelBtn) {
               parentSpan.setAttribute('data-isdou-effort-hidden', 'true');
+            }
+          } else {
+            modelBtn.querySelectorAll('[data-isdou-effort-hidden]').forEach((el) => {
+              el.removeAttribute('data-isdou-effort-hidden');
+            });
+            // 例如 Orchestrator 下第二个节点为 "Gemini 4 Carbon Medium"，同样精简前缀
+            for (let i = 1; i < textNodes.length; i++) {
+              const tn = textNodes[i];
+              const rawSec = tn.nodeValue || '';
+              const srcSec = rawSec !== tn.__isdouShortLabel ? rawSec : tn.__isdouOrigLabel || rawSec;
+              let cleanSec = formatCompactModelDisplay(srcSec);
+              if (hasEffortSeg) {
+                cleanSec = cleanSec.replace(EFFORT_RE, '').trim();
+              }
+              if (cleanSec && cleanSec !== rawSec) {
+                if (rawSec !== tn.__isdouShortLabel) {
+                  tn.__isdouOrigLabel = rawSec;
+                }
+                tn.__isdouShortLabel = cleanSec;
+                tn.nodeValue = cleanSec;
+              }
             }
           }
         } else {
