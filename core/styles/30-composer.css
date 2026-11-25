@@ -198,10 +198,11 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   color: var(--isdou-fg-muted) !important;
 }
 
-/* 隐藏旧版冗余顶部状态胶囊（已由 Linear 外置用量微徽章接管），保留每轮对话尾部统计行（.ag-turn-metrics） */
+/* 隐藏旧版冗余顶部状态胶囊及遗留浮层（已由 Linear 外置用量微徽章与 #isdou-usage-popover 接管），保留每轮对话尾部统计行（.ag-turn-metrics） */
 #ag-live-metrics-pill,
 .ag-live-metrics-pill,
-#ag-side-metrics-pill {
+#ag-side-metrics-pill,
+#ag-live-metrics-tooltip {
   display: none !important;
 }
 

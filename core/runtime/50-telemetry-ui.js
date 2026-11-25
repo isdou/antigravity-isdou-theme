@@ -9,6 +9,17 @@
       if (staleEl) staleEl.remove();
     }
     document.querySelectorAll('.ag-live-metrics-pill').forEach((el) => el.remove());
+    if (
+      window.scrollY > 0 ||
+      (document.documentElement && document.documentElement.scrollTop > 0) ||
+      (document.body && document.body.scrollTop > 0)
+    ) {
+      try {
+        window.scrollTo(0, 0);
+      } catch (e) {}
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    }
     if (window.__ag_pane_states && typeof window.__ag_pane_states === 'object') {
       for (const k of Object.keys(window.__ag_pane_states)) {
         const ps = window.__ag_pane_states[k];
@@ -1114,11 +1125,11 @@
         }
       }
       if (payload.tooltipHtml && (window.__ag_tt_owner_pane || 'main') === pane.key) {
-        const tt = ensureMetricsTooltipEl();
-        if (tt && tt.getAttribute('data-ag-raw-tt') !== payload.tooltipHtml) {
+        const tt = document.getElementById('ag-live-metrics-tooltip');
+        if (tt && tt.getAttribute('data-visible') === '1' && tt.getAttribute('data-ag-raw-tt') !== payload.tooltipHtml) {
           tt.setAttribute('data-ag-raw-tt', payload.tooltipHtml);
           tt.innerHTML = payload.tooltipHtml;
-          if (pill && tt.getAttribute('data-visible') === '1') {
+          if (pill) {
             positionMetricsTooltip(pill, tt, pane.inputBox);
           }
         }
