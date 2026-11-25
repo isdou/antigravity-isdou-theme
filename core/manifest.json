@@ -105,16 +105,16 @@
       "bytes": 7088
     },
     "styles/00-tokens.css": {
-      "sha256": "fd51e1e36d70414b2cb44bb3317aebd2312bc07489d092d7e2ddd6265acee291",
-      "bytes": 5573
+      "sha256": "71065e543c2012e719a57bd24a8300a8c5732e8d37ef55c6db89e22fcdd45789",
+      "bytes": 6628
     },
     "styles/10-sidebar.css": {
       "sha256": "c22e1a74876f0c7a7ca9bb38a301e8cab14d9ad1cf0acd5fd85a262b8cb60e64",
       "bytes": 8850
     },
     "styles/20-chat.css": {
-      "sha256": "9432f11e58d64b5bf258b8f41c5da9d7c407a67b5b3e9c864c68f0a77625dd26",
-      "bytes": 1033
+      "sha256": "874c2cc508227b2a6b195b24bea781d75ff17d87cb99dc84e0f02d89b596d1e3",
+      "bytes": 7932
     },
     "styles/30-composer.css": {
       "sha256": "afbf1731538fa0f88755d46e355acf62218b26670fbf8944acce266c8f222dfe",

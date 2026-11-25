@@ -1,7 +1,10 @@
 /* ============================================================================
- * 20-chat.css — Clean Canvas & Typography Foundation
+ * 20-chat.css — Linear Minimal Chat Bubbles, Markdown Typography & Code Blocks
  *
- * 保持主对话区干净通透，不乱加暴力覆写，方便后续按模块精细定制。
+ * 设计准则：
+ * - 用户气泡摒弃双层套娃与臃肿大圆球，采用 8px 几何圆角 + 1px 发丝冷石板边
+ * - 正文收敛至 14.5px 精密字号 + 1.66 舒适行高，告别桌面端“傻大粗”排版
+ * - 行内代码采用 Linear 文档级 1px 微边框键帽质感；多行代码块采用冷石板顶栏与细边卡片
  * ============================================================================ */
 
 html, body {
@@ -10,27 +13,223 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-[data-markdown-root],
-[data-testid="user-message-content"],
-.agy-user-bubble,
-.prose,
-.markdown {
-  font-family: var(--font-sans) !important;
-  letter-spacing: -0.008em;
-}
-
-:is([data-markdown-root], .prose, .markdown) :is(p, li, blockquote) {
-  line-height: 1.65;
-}
-
-code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
-  font-family: var(--font-mono) !important;
-}
-
 .surface-glass,
 .agy-fastpick.surface-glass,
 .quick-input-widget.surface-glass,
 .agy-user-bubble {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 1. 用户消息气泡（User Message Bubble）
+ * ---------------------------------------------------------------------------- */
+.agy-user-bubble-frame {
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: var(--isdou-radius-md) !important;
+  box-shadow: none !important;
+}
+
+[data-testid="user-message-bubble"],
+.agy-user-bubble {
+  background-color: var(--isdou-user-bubble-bg) !important;
+  border: 1px solid var(--isdou-user-bubble-border) !important;
+  border-radius: var(--isdou-radius-md) !important;
+  padding: 8px 13px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  color: var(--isdou-user-bubble-fg) !important;
+}
+
+[data-testid="user-message-content"] {
+  padding: 0 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 14px !important;
+  font-weight: 430 !important;
+  line-height: 1.58 !important;
+  letter-spacing: -0.008em !important;
+  color: var(--isdou-user-bubble-fg) !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 2. AI 助手 Markdown 正文排版（Linear Docs 精密阅读比例）
+ * ---------------------------------------------------------------------------- */
+[data-markdown-root] {
+  font-family: var(--font-sans) !important;
+  font-size: 14.5px !important;
+  line-height: 1.68 !important;
+  letter-spacing: -0.008em !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-markdown-root] :is(p, li) {
+  line-height: 1.68 !important;
+}
+
+[data-markdown-root] :is(strong, b) {
+  font-weight: 600 !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+[data-markdown-root] h1 {
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.35 !important;
+}
+
+[data-markdown-root] h2 {
+  font-size: 16.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.016em !important;
+  line-height: 1.4 !important;
+}
+
+[data-markdown-root] h3 {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.014em !important;
+  line-height: 1.45 !important;
+}
+
+[data-markdown-root] h4 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* 引用块与分隔线 */
+[data-markdown-root] blockquote {
+  margin: 8px 0 !important;
+  padding: 2px 0 2px 12px !important;
+  border-left: 2px solid var(--isdou-code-border) !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+[data-markdown-root] hr {
+  border: none !important;
+  border-top: 1px solid var(--isdou-sidebar-divider) !important;
+  margin: 14px 0 !important;
+}
+
+/* 文件/上下文引用药丸（inline-pill） */
+[data-markdown-root] .inline-pill {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  padding: 1px 6px !important;
+  border-radius: 5px !important;
+  background-color: var(--isdou-pill-bg) !important;
+  color: var(--isdou-pill-fg) !important;
+  transition: background-color 110ms ease !important;
+}
+
+[data-markdown-root] .inline-pill:hover {
+  background-color: var(--isdou-pill-hover-bg) !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 3. 行内代码与多行代码块（Inline Code & Fenced Code Blocks）
+ * ---------------------------------------------------------------------------- */
+code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
+  font-family: var(--font-mono) !important;
+}
+
+/* 行内代码：Linear 标志性 1px 细边精密微标签 */
+[data-markdown-root] code:not(pre code) {
+  font-family: var(--font-mono) !important;
+  font-size: 12.5px !important;
+  font-weight: 450 !important;
+  padding: 1.5px 5.5px !important;
+  margin: 0 1px !important;
+  border-radius: 5px !important;
+  background-color: var(--isdou-inline-code-bg) !important;
+  border: 1px solid var(--isdou-inline-code-border) !important;
+  color: var(--isdou-inline-code-fg) !important;
+}
+
+/* 多行代码块容器（仅最外层包裹画 1px 细边，彻底杜绝内外双层边框） */
+[data-markdown-root] div:has(> pre):not(div:has(> div > pre) > div),
+[data-markdown-root] div:has(> div > pre) {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  background-color: var(--isdou-code-bg) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+[data-markdown-root] div:has(> div > pre) > div:has(> pre) {
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}
+
+/* 代码块顶部语言与复制按钮栏 */
+[data-markdown-root] div:has(> pre) > div:first-child:not(:only-child),
+[data-markdown-root] div:has(> div > pre) > div:first-child:not(:only-child) {
+  background-color: var(--isdou-code-header-bg) !important;
+  border-bottom: 1px solid var(--isdou-code-border) !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11.5px !important;
+  color: var(--isdou-fg-muted) !important;
+}
+
+/* 纯独立 pre 节点兜底（无外层 wrapper 时） */
+[data-markdown-root] > pre {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  background-color: var(--isdou-code-bg) !important;
+  padding: 12px 14px !important;
+}
+
+[data-markdown-root] pre {
+  background-color: var(--isdou-code-bg) !important;
+  font-size: 12.75px !important;
+  line-height: 1.62 !important;
+  tab-size: 2 !important;
+}
+
+[data-markdown-root] pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* 右侧文件查看器代码行（file-viewer-root）细微调优 */
+.file-viewer-root .code-line {
+  font-family: var(--font-mono) !important;
+  font-size: 12.75px !important;
+}
+
+.file-viewer-root .code-line:not(.code-line-active):hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+}
+
+/* ----------------------------------------------------------------------------
+ * 4. Markdown 表格（Linear 精密细边数据表）
+ * ---------------------------------------------------------------------------- */
+[data-markdown-root] .agy-md-table,
+[data-markdown-root] .md-table-frame {
+  border-radius: var(--isdou-radius-md) !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  box-shadow: none !important;
+}
+
+[data-markdown-root] table.md-table-el th {
+  background-color: var(--isdou-code-header-bg) !important;
+  font-size: 12px !important;
+  font-weight: 550 !important;
+  color: var(--isdou-fg-secondary) !important;
+  border-color: var(--isdou-code-border) !important;
+  padding: 7px 12px !important;
+}
+
+[data-markdown-root] table.md-table-el td {
+  font-size: 13.25px !important;
+  border-color: var(--isdou-code-border) !important;
+  padding: 7px 12px !important;
 }

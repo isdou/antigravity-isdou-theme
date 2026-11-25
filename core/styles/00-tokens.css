@@ -43,6 +43,20 @@ html:not([data-ag-theme-mode="dark"]) body:not(.dark) {
   --isdou-composer-focus-border: #C9CDD4;
   --isdou-composer-shadow: 0 2px 10px rgba(0, 0, 0, 0.035), 0 1px 2px rgba(0, 0, 0, 0.02);
 
+  /* 聊天气泡与代码块 Tokens（浅色） */
+  --isdou-user-bubble-bg: #F3F4F7;
+  --isdou-user-bubble-border: #E4E7EC;
+  --isdou-user-bubble-fg: #16171A;
+  --isdou-code-bg: #F7F8FA;
+  --isdou-code-header-bg: #F1F3F6;
+  --isdou-code-border: #E4E7EC;
+  --isdou-inline-code-bg: #F2F4F7;
+  --isdou-inline-code-border: #E2E5EB;
+  --isdou-inline-code-fg: #242830;
+  --isdou-pill-bg: rgba(94, 106, 210, 0.08);
+  --isdou-pill-hover-bg: rgba(94, 106, 210, 0.14);
+  --isdou-pill-fg: #4854BD;
+
   /* 桥接宿主原生 CSS 变量 */
   --primary: var(--isdou-accent) !important;
   --primary-foreground: #FFFFFF !important;
@@ -102,6 +116,20 @@ body.theme-dark {
   --isdou-composer-border: rgba(255, 255, 255, 0.08);
   --isdou-composer-focus-border: rgba(255, 255, 255, 0.15);
   --isdou-composer-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
+
+  /* 聊天气泡与代码块 Tokens（深色） */
+  --isdou-user-bubble-bg: #1B1C22;
+  --isdou-user-bubble-border: rgba(255, 255, 255, 0.08);
+  --isdou-user-bubble-fg: #F2F3F5;
+  --isdou-code-bg: #131418;
+  --isdou-code-header-bg: #18191E;
+  --isdou-code-border: rgba(255, 255, 255, 0.075);
+  --isdou-inline-code-bg: rgba(255, 255, 255, 0.065);
+  --isdou-inline-code-border: rgba(255, 255, 255, 0.095);
+  --isdou-inline-code-fg: #E3E6ED;
+  --isdou-pill-bg: rgba(94, 106, 210, 0.16);
+  --isdou-pill-hover-bg: rgba(94, 106, 210, 0.25);
+  --isdou-pill-fg: #9AA3F8;
 
   --primary: var(--isdou-accent) !important;
   --primary-foreground: #FFFFFF !important;
