@@ -34,6 +34,7 @@ const protoMod = await loadOptionalModule('daemon/protobuf.mjs');
 const lsLogMod = await loadOptionalModule('daemon/ls-log.mjs');
 const sqliteMetricsMod = await loadOptionalModule('daemon/sqlite-metrics.mjs');
 const promptSuggestMod = await loadOptionalModule('daemon/prompt-suggest.mjs');
+const skillDexMod = await loadOptionalModule('daemon/skilldex.mjs');
 
 const parseProto = protoMod?.parseProto || null;
 const parseGenMetadataRow = protoMod?.parseGenMetadataRow || null;
@@ -75,10 +76,13 @@ const promptSuggester = promptSuggestMod
     })
   : null;
 
+const skillDexEngine = skillDexMod ? skillDexMod.createSkillDexEngine() : null;
+
 const cdpManager = createCdpManager({
   bundleCtrl,
   metricsReader,
   promptSuggester,
+  skillDexEngine,
   hasSqlite: () => Boolean(DatabaseSync && sqliteMetricsMod),
   runOnce: cliOpts.runOnce,
   safeMode: cliOpts.safeMode

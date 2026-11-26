@@ -8,6 +8,22 @@
 
 ---
 
+## 效果预览
+
+> **深色工作区（`linear-dark`）与配额恢复自动续跑条**：卡片侧边栏、每轮回复统计，以及配额可用时自动亮起的续跑提示条
+![深色工作区与配额恢复自动续跑条](docs/images/02-workspace-dark.png)
+
+> **高频工作流增强套件**：侧栏隐藏项目与一键恢复、每轮耗时与缓存拆解、Finder 拖拽文件夹直开项目、OAuth 验证横幅救援
+![高频工作流增强细节](docs/images/04-workflow-highlights.png)
+
+> **额度 / 会话 / 多账号三合一浮窗**：同池模型自动合并折叠、实时会话遥测，以及切号前的上次剩余额度预览
+![额度与多账号切换三视图](docs/images/03-usage-and-accounts.png)
+
+> **浅色工作区（`linear-light`）**：极简发丝边线、项目 Monogram 徽标、内联思考强度切换与 `Tab` 预测输入
+![浅色工作区全景](docs/images/01-workspace-light.png)
+
+---
+
 ## 核心功能
 
 ### 1. Linear 极简视觉与输入栏重构

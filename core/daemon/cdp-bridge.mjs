@@ -105,6 +105,7 @@ export function createCdpManager({
   bundleCtrl,
   metricsReader,
   promptSuggester = null,
+  skillDexEngine = null,
   hasSqlite,
   runOnce = false,
   safeMode = false
@@ -419,6 +420,7 @@ export function createCdpManager({
             await send('Runtime.addBinding', { name: '__agRequestMetrics' });
             await send('Runtime.addBinding', { name: '__agSyncHostThemeMode' });
             await send('Runtime.addBinding', { name: '__agRequestPromptSuggestion' });
+            await send('Runtime.addBinding', { name: '__agSkillDexRequest' });
           }
           await updateNewDocScript();
           const ok = await inject();
@@ -523,6 +525,43 @@ export function createCdpManager({
                   try {
                     await send('Runtime.evaluate', {
                       expression: `if (typeof window.__ag_on_prompt_suggestion === 'function') { window.__ag_on_prompt_suggestion(${JSON.stringify(reqId)}, ${payloadJson}); }`,
+                      returnByValue: false
+                    });
+                  } catch {}
+                }
+              })();
+              return;
+            }
+            if (msg.method === 'Runtime.bindingCalled' && msg.params?.name === '__agSkillDexRequest') {
+              const { activeConfig } = bundleCtrl.getState();
+              if (
+                isSwarmIframe ||
+                !hostConfirmed ||
+                !skillDexEngine ||
+                !activeConfig.enabled ||
+                activeConfig.modules.skillDex === false
+              ) {
+                return;
+              }
+              let req = {};
+              try {
+                req = msg.params.payload ? JSON.parse(String(msg.params.payload)) : {};
+              } catch {}
+              const reqId = String(req?.reqId || '');
+              void (async () => {
+                let out;
+                try {
+                  out = await skillDexEngine.handleRequest(req);
+                } catch (err) {
+                  out = { ok: false, error: err?.message || String(err || 'SkillDex error') };
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                  const payloadJson = JSON.stringify(out)
+                    .replace(/\u2028/g, '\\u2028')
+                    .replace(/\u2029/g, '\\u2029');
+                  try {
+                    await send('Runtime.evaluate', {
+                      expression: `if (typeof window.__ag_on_skilldex_response === 'function') { window.__ag_on_skilldex_response(${JSON.stringify(reqId)}, ${payloadJson}); }`,
                       returnByValue: false
                     });
                   } catch {}

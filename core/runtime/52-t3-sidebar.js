@@ -75,7 +75,9 @@
         imageIcon:
           '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0 text-secondary-foreground"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>',
         rotateCcw:
-          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0 text-secondary-foreground"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>'
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0 text-secondary-foreground"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>',
+        skilldex:
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path></svg>'
       };
 
       const PROVIDER_SVGS = {
@@ -660,7 +662,12 @@
             '</button>' +
             '<button type="button" class="isdou-t3-icon-btn" data-isdou-action="customizations" aria-label="技能与自定义" title="技能与自定义">' +
             SVG_ICONS.blocks +
-            '</button>';
+            '</button>' +
+            (MODULES.skillDex !== false
+              ? '<button type="button" class="isdou-t3-icon-btn" data-isdou-action="skilldex" aria-label="SkillDex 技能图鉴" title="SkillDex 技能图鉴 (⌘⇧K)">' +
+                SVG_ICONS.skilldex +
+                '</button>'
+              : '');
 
           if (boot.updateNotice) {
             const link = document.createElement('a');
@@ -689,6 +696,12 @@
             e.preventDefault();
             e.stopPropagation();
             document.querySelector('.bg-sidebar a[href="/customizations"]')?.click();
+          });
+
+          footer.querySelector('[data-isdou-action="skilldex"]')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.__isdouSkillDex?.toggle?.();
           });
         }
 
@@ -1204,8 +1217,9 @@
                   target.id === FOOTER_ID ||
                   target.id === ICON_INPUT_ID ||
                   target.id === TOAST_ID ||
+                  target.id === 'isdou-skilldex-backdrop' ||
                   target.closest?.(
-                    `#${HEADER_ID}, #${FOOTER_ID}, #${ICON_INPUT_ID}, #${TOAST_ID}, [data-testid="${ICON_SET_MENU_TESTID}"], [data-testid="${ICON_RESET_MENU_TESTID}"], .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-proj-trailing`
+                    `#${HEADER_ID}, #${FOOTER_ID}, #${ICON_INPUT_ID}, #${TOAST_ID}, #isdou-skilldex-backdrop, [data-testid="${ICON_SET_MENU_TESTID}"], [data-testid="${ICON_RESET_MENU_TESTID}"], .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-proj-trailing`
                   )
                 ) {
                   continue;

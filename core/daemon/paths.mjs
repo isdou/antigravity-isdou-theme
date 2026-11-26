@@ -170,6 +170,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       metrics: Boolean(hasSqlite),
       promptSuggestions: true,
       projectHider: true,
+      skillDex: true,
       accountSwitcher: true,
       folderDrop: true,
       quotaResume: true,
@@ -244,6 +245,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
         metrics: true,
         promptSuggestions: true,
         projectHider: true,
+        skillDex: true,
         accountSwitcher: true,
         folderDrop: true,
         quotaResume: true,
@@ -267,6 +269,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     const hasGuardsFile = fs.existsSync(path.join(RUNTIME_DIR, '10-guards.js'));
     const hasPromptSuggestionsFile = fs.existsSync(path.join(RUNTIME_DIR, '70-prompt-suggestions.js'));
     const hasProjectHiderFile = fs.existsSync(path.join(RUNTIME_DIR, '55-project-hider.js'));
+    const hasSkillDexFile = fs.existsSync(path.join(RUNTIME_DIR, '58-skilldex.js'));
     const hasAccountSwitcherFile = fs.existsSync(path.join(RUNTIME_DIR, '62-account-switcher.js'));
     const hasFolderDropFile = fs.existsSync(path.join(RUNTIME_DIR, '80-folder-drop.js'));
     const hasQuotaResumeFile = fs.existsSync(path.join(RUNTIME_DIR, '85-quota-resume.js'));
@@ -275,6 +278,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     if (!hasSqlite || !hasMetricsFiles) modules.metrics = false;
     if (!hasPromptSuggestionsFile) modules.promptSuggestions = false;
     if (!hasProjectHiderFile) modules.projectHider = false;
+    if (!hasSkillDexFile) modules.skillDex = false;
     if (!hasAccountSwitcherFile) modules.accountSwitcher = false;
     if (!hasFolderDropFile) modules.folderDrop = false;
     if (!hasQuotaResumeFile) modules.quotaResume = false;

@@ -241,6 +241,7 @@ async function runInstall() {
     'metrics',
     'promptSuggestions',
     'projectHider',
+    'skillDex',
     'accountSwitcher',
     'folderDrop',
     'quotaResume',
@@ -276,6 +277,9 @@ async function runInstall() {
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '55-project-hider.js'))) {
     currentCfg.modules.projectHider = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '58-skilldex.js'))) {
+    currentCfg.modules.skillDex = false;
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '62-account-switcher.js'))) {
     currentCfg.modules.accountSwitcher = false;

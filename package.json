@@ -1,6 +1,6 @@
 {
   "name": "antigravity-isdou-theme",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Linear-inspired minimal UI theme, localization, and Claude-style prompt suggestions for Google Antigravity.",
   "type": "module",
   "author": "isdou",

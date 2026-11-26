@@ -1,0 +1,873 @@
+/* ============================================================================
+ * 45-skilldex.css — SkillDex 内置技能图鉴与省额度体检工作台
+ * ============================================================================ */
+
+#isdou-t3-sidebar-footer [data-isdou-action="skilldex"] {
+  position: relative !important;
+}
+
+#isdou-t3-sidebar-footer [data-isdou-action="skilldex"][data-isdou-has-alert]::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 999px;
+  background-color: var(--isdou-t3-approval);
+}
+
+#isdou-skilldex-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483200 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(15, 16, 20, 0.42) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 150ms ease, visibility 150ms ease !important;
+  font-family: var(--font-sans) !important;
+}
+
+#isdou-skilldex-backdrop[data-open="true"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+#isdou-skilldex-modal {
+  width: min(1040px, 92vw) !important;
+  height: min(720px, 86vh) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--isdou-composer-border) !important;
+  background: var(--isdou-canvas-bg) !important;
+  color: var(--isdou-fg-primary) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24), 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(8px) scale(0.985);
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+#isdou-skilldex-backdrop[data-open="true"] #isdou-skilldex-modal {
+  transform: translateY(0) scale(1);
+}
+
+/* 顶栏 */
+#isdou-skilldex-modal .sdx-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--isdou-sidebar-divider);
+  background: var(--isdou-sidebar-bg);
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--isdou-accent-soft);
+  color: var(--isdou-fg-secondary);
+}
+
+#isdou-skilldex-modal .sdx-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--isdou-chip-bg);
+  border: 1px solid var(--isdou-chip-border);
+}
+
+#isdou-skilldex-modal .sdx-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--isdou-fg-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 110ms ease, color 110ms ease;
+}
+
+#isdou-skilldex-modal .sdx-tab:hover {
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-tab.is-active {
+  background: var(--isdou-composer-card);
+  color: var(--isdou-fg-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+#isdou-skilldex-modal .sdx-tab span {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.72;
+}
+
+#isdou-skilldex-modal .sdx-tab span.is-warn {
+  opacity: 1;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(217, 119, 6, 0.16);
+  color: var(--isdou-t3-approval);
+  font-weight: 600;
+}
+
+#isdou-skilldex-modal .sdx-top-right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#isdou-skilldex-modal .sdx-search {
+  width: 220px;
+  height: 29px;
+  padding: 0 10px;
+  border-radius: 7px;
+  border: 1px solid var(--isdou-composer-border);
+  background: var(--isdou-composer-card);
+  color: var(--isdou-fg-primary);
+  font-size: 12.5px;
+  outline: none;
+}
+
+#isdou-skilldex-modal .sdx-search:focus {
+  border-color: var(--isdou-accent);
+}
+
+#isdou-skilldex-modal .sdx-icon-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--isdou-fg-muted);
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-icon-btn:hover {
+  background: var(--isdou-sidebar-hover);
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-body {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 筛选条 */
+#isdou-skilldex-modal .sdx-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--isdou-sidebar-divider);
+  background: var(--isdou-canvas-bg);
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-chips {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+#isdou-skilldex-modal .sdx-chip {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 999px;
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-chip.is-active {
+  background: var(--isdou-accent-soft);
+  color: var(--isdou-pill-fg);
+  font-weight: 600;
+}
+
+#isdou-skilldex-modal .sdx-filter-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-select {
+  height: 25px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--isdou-chip-border);
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-secondary);
+  font-size: 11.5px;
+  outline: none;
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-seg {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--isdou-chip-bg);
+  border: 1px solid var(--isdou-chip-border);
+}
+
+#isdou-skilldex-modal .sdx-seg button {
+  height: 21px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--isdou-fg-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-seg button.is-active {
+  background: var(--isdou-composer-card);
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* 图鉴卡片网格 */
+#isdou-skilldex-modal .sdx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+#isdou-skilldex-modal .sdx-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 13px;
+  border-radius: 11px;
+  border: 1px solid var(--isdou-composer-border);
+  background: var(--isdou-composer-card);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+#isdou-skilldex-modal .sdx-card:hover {
+  border-color: color-mix(in srgb, var(--isdou-accent) 45%, var(--isdou-composer-border));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+#isdou-skilldex-modal .sdx-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#isdou-skilldex-modal .sdx-cat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--sdx-cat, #5E6AD2) 13%, transparent);
+  color: var(--sdx-cat, #5E6AD2);
+}
+
+#isdou-skilldex-modal .sdx-card-title-wrap {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#isdou-skilldex-modal .sdx-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--isdou-fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#isdou-skilldex-modal .sdx-sym {
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--isdou-fg-subtle);
+}
+
+#isdou-skilldex-modal .sdx-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+#isdou-skilldex-modal .sdx-demo-tag {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--isdou-accent-soft);
+  color: var(--isdou-pill-fg);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+#isdou-skilldex-modal .sdx-usage-pill {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-subtle);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+#isdou-skilldex-modal .sdx-usage-pill.is-hot {
+  background: rgba(217, 119, 6, 0.14);
+  color: var(--isdou-t3-approval);
+  font-weight: 600;
+}
+
+#isdou-skilldex-modal .sdx-card-desc {
+  font-size: 12px;
+  line-height: 1.48;
+  color: var(--isdou-fg-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 35px;
+}
+
+#isdou-skilldex-modal .sdx-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+#isdou-skilldex-modal .sdx-trigger {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--isdou-inline-code-bg);
+  color: var(--isdou-fg-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+#isdou-skilldex-modal .sdx-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 110ms ease;
+}
+
+#isdou-skilldex-modal .sdx-card:hover .sdx-card-actions {
+  opacity: 1;
+}
+
+/* 通用按钮与标签 */
+#isdou-skilldex-modal .sdx-mini-btn,
+#isdou-skilldex-modal .sdx-btn {
+  height: 23px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid var(--isdou-chip-border);
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#isdou-skilldex-modal .sdx-btn {
+  height: 28px;
+  padding: 0 11px;
+  font-size: 12px;
+}
+
+#isdou-skilldex-modal .sdx-mini-btn:hover,
+#isdou-skilldex-modal .sdx-btn:hover {
+  background: var(--isdou-chip-hover-bg);
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-mini-btn.is-accent,
+#isdou-skilldex-modal .sdx-btn.is-primary {
+  border-color: transparent;
+  background: var(--isdou-accent);
+  color: #ffffff;
+}
+
+#isdou-skilldex-modal .sdx-mini-btn.is-accent:hover,
+#isdou-skilldex-modal .sdx-btn.is-primary:hover {
+  background: var(--isdou-accent-hover);
+  color: #ffffff;
+}
+
+#isdou-skilldex-modal .sdx-mini-btn.is-warn {
+  border-color: rgba(217, 119, 6, 0.3);
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--isdou-t3-approval);
+}
+
+#isdou-skilldex-modal .sdx-btn.is-danger {
+  border-color: rgba(220, 38, 38, 0.28);
+  color: var(--isdou-t3-failed);
+}
+
+#isdou-skilldex-modal .sdx-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+#isdou-skilldex-modal .sdx-badge.is-warn {
+  background: rgba(217, 119, 6, 0.14);
+  color: var(--isdou-t3-approval);
+}
+
+#isdou-skilldex-modal .sdx-badge.is-accent {
+  background: var(--isdou-accent-soft);
+  color: var(--isdou-pill-fg);
+}
+
+/* 详情视图 */
+#isdou-skilldex-modal .sdx-detail-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--isdou-sidebar-divider);
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-back-btn {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 6px;
+  border: 1px solid var(--isdou-chip-border);
+  background: var(--isdou-chip-bg);
+  color: var(--isdou-fg-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-detail-head-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#isdou-skilldex-modal .sdx-detail-name {
+  font-size: 14.5px;
+  font-weight: 620;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-detail-sub {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-skilldex-modal .sdx-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#isdou-skilldex-modal .sdx-detail-card {
+  padding: 13px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--isdou-composer-border);
+  background: var(--isdou-composer-card);
+}
+
+#isdou-skilldex-modal .sdx-detail-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--isdou-fg-muted);
+  margin-bottom: 8px;
+}
+
+#isdou-skilldex-modal .sdx-detail-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-prompt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#isdou-skilldex-modal .sdx-prompt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--isdou-chip-bg);
+}
+
+#isdou-skilldex-modal .sdx-prompt-text {
+  font-size: 12.5px;
+  color: var(--isdou-fg-primary);
+  line-height: 1.4;
+}
+
+#isdou-skilldex-modal .sdx-prompt-btns {
+  display: inline-flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-demo-box {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--isdou-accent-soft);
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+#isdou-skilldex-modal .sdx-preview-imgs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+#isdou-skilldex-modal .sdx-preview-img {
+  width: 200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--isdou-composer-border);
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-file-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#isdou-skilldex-modal .sdx-file-tags code {
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--isdou-inline-code-bg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--isdou-fg-secondary);
+}
+
+#isdou-skilldex-modal .sdx-path {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--isdou-fg-secondary);
+  word-break: break-all;
+}
+
+#isdou-skilldex-modal .sdx-path.is-sym {
+  margin-top: 4px;
+  color: var(--isdou-pill-fg);
+}
+
+#isdou-skilldex-modal .sdx-source-pre {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--isdou-code-border);
+  background: var(--isdou-code-bg);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-detail-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--isdou-sidebar-divider);
+  background: var(--isdou-sidebar-bg);
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-detail-foot-left,
+#isdou-skilldex-modal .sdx-detail-foot-right {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* 体检视图 */
+#isdou-skilldex-modal .sdx-audit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#isdou-skilldex-modal .sdx-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+#isdou-skilldex-modal .sdx-metric {
+  padding: 14px 16px;
+  border-radius: 11px;
+  border: 1px solid var(--isdou-composer-border);
+  background: var(--isdou-composer-card);
+}
+
+#isdou-skilldex-modal .sdx-metric-lbl {
+  font-size: 11.5px;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-skilldex-modal .sdx-metric-val {
+  margin-top: 5px;
+  font-size: 24px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-metric-val.is-warn {
+  color: var(--isdou-t3-approval);
+}
+
+#isdou-skilldex-modal .sdx-metric-val.is-ok {
+  color: var(--isdou-t3-done);
+}
+
+#isdou-skilldex-modal .sdx-metric-val span {
+  margin-left: 5px;
+  font-size: 11.5px;
+  font-weight: 450;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-skilldex-modal .sdx-bar {
+  margin-top: 8px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--isdou-chip-bg);
+  overflow: hidden;
+}
+
+#isdou-skilldex-modal .sdx-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+#isdou-skilldex-modal .sdx-section {
+  padding: 14px 16px;
+  border-radius: 11px;
+  border: 1px solid var(--isdou-composer-border);
+  background: var(--isdou-composer-card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#isdou-skilldex-modal .sdx-section-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 620;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-audit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--isdou-chip-bg);
+}
+
+#isdou-skilldex-modal .sdx-audit-row.is-warn {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+#isdou-skilldex-modal .sdx-audit-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#isdou-skilldex-modal .sdx-audit-title {
+  font-size: 12.5px;
+  font-weight: 560;
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-audit-sub {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--isdou-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#isdou-skilldex-modal .sdx-audit-acts {
+  display: inline-flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+#isdou-skilldex-modal .sdx-unused-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
+}
+
+#isdou-skilldex-modal .sdx-unused-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--isdou-chip-bg);
+}
+
+#isdou-skilldex-modal .sdx-unused-name {
+  font-size: 11.5px;
+  color: var(--isdou-fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#isdou-skilldex-modal .sdx-unused-name:hover {
+  color: var(--isdou-fg-primary);
+}
+
+#isdou-skilldex-modal .sdx-link-btn {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--isdou-pill-fg);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+/* 原生质感 Switch */
+#isdou-skilldex-modal .sdx-switch {
+  width: 32px;
+  height: 18px;
+  padding: 2px;
+  border: none;
+  border-radius: 999px;
+  background: var(--isdou-composer-border);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 140ms ease;
+}
+
+#isdou-skilldex-modal .sdx-switch span {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  transform: translateX(0);
+  transition: transform 140ms ease;
+}
+
+#isdou-skilldex-modal .sdx-switch.is-on {
+  background: var(--isdou-accent);
+}
+
+#isdou-skilldex-modal .sdx-switch.is-on span {
+  transform: translateX(14px);
+}
+
+#isdou-skilldex-modal .sdx-empty {
+  padding: 64px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--isdou-fg-muted);
+}
+
+#isdou-skilldex-modal .sdx-muted {
+  font-size: 12px;
+  color: var(--isdou-fg-muted);
+}
