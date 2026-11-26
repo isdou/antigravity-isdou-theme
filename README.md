@@ -1,10 +1,10 @@
 # antigravity-isdou-theme
 
-面向 **Google Antigravity** 的 **Linear 极简克制风格** 界面重构主题、中文界面本地化与原生工作流效率增强套件。
+面向 **Google Antigravity** 的 **Linear 极简克制风格** 界面重构主题、中文界面本地化、**内置 SkillDex 技能图鉴与省额度体检工作台**，以及原生工作流效率增强套件。
 
 基于本地 Chrome DevTools Protocol（CDP）守护进程实时注入样式与运行时脚本，**不修改已签名的 `.app` 主程序二进制与服务端文件**，可随时完整停用或卸载还原。
 
-> 环境要求：Node.js `>= 22.13.0`
+> 环境要求：Node.js `>= 22.13.0` · 最新版本：[v0.3.0](https://github.com/isdou/antigravity-isdou-theme/releases/latest)（新增内置 **SkillDex 技能图鉴/省额度体检** 与 **项目管理自定义 APP 图标**）
 
 ---
 
@@ -26,27 +26,33 @@
 
 ## 核心功能
 
-### 1. Linear 极简视觉与输入栏重构
-- 提供 `linear-light`（默认）与 `linear-dark` 双预设色阶，统一 6px 几何圆角、1px 发丝边线、对话气泡与设置/命令面板（`⌘K`）样式。
+### 1. 内置 SkillDex 技能图鉴与省额度体检工作台（`⌘⇧K`）
+- **侧栏底栏双星芒图标**或全局快捷键 **`⌘ + Shift + K`**（Windows/Linux 为 `Ctrl + Shift + K`）一键呼出 Linear 风格宽屏模态工作台。
+- **图鉴画廊 & 一键填入输入框**：默认聚焦当前 Antigravity 生效技能（可按需切换查看 Codex / Claude / Cursor 全端），卡片化展示一句话用途、触发口令、Demo 效果与附带截图/脚本，以及基于本地历史日志统计的真实调用频次；点击 **「填入」** 可直接把推荐口令注入当前对话框，免去复制粘贴。
+- **省额度体检雷达**：实时测算常驻 `always_on` Rules 的每轮 Token 消耗与 Antigravity 技能挂载水位，一眼揪出重型插件规则、跨目录重复副本与 `0 次吃灰` 技能；支持**一键安全去重**、**一键收入收纳箱**与 **Antigravity 插件实时开关**（直接读写 `~/.gemini/config/config.json`，不删文件）。
+- **无痛收纳箱**：归档技能统一安全移入 `skills-archive/`，不删原文件、不破坏跨工具软链，随时一键恢复。
+
+### 2. 侧边栏项目管理：自定义 APP 图标 + 列表隐藏
+- **自定义项目图标**：在左侧「项目管理」任意项目行的 `···` / 右键菜单中点击 **「自定义图标 / 更换图标」**（或按住 `Option/Alt + 点击项目左侧图标`），上传 PNG / JPG / WebP / SVG / ICO 即可替换默认文字缩写徽标；支持随时 **「恢复默认图标」**。
+  - 自动在客户端缩放压缩为高清 `96×96` WebP 持久化于 `localStorage`（跨窗口自动同步），自动识别满幅 App Icon 与透明底图标以匹配自适应微描边，并同步联动**项目折叠头**与**会话卡片顶行所属项目徽标**。
+- **在列表中隐藏**：在项目行 `···` 菜单「删除项目」前新增 **「在列表中隐藏」**，仅作本地视图过滤（记录于 `localStorage`），**不删除项目文件、不修改服务端状态**，无空白占位间隙；标题右侧出现紧凑 **「隐藏 N」** 浮窗支持单个或全部恢复，拖入已隐藏文件夹也会自动恢复显示。
+
+### 3. Linear 极简视觉与输入栏重构
+- 提供 `linear-light`（默认）与 `linear-dark` 双预设色阶，统一 6px 几何圆角、1px 发丝边线、紧凑卡片式侧边栏、对话气泡与设置/命令面板（`⌘K`）样式。
 - **输入栏响应式改造**：支持主对话区与右侧 `Side Question` 双窗格；自动去掉模型名称中重复的 `Gemini ` 前缀，并在输入栏中内嵌思考强度调节器（`低` / `中` / `高` / `极高`，窄屏下自动折叠为紧凑切换胶囊）及模型配额进度显示。
 
-### 2. 侧边栏项目管理「在列表中隐藏」
-- 在左侧「项目管理」每个文件夹行的 `...` 菜单「删除项目」前新增 **「在列表中隐藏」** 选项。
-- 仅作本地视图过滤（记录于 `localStorage`），**不删除项目文件、不修改服务端项目状态**，并复用原生虚拟列表重排，隐藏后无空白占位间隙，也不会把该项目下对话错归入孤立对话列表。
-- 有项目被隐藏时，「项目管理」标题右侧会显示紧凑的 **「隐藏 N」** 按钮，点击浮窗支持单个 **「恢复显示」** 或 **「全部恢复」**；将已隐藏的文件夹从桌面重新拖入打开时也会自动取消隐藏。
-
-### 3. 桌面 / Finder 拖拽文件夹直接打开
+### 4. 桌面 / Finder 拖拽文件夹直接打开
 - 从 Finder 或桌面将本地文件夹拖入 Antigravity 窗口任意位置即可直接打开或切换聚焦对应项目，省去手动点选层级目录的弹窗步骤。
 - 普通文件或图片拖入输入框时，仍保持 Antigravity 原生附件上传逻辑，互不干扰。
 
-### 4. 原生一键切换账号与验证辅助横幅
+### 5. 原生一键切换账号与验证辅助横幅
 - 面向拥有多个合法会员账号的场景，在顶部状态区 / 账号切换入口复用 Antigravity 内置 OAuth 登录流程（`authService.loginWithRedirect`），并在 `localStorage` 保存非敏感的邮箱与最近配额快照（**不接触系统 Keychain 或任何凭据 Token**）。
 - 当浏览器关闭或跳转阻塞停留在 `Authenticating...` 横幅时，横幅内提供 **「🌐 打开验证页」「📋 复制链接」「粘贴授权码 / 提交」「取消验证」**，避免死等卡住。
 
-### 5. 配额耗尽 / 切号后无缝续跑条
+### 6. 配额耗尽 / 切号后无缝续跑条
 - 记录因模型配额耗尽而中断的会话上下文，在切换账号或更换到有可用配额的模型后，输入框上方自动出现高亮续跑条（支持手点继续或开启“配额恢复后自动继续”）。
 
-### 6. 实时会话遥测、提示词预测与稳定性增强
+### 7. 实时会话遥测、提示词预测与稳定性增强
 - **实时会话遥测**：底部状态胶囊（输出速率 `tok/s`、上下文占比 `Ctx`、缓存命中率 `Cache`）、悬停面板与每轮回复尾部耗时/用量统计。
 - **Claude Code 风格提示词预测**：输入框浅灰 ghost text + `Tab` / `→` 采纳下一句建议。
 - **中文界面本地化**：基于 `WeakMap` 隔离与排除列表的安全 DOM 本地化引擎，不误伤代码块、用户输入与对话内容。
@@ -58,18 +64,21 @@
 
 ### 样式分层（`core/styles/`）
 - [00-tokens.css](core/styles/00-tokens.css) — Linear 昼夜色阶（Daylight / Obsidian）、6px 精密几何圆角、字重与边线变量
-- [10-sidebar.css](core/styles/10-sidebar.css) — Linear 极简侧边栏、项目树引导线、隐形滚动条与隐藏项目徽章/浮窗样式
+- [10-sidebar.css](core/styles/10-sidebar.css) — Linear 极简侧边栏、自定义项目图标与 Monogram 徽标、项目树引导线、隐形滚动条与隐藏项目浮窗样式
 - [15-topbar.css](core/styles/15-topbar.css) — Linear 正交顶栏、面包屑与面板切换图标
 - [20-chat.css](core/styles/20-chat.css) — 主对话气泡、Markdown 排版、代码块与工具调用活动时间轴
 - [30-composer.css](core/styles/30-composer.css) — 底部输入框、属性芯片、思考强度切换、配额徽章、实时遥测胶囊与幽灵补全样式
 - [40-modals-home.css](core/styles/40-modals-home.css) — 系统设置弹窗、账号验证操作栏、命令面板（`⌘K`）与首页欢迎页
+- [45-skilldex.css](core/styles/45-skilldex.css) — 内置 SkillDex 技能图鉴、省额度体检与收纳箱工作台样式
 
-### 运行时模块（`core/runtime/`）
+### 运行时与守护引擎（`core/runtime/` & `core/daemon/`）
 - [00-head.js](core/runtime/00-head.js) — 引导初始化、生命周期清理钩子、i18n 排除选择器与样式注入
 - [10-guards.js](core/runtime/10-guards.js) — 设置弹窗路由死锁修复与跨平台缩放快捷键
 - [20-theme-sync.js](core/runtime/20-theme-sync.js) — 昼夜主题与设计变量实时同步
 - [30-antigravity-probe.js](core/runtime/30-antigravity-probe.js) / [40-status-machine.js](core/runtime/40-status-machine.js) / [50-telemetry-ui.js](core/runtime/50-telemetry-ui.js) — 会话状态探测与遥测面板渲染
+- [52-t3-sidebar.js](core/runtime/52-t3-sidebar.js) — 紧凑卡片式侧边栏、项目自定义 APP 图标上传/同步与底栏 SkillDex 入口
 - [55-project-hider.js](core/runtime/55-project-hider.js) — 侧边栏文件夹「在列表中隐藏」与「隐藏 N」恢复浮窗
+- [58-skilldex.js](core/runtime/58-skilldex.js) & [skilldex.mjs](core/daemon/skilldex.mjs) — 内置 SkillDex 图鉴画廊、历史日志用量统计、Rules 体检、安全归档与插件开关引擎
 - [60-i18n-engine.js](core/runtime/60-i18n-engine.js) — 中文界面本地化引擎（词典见 [core/i18n.json](core/i18n.json)）
 - [62-account-switcher.js](core/runtime/62-account-switcher.js) — 原生一键切号、验证横幅辅助与配额快照
 - [65-composer-bar.js](core/runtime/65-composer-bar.js) — 输入栏响应式改造（精简模型名、内嵌思考强度与配额条）
@@ -134,7 +143,7 @@ node install.mjs uninstall
 
 ```bash
 node install.mjs install --preset linear-light --only theme
-# 或跳过修复与交互增强组（deadlockHealer / zoomShortcuts / projectHider / accountSwitcher / folderDrop / quotaResume）
+# 或跳过修复与交互增强组（deadlockHealer / zoomShortcuts / projectHider / skillDex / accountSwitcher / folderDrop / quotaResume）
 node install.mjs install --without fixes
 # 可切换深色预设
 node install.mjs install --preset linear-dark
@@ -155,6 +164,7 @@ node install.mjs install --preset linear-dark
     "metrics": true,
     "promptSuggestions": true,
     "projectHider": true,
+    "skillDex": true,
     "accountSwitcher": true,
     "folderDrop": true,
     "quotaResume": true,
