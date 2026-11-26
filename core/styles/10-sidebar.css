@@ -1,14 +1,14 @@
 /* ============================================================================
- * 10-sidebar.css — Linear Minimal Precision Sidebar
+ * 10-sidebar.css — 紧凑卡片式精准侧边栏（Light Zinc / Obsidian Dark）
  *
  * 设计准则：
- * - 6px 精密小圆角，摒弃松散圆球与廉价厚阴影
- * - 纯粹通过冷中性石板灰阶区分主次：标题 #16171A / 常态行 #494E56 / 辅助 #8A8F98
- * - 清晰的 1px 发丝边界与项目子树垂直缩进引导线（Indent Guide）
- * - 隐形极细滚动条，悬停侧边栏时才轻柔浮现
+ * - 极净中性 Zinc 色阶：浅色 #FAFAFA 底布配 #FFFFFF 抬升选中卡；深色 #0B0B0D 配 #1B1C20 高光卡
+ * - 顶部收拢为「搜索 + 筛选 / 新建项目 / 新建对话」，底部收敛为横向图标栏
+ * - 16×16 彩色双字母 / 单汉字项目方砖徽标 + 折叠态精准计数与状态点
+ * - 多维克制卡片行（所属项目 / 状态胶囊 / Git 分支 / PR / 模型徽标），无数据时保持利落单行
  * ============================================================================ */
 
-/* 1. 侧边栏容器底布与右侧 1px 发丝线 */
+/* 1. 侧边栏容器底布与 1px 边框 */
 .bg-sidebar:not([data-has-browser-hole="true"]),
 aside.bg-sidebar {
   background-color: var(--isdou-sidebar-bg) !important;
@@ -17,13 +17,21 @@ aside.bg-sidebar {
   -webkit-font-smoothing: antialiased;
 }
 
-/* 去除宿主内置玻璃模糊与多余内边阴影 */
+.agy-inset-shell .bg-sidebar:not([data-has-browser-hole="true"]),
+.agy-inset-shell aside.bg-sidebar {
+  border-right-color: transparent !important;
+}
+
+body[data-isdou-t3-sidebar="1"] .bg-sidebar:not([data-has-browser-hole="true"]),
+body[data-isdou-t3-sidebar="1"] aside.bg-sidebar {
+  padding-bottom: 0 !important;
+}
+
 .agy-inset-shell [data-side-panel-body]::after,
 .agy-sheet[data-sheet-inset] [data-main-content-body]::after {
   box-shadow: inset 0 0 0 1px var(--isdou-sidebar-border) !important;
 }
 
-/* 侧边栏水平分隔线：收敛为极淡 1px 发丝线 */
 .bg-sidebar > div.h-px {
   background-color: var(--isdou-sidebar-divider) !important;
   margin-left: 12px !important;
@@ -31,47 +39,130 @@ aside.bg-sidebar {
   opacity: 1 !important;
 }
 
-/* 2. 顶部导航项（新建对话 / 自动化任务 / 技能与自定义）与底部系统设置项 */
+/* 增强模块激活后：无痕收拢原生顶底占高按钮条，同时保留 DOM 可编程点击锚点 */
+body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.px-2:has([data-testid="sidebar-navigation-items"]),
+body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.h-px,
+body[data-isdou-t3-sidebar="1"] .bg-sidebar > div:has(> [data-testid="settings-button"]) {
+  position: fixed !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body[data-isdou-t3-sidebar="1"] [data-testid="sidebar-search-button"] {
+  display: none !important;
+}
+
+body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.flex-1.overflow-y-auto {
+  padding-top: 2px !important;
+  padding-bottom: 6px !important;
+}
+
+/* 2. 顶部搜索与紧凑工具栏（#isdou-t3-sidebar-header） */
+#isdou-t3-sidebar-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  height: 36px !important;
+  flex-shrink: 0 !important;
+  padding: 2px 10px 6px !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-sans) !important;
+}
+
+#isdou-t3-sidebar-header .isdou-t3-search-btn {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 8px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--isdou-sidebar-meta) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 480 !important;
+  letter-spacing: -0.011em !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background-color 110ms ease, color 110ms ease !important;
+}
+
+#isdou-t3-sidebar-header .isdou-t3-search-btn:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+#isdou-t3-sidebar-header .isdou-t3-search-btn svg {
+  flex-shrink: 0 !important;
+  opacity: 0.86 !important;
+}
+
+#isdou-t3-sidebar-header .isdou-t3-hdr-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+/* 顶部与底部通用 28×28 紧凑图标钮 */
+.isdou-t3-icon-btn {
+  width: 28px !important;
+  height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--isdou-sidebar-meta) !important;
+  cursor: pointer !important;
+  transition: background-color 110ms ease, color 110ms ease !important;
+}
+
+.isdou-t3-icon-btn:hover {
+  background-color: var(--isdou-sidebar-hover) !important;
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 3. 底部横向工具栏（#isdou-t3-sidebar-footer） */
+#isdou-t3-sidebar-footer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  height: 38px !important;
+  flex-shrink: 0 !important;
+  padding: 4px 10px 6px !important;
+  border-top: 1px solid var(--isdou-sidebar-divider) !important;
+  background-color: var(--isdou-sidebar-bg) !important;
+  box-sizing: border-box !important;
+}
+
+/* 未启用 JS 增强时的兼容兜底按钮样式 */
 .bg-sidebar > div.px-2 .agy-button-custom,
 .bg-sidebar > div.pt-2 .agy-button-custom,
 .bg-sidebar [data-testid="new-conversation-button"],
 .bg-sidebar [data-testid="automations-button"] {
   min-height: 29px !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
+  padding: 4px 8px !important;
   border-radius: var(--isdou-radius-sm) !important;
   font-size: 13px !important;
   font-weight: 450 !important;
   letter-spacing: -0.011em !important;
   color: var(--isdou-fg-secondary) !important;
   box-shadow: none !important;
-  transition: background-color 100ms ease, color 100ms ease !important;
 }
 
-.bg-sidebar > div.px-2 .agy-button-custom:hover,
-.bg-sidebar > div.pt-2 .agy-button-custom:hover,
-.bg-sidebar [data-testid="new-conversation-button"]:hover,
-.bg-sidebar [data-testid="automations-button"]:hover {
-  background-color: var(--isdou-sidebar-hover) !important;
-  color: var(--isdou-fg-primary) !important;
-}
-
-.bg-sidebar > div.px-2 .agy-button-custom svg,
-.bg-sidebar > div.pt-2 .agy-button-custom svg {
-  width: 15px !important;
-  height: 15px !important;
-  color: var(--isdou-fg-muted) !important;
-  transition: color 100ms ease !important;
-}
-
-.bg-sidebar > div.px-2 .agy-button-custom:hover svg,
-.bg-sidebar > div.pt-2 .agy-button-custom:hover svg {
-  color: var(--isdou-fg-primary) !important;
-}
-
-/* 侧边栏小图标按钮（折叠、新建项目、更多操作）统一 5px 精密圆角 */
 .bg-sidebar .agy-button-icon,
 .bg-sidebar .agy-button-icon-sm {
   border-radius: 5px !important;
@@ -85,27 +176,86 @@ aside.bg-sidebar {
   color: var(--isdou-fg-primary) !important;
 }
 
-/* 3. 分组栏小标题（如「项目管理」）—— Linear 标志性冷灰微标签 */
-.bg-sidebar :is([class*="text-muted"], [class*="text-[11px]"], [class*="uppercase"]) {
+/* 4. 分组小标题（项目管理 / 对话管理） */
+.bg-sidebar [data-testid="section-header"] h2 {
+  opacity: 1 !important;
   font-size: 11.5px !important;
-  font-weight: 500 !important;
+  font-weight: 520 !important;
   letter-spacing: 0.005em !important;
-  color: var(--isdou-fg-muted) !important;
+  color: var(--isdou-sidebar-meta) !important;
 }
 
-/* 4. 项目折叠头（h3 > button[data-testid="project-header"]） */
+.bg-sidebar [data-testid="section-header"] h2 button {
+  color: var(--isdou-sidebar-meta) !important;
+  font-size: 11.5px !important;
+  font-weight: 520 !important;
+}
+
+.bg-sidebar [data-testid="section-header"] h2 button:hover {
+  color: var(--isdou-fg-primary) !important;
+}
+
+/* 原生分组右端小操作按钮默认隐去，悬停或聚焦才显露，避免与顶栏图标重复抢眼（隐藏徽章保持常显） */
+body[data-isdou-t3-sidebar="1"] .bg-sidebar [data-testid="section-header"] .agy-button-icon-sm {
+  opacity: 0 !important;
+  transition: opacity 120ms ease, background-color 100ms ease, color 100ms ease !important;
+}
+
+body[data-isdou-t3-sidebar="1"] .bg-sidebar [data-testid="section-header"]:hover .agy-button-icon-sm,
+body[data-isdou-t3-sidebar="1"] .bg-sidebar [data-testid="section-header"]:focus-within .agy-button-icon-sm {
+  opacity: 1 !important;
+}
+
+/* 5. 10 色项目 Monogram 调色板（浅色 600 阶 / 深色 400 阶） */
+.bg-sidebar [data-isdou-tone="violet"]  { --isdou-mono-fg: #7C3AED; }
+.bg-sidebar [data-isdou-tone="teal"]    { --isdou-mono-fg: #0D9488; }
+.bg-sidebar [data-isdou-tone="emerald"] { --isdou-mono-fg: #059669; }
+.bg-sidebar [data-isdou-tone="blue"]    { --isdou-mono-fg: #2563EB; }
+.bg-sidebar [data-isdou-tone="amber"]   { --isdou-mono-fg: #D97706; }
+.bg-sidebar [data-isdou-tone="rose"]    { --isdou-mono-fg: #E11D48; }
+.bg-sidebar [data-isdou-tone="indigo"]  { --isdou-mono-fg: #4F46E5; }
+.bg-sidebar [data-isdou-tone="cyan"]    { --isdou-mono-fg: #0891B2; }
+.bg-sidebar [data-isdou-tone="orange"]  { --isdou-mono-fg: #EA580C; }
+.bg-sidebar [data-isdou-tone="fuchsia"] { --isdou-mono-fg: #C026D3; }
+
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="violet"],
+body.dark .bg-sidebar [data-isdou-tone="violet"]   { --isdou-mono-fg: #A78BFA; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="teal"],
+body.dark .bg-sidebar [data-isdou-tone="teal"]     { --isdou-mono-fg: #2DD4BF; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="emerald"],
+body.dark .bg-sidebar [data-isdou-tone="emerald"]  { --isdou-mono-fg: #34D399; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="blue"],
+body.dark .bg-sidebar [data-isdou-tone="blue"]     { --isdou-mono-fg: #60A5FA; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="amber"],
+body.dark .bg-sidebar [data-isdou-tone="amber"]    { --isdou-mono-fg: #FBBF24; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="rose"],
+body.dark .bg-sidebar [data-isdou-tone="rose"]     { --isdou-mono-fg: #FB7185; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="indigo"],
+body.dark .bg-sidebar [data-isdou-tone="indigo"]   { --isdou-mono-fg: #818CF8; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="cyan"],
+body.dark .bg-sidebar [data-isdou-tone="cyan"]     { --isdou-mono-fg: #22D3EE; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="orange"],
+body.dark .bg-sidebar [data-isdou-tone="orange"]   { --isdou-mono-fg: #FB923C; }
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-isdou-tone="fuchsia"],
+body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
+
+/* 6. 项目折叠头与彩色双字母 / 单汉字徽标 */
 .bg-sidebar button[data-testid="project-header"],
 .bg-sidebar button[data-project-card="true"] {
-  min-height: 28px !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  padding-left: 6px !important;
-  border-radius: var(--isdou-radius-sm) !important;
+  width: 100% !important;
+  min-height: 30px !important;
+  padding: 4px 8px 4px 6px !important;
+  border: none !important;
+  border-radius: 6px !important;
   background-color: transparent !important;
+  box-shadow: none !important;
   font-size: 13px !important;
-  font-weight: 500 !important;
+  font-weight: 510 !important;
   letter-spacing: -0.012em !important;
   color: var(--isdou-fg-secondary) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
   transition: background-color 100ms ease, color 100ms ease !important;
 }
 
@@ -115,100 +265,452 @@ aside.bg-sidebar {
   color: var(--isdou-fg-primary) !important;
 }
 
-.bg-sidebar button[data-testid="project-header"] span {
-  color: inherit !important;
-  font-weight: 500 !important;
-}
-
-.bg-sidebar [data-testid="project-header-icon"] svg {
-  width: 14.5px !important;
-  height: 14.5px !important;
-  color: var(--isdou-fg-muted) !important;
-}
-
 .bg-sidebar button[data-testid="project-header"][aria-expanded="true"] {
   color: var(--isdou-fg-primary) !important;
 }
 
-/* 展开项目子会话树：左侧 Linear 1px 垂直层级引导线（Indent Guide） */
-.bg-sidebar [class*="group/headerbtn"] + div:has([data-testid="conversation-row-sidebar"]) {
-  position: relative !important;
-  margin-left: 16px !important;
-  padding-left: 8px !important;
-  border-left: 1px solid var(--isdou-sidebar-guide) !important;
+.bg-sidebar button[data-testid="project-header"] > span:first-child > span {
+  gap: 6px !important;
 }
 
-/* 5. 会话列表行（conversation-row-sidebar）—— 利落 6px 圆角与精准灰阶 */
+.bg-sidebar button[data-testid="project-header"] span.truncate {
+  color: inherit !important;
+  font-weight: 510 !important;
+}
+
+/* 用属性 ::before 绘制 16×16 彩色半透方砖徽标（零修改 React 子元素） */
+.bg-sidebar [data-testid="project-header-icon"] {
+  width: 20px !important;
+  height: 20px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-mono] svg {
+  display: none !important;
+}
+
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-mono]::before {
+  content: attr(data-isdou-mono);
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--isdou-mono-fg, var(--isdou-fg-muted)) 15%, transparent);
+  color: var(--isdou-mono-fg, var(--isdou-fg-secondary));
+  font-family: var(--font-mono);
+  font-size: 8.25px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-cjk="1"]::before {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* 项目折叠头右侧：状态圆点 + 计数 + 折叠箭头（悬停时让位给原生 ··· 和 + 操作钮） */
+.bg-sidebar button[data-testid="project-header"] > .isdou-t3-proj-trailing {
+  margin-left: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  color: var(--isdou-sidebar-meta) !important;
+  pointer-events: none !important;
+  transition: opacity 90ms ease !important;
+}
+
+.bg-sidebar .isdou-t3-proj-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 999px !important;
+  flex-shrink: 0 !important;
+}
+
+.bg-sidebar .isdou-t3-proj-dot.is-working {
+  background-color: var(--isdou-t3-working) !important;
+}
+
+.bg-sidebar .isdou-t3-proj-dot.is-approval {
+  background-color: var(--isdou-t3-approval) !important;
+}
+
+.bg-sidebar .isdou-t3-proj-dot.is-done {
+  background-color: var(--isdou-t3-done) !important;
+}
+
+.bg-sidebar .isdou-t3-proj-count {
+  font-size: 11.5px !important;
+  font-weight: 450 !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1 !important;
+  color: var(--isdou-sidebar-meta) !important;
+}
+
+.bg-sidebar .isdou-t3-folder-chevron {
+  color: var(--isdou-sidebar-meta) !important;
+  transition: transform 140ms ease !important;
+}
+
+.bg-sidebar button[data-testid="project-header"][aria-expanded="false"] .isdou-t3-folder-chevron {
+  transform: rotate(-90deg) !important;
+}
+
+.bg-sidebar [data-testid="project-header-container"]:hover .isdou-t3-proj-trailing,
+.bg-sidebar [data-testid="project-header-container"]:focus-within .isdou-t3-proj-trailing {
+  display: none !important;
+}
+
+.bg-sidebar [data-testid="project-header-container"]:hover button[data-testid="project-header"],
+.bg-sidebar [data-testid="project-header-container"]:focus-within button[data-testid="project-header"] {
+  padding-right: 58px !important;
+}
+
+/* 7. 虚拟列表项目展开子会话树：1px 垂直引导线 + 精准缩进（保留内联 position: absolute） */
+.bg-sidebar [data-index][data-sidebar-section-id]:not([data-sidebar-section-id="standalone"]):not([data-sidebar-section-id="pinned"])::before {
+  content: "";
+  position: absolute;
+  left: 13.5px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--isdou-sidebar-guide);
+  pointer-events: none;
+}
+
+.bg-sidebar [data-index][data-sidebar-section-id]:not([data-sidebar-section-id="standalone"]):not([data-sidebar-section-id="pinned"]) [data-testid="conversation-row-sidebar"] {
+  margin-left: 20px !important;
+  width: calc(100% - 20px) !important;
+}
+
+/* 优化空项目占位文案字号，避免 14px 默认样式显粗突兀 */
+.bg-sidebar [data-index] > span[class*="pl-[30px]"] {
+  font-size: 12px !important;
+  color: var(--isdou-fg-subtle) !important;
+  opacity: 0.85 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* 将行间距转移至虚拟列表测量的 [data-index] 容器内，防止 margin 外溢导致相邻行轻微贴近 */
+body[data-isdou-t3-sidebar="1"] .bg-sidebar [data-index]:has([data-testid="conversation-row-sidebar"]) {
+  padding-bottom: 2px !important;
+}
+
+body[data-isdou-t3-sidebar="1"] .bg-sidebar [data-index]:has([data-isdou-has-top="1"]) {
+  padding-top: 1px !important;
+  padding-bottom: 3px !important;
+}
+
+/* 8. 会话列表行（conversation-row-sidebar）—— 卡片态 & 紧凑单行态 */
 .bg-sidebar [data-testid="conversation-row-sidebar"],
 .bg-sidebar .agy-sidebar-row {
-  min-height: 29px !important;
-  padding: 4px 8px !important;
-  margin: 1px 0 !important;
-  border-radius: var(--isdou-radius-sm) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  column-gap: 6px !important;
+  row-gap: 3px !important;
+  min-height: 30px !important;
+  height: auto !important;
+  padding: 5px 8px !important;
+  margin: 0 !important;
+  border-radius: 7px !important;
   box-shadow: none !important;
-  transition: background-color 90ms ease !important;
+  transition: background-color 100ms ease, box-shadow 100ms ease !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"]:has(.isdou-t3-card-bottom) {
+  padding: 6px 9px !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-has-top="1"] {
+  padding: 7px 9px !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
 }
 
 .bg-sidebar [data-testid="conversation-row-sidebar"] > a.inset-0,
 .bg-sidebar .agy-sidebar-row > a.inset-0 {
-  border-radius: var(--isdou-radius-sm) !important;
+  border-radius: inherit !important;
 }
 
-/* 未选中会话行：干净透明底 + 中性石板灰字 */
+/* 原生子节点 flex order 排布：确保 top(1) / 标题(2) + 内联状态(3) + 原生动作/时间(4) / bottom(5) */
+.bg-sidebar [data-testid="conversation-row-sidebar"] > div.grow {
+  order: 2 !important;
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"] > .isdou-t3-inline-meta {
+  order: 3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 90ms ease !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"]:hover > .isdou-t3-inline-meta,
+.bg-sidebar [data-testid="conversation-row-sidebar"]:focus-within > .isdou-t3-inline-meta {
+  opacity: 0 !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"] > div.shrink-0 {
+  order: 4 !important;
+  margin-left: 2px !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"] > div.shrink-0 > div {
+  min-height: 18px !important;
+}
+
+/* 含顶行项目徽标的卡片不再重复在第二行显示原生时间戳，只保留悬停操作钮 */
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-has-top="1"] > div.shrink-0 {
+  margin-left: 0 !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-has-top="1"] .agy-row-status {
+  display: none !important;
+}
+
+/* 常态 / 悬停态 / 选中抬升态 */
 .bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]),
 .bg-sidebar .agy-sidebar-row:not([data-selected="true"]) {
   background-color: transparent !important;
   --row-bg: transparent !important;
 }
 
-.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) span.truncate,
-.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) [class*="truncate"],
-.bg-sidebar .agy-sidebar-row:not([data-selected="true"]) span.truncate {
-  font-size: 13px !important;
-  font-weight: 420 !important;
-  letter-spacing: -0.008em !important;
-  color: var(--isdou-fg-secondary) !important;
-}
-
-/* 悬停态：极轻 4% 灰底，文字微提亮 */
 .bg-sidebar [data-testid="conversation-row-sidebar"]:hover:not([data-selected="true"]),
 .bg-sidebar .agy-sidebar-row:hover:not([data-selected="true"]) {
   background-color: var(--isdou-sidebar-hover) !important;
   --row-bg: var(--isdou-sidebar-hover) !important;
 }
 
-.bg-sidebar [data-testid="conversation-row-sidebar"]:hover:not([data-selected="true"]) span.truncate {
-  color: var(--isdou-fg-primary) !important;
-}
-
-/* 选中态：Linear 标志性紧凑冷灰胶囊（无浮夸阴影，靠精准对比度定锚） */
 .bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"],
 .bg-sidebar .agy-sidebar-row[data-selected="true"],
 body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
-  background-color: var(--isdou-sidebar-selected) !important;
-  --row-bg: var(--isdou-sidebar-selected) !important;
-  border-radius: var(--isdou-radius-sm) !important;
-  box-shadow: none !important;
+  background-color: var(--isdou-sidebar-card-active) !important;
+  --row-bg: var(--isdou-sidebar-card-active) !important;
+  box-shadow: inset 0 0 0 1px var(--isdou-sidebar-selected-ring, var(--isdou-sidebar-border)), var(--isdou-sidebar-selected-shadow, none) !important;
 }
 
+/* 会话标题视觉退让（Recede）：已读静止微沉，运行/待确认/未读/选中提亮 */
+.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"]:not([data-selected="true"]) [class*="truncate"],
+.bg-sidebar .agy-sidebar-row:not([data-selected="true"]) span.truncate {
+  font-size: 13px !important;
+  font-weight: 430 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--isdou-fg-secondary) !important;
+}
+
+.bg-sidebar [data-testid="conversation-row-sidebar"]:hover:not([data-selected="true"]) span.truncate,
 .bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"] span.truncate,
 .bg-sidebar [data-testid="conversation-row-sidebar"][data-selected="true"] [class*="truncate"],
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-state="approval"] span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-state="input"] span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-state="working"] span.truncate,
+.bg-sidebar [data-testid="conversation-row-sidebar"][data-isdou-state="done"] span.truncate,
 .bg-sidebar .agy-sidebar-row[data-selected="true"] span.truncate {
   font-size: 13px !important;
-  font-weight: 510 !important;
-  letter-spacing: -0.01em !important;
+  font-weight: 525 !important;
+  letter-spacing: -0.011em !important;
   color: var(--isdou-fg-primary) !important;
 }
 
-/* 会话行右侧时间与计数数字：等宽对齐、克制淡化 */
-.bg-sidebar [data-testid="conversation-row-sidebar"] time,
-.bg-sidebar [data-testid="conversation-row-sidebar"] [class*="shrink-0"]:not(svg):not(:has(button)) {
+/* 会话行右侧原生时间字阶 */
+.bg-sidebar [data-testid="conversation-row-sidebar"] .agy-row-status [data-screenshot-volatile="true"],
+.bg-sidebar [data-testid="conversation-row-sidebar"] time {
   font-variant-numeric: tabular-nums !important;
-  font-size: 11px !important;
-  color: var(--isdou-fg-subtle) !important;
+  font-size: 11.5px !important;
+  font-weight: 430 !important;
+  opacity: 1 !important;
+  color: var(--isdou-sidebar-meta) !important;
 }
 
-/* 6. 侧边栏隐形极细滚动条（仅在鼠标进入侧边栏时微微显露） */
+/* 9. 注入卡片顶栏（项目徽标 + 状态胶囊 / 时间）与底栏（Git 分支 + PR + 模型图标） */
+.bg-sidebar .isdou-t3-card-top {
+  order: 1 !important;
+  flex: 1 0 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  margin-bottom: 1px !important;
+  pointer-events: none !important;
+}
+
+.bg-sidebar .isdou-t3-card-proj {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5.5px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.bg-sidebar .isdou-t3-mini-mono {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 3.5px !important;
+  background-color: color-mix(in srgb, var(--isdou-mono-fg, var(--isdou-fg-muted)) 15%, transparent) !important;
+  color: var(--isdou-mono-fg, var(--isdou-fg-secondary)) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.bg-sidebar .isdou-t3-mini-mono[data-isdou-cjk="1"] {
+  font-family: var(--font-sans) !important;
+  font-size: 8.5px !important;
+  font-weight: 600 !important;
+}
+
+.bg-sidebar .isdou-t3-card-proj-name {
+  font-size: 11.5px !important;
+  font-weight: 480 !important;
+  line-height: 1.2 !important;
+  color: var(--isdou-sidebar-meta) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.bg-sidebar .isdou-t3-card-right {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.bg-sidebar .isdou-t3-top-time {
+  font-size: 11.5px !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.2 !important;
+  color: var(--isdou-sidebar-meta) !important;
+}
+
+.bg-sidebar .isdou-t3-status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3.5px !important;
+  font-size: 11.5px !important;
+  font-weight: 540 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.bg-sidebar .isdou-t3-status-pill.is-approval {
+  color: var(--isdou-t3-approval) !important;
+}
+
+.bg-sidebar .isdou-t3-status-pill.is-done {
+  color: var(--isdou-t3-done) !important;
+}
+
+.bg-sidebar .isdou-t3-status-pill.is-working {
+  color: var(--isdou-t3-working) !important;
+}
+
+@keyframes isdouSpin360 {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.bg-sidebar .isdou-t3-spin {
+  animation: isdouSpin360 1s linear infinite !important;
+}
+
+.bg-sidebar .isdou-t3-card-bottom {
+  order: 5 !important;
+  flex: 1 0 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  margin-top: 1px !important;
+  pointer-events: none !important;
+}
+
+.bg-sidebar .isdou-t3-bottom-left {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.bg-sidebar .isdou-t3-branch {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  font-size: 11.5px !important;
+  line-height: 1.25 !important;
+  color: var(--isdou-sidebar-meta) !important;
+}
+
+.bg-sidebar .isdou-t3-branch svg {
+  flex-shrink: 0 !important;
+  opacity: 0.78 !important;
+}
+
+.bg-sidebar .isdou-t3-branch-name {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.bg-sidebar .isdou-t3-pr {
+  flex-shrink: 0 !important;
+  padding: 1px 4px !important;
+  border-radius: 4px !important;
+  background-color: color-mix(in srgb, var(--isdou-t3-done) 11%, transparent) !important;
+  color: var(--isdou-t3-done) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10.5px !important;
+  font-weight: 550 !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.15 !important;
+}
+
+.bg-sidebar .isdou-t3-provider-glyph {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.bg-sidebar .isdou-t3-provider-svg {
+  display: block !important;
+  opacity: 0.7 !important;
+  color: var(--isdou-sidebar-meta) !important;
+}
+
+.bg-sidebar .isdou-t3-provider-svg.is-claude {
+  color: #D97757 !important;
+  opacity: 0.85 !important;
+}
+
+/* 10. 侧边栏隐形极细滚动条 */
 .bg-sidebar ::-webkit-scrollbar {
   width: 5px !important;
   height: 5px !important;
@@ -231,7 +733,7 @@ body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
   background: rgba(128, 134, 145, 0.42) !important;
 }
 
-/* 7. 侧边栏「隐藏项目」徽章与恢复浮窗 */
+/* 11. 侧边栏「隐藏项目」徽章与恢复浮窗（与 55-project-hider.js 协同） */
 #isdou-hidden-projects-btn {
   display: inline-flex !important;
   align-items: center !important;

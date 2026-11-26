@@ -449,7 +449,7 @@
         cancelAutoCountdown();
         autoCountdownTargetCid = cid;
         autoCountdownLeft = 2;
-        renderBar();
+        // 先设置计时器句柄再刷新 DOM，避免 renderBar 再次重入 startAutoCountdown 造成栈溢出
         autoCountdownTimer = setInterval(() => {
           autoCountdownLeft -= 1;
           if (autoCountdownLeft <= 0) {
@@ -459,6 +459,7 @@
             renderBar();
           }
         }, 1000);
+        renderBar();
       }
 
       function onBarClick(ev) {

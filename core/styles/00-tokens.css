@@ -32,12 +32,21 @@ html:not([data-ag-theme-mode="dark"]) body:not(.dark) {
   --isdou-accent-soft: rgba(94, 106, 210, 0.12);
 
   --isdou-canvas-bg: #FFFFFF;
-  --isdou-sidebar-bg: #F7F8F9;
-  --isdou-sidebar-border: #ECEEF0;
-  --isdou-sidebar-divider: #E9EBEE;
-  --isdou-sidebar-hover: rgba(0, 0, 0, 0.04);
-  --isdou-sidebar-selected: #E8EAEE;
-  --isdou-sidebar-guide: #E2E5E9;
+  --isdou-sidebar-bg: #FAFAFA;
+  --isdou-sidebar-border: #E4E4E7;
+  --isdou-sidebar-divider: #EBEBED;
+  --isdou-sidebar-hover: rgba(24, 24, 27, 0.045);
+  --isdou-sidebar-selected: #ECECEE;
+  --isdou-sidebar-card-active: #FFFFFF;
+  --isdou-sidebar-selected-ring: rgba(228, 228, 231, 0.92);
+  --isdou-sidebar-selected-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --isdou-sidebar-guide: #E4E4E7;
+  --isdou-sidebar-meta: #71717A;
+
+  --isdou-t3-working: #2563EB;
+  --isdou-t3-approval: #D97706;
+  --isdou-t3-done: #059669;
+  --isdou-t3-failed: #DC2626;
 
   --isdou-fg-primary: #16171A;
   --isdou-fg-secondary: #494E56;
@@ -117,13 +126,22 @@ body.theme-dark {
   --isdou-accent-hover: #6E7AE2;
   --isdou-accent-soft: rgba(94, 106, 210, 0.22);
 
-  --isdou-canvas-bg: #0F1012;
-  --isdou-sidebar-bg: #141518;
-  --isdou-sidebar-border: rgba(255, 255, 255, 0.06);
-  --isdou-sidebar-divider: rgba(255, 255, 255, 0.055);
-  --isdou-sidebar-hover: rgba(255, 255, 255, 0.042);
-  --isdou-sidebar-selected: rgba(255, 255, 255, 0.082);
-  --isdou-sidebar-guide: rgba(255, 255, 255, 0.075);
+  --isdou-canvas-bg: #0E0E11;
+  --isdou-sidebar-bg: #0B0B0D;
+  --isdou-sidebar-border: rgba(255, 255, 255, 0.08);
+  --isdou-sidebar-divider: rgba(255, 255, 255, 0.06);
+  --isdou-sidebar-hover: rgba(241, 243, 247, 0.06);
+  --isdou-sidebar-selected: rgba(241, 243, 247, 0.085);
+  --isdou-sidebar-card-active: #1B1C20;
+  --isdou-sidebar-selected-ring: rgba(255, 255, 255, 0.06);
+  --isdou-sidebar-selected-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  --isdou-sidebar-guide: rgba(255, 255, 255, 0.085);
+  --isdou-sidebar-meta: #8F8F96;
+
+  --isdou-t3-working: #60A5FA;
+  --isdou-t3-approval: #FBBF24;
+  --isdou-t3-done: #34D399;
+  --isdou-t3-failed: #F87171;
 
   --isdou-fg-primary: #F2F3F5;
   --isdou-fg-secondary: #9CA1AA;

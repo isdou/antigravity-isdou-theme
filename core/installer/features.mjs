@@ -33,7 +33,8 @@ export const FEATURE_GROUPS = Object.freeze({
       '/core/styles/20-chat.css',
       '/core/styles/30-composer.css',
       '/core/styles/40-modals-home.css',
-      '/core/runtime/20-theme-sync.js'
+      '/core/runtime/20-theme-sync.js',
+      '/core/runtime/52-t3-sidebar.js'
     ],
     coreRelPaths: [
       'styles/00-tokens.css',
@@ -42,7 +43,8 @@ export const FEATURE_GROUPS = Object.freeze({
       'styles/20-chat.css',
       'styles/30-composer.css',
       'styles/40-modals-home.css',
-      'runtime/20-theme-sync.js'
+      'runtime/20-theme-sync.js',
+      'runtime/52-t3-sidebar.js'
     ],
     aliases: ['theme', 'linear', 'style', 'styles', 'css', 'dark', 'light']
   },

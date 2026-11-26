@@ -53,8 +53,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "13b3ae52932c2f31278cccbed680c4e6a3e44f2c26dad4ebf78d02169b87dace",
-      "bytes": 5968
+      "sha256": "5c019445136a899476838f308dfef9cd9bc3402092778428d0e4be25fd8b9478",
+      "bytes": 6042
     },
     "installer/manifest.mjs": {
       "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
@@ -65,8 +65,8 @@
       "bytes": 13504
     },
     "runtime/00-head.js": {
-      "sha256": "36c3064b47db9eb9c94f6626cc9abeb7c49150c6fd24af29235216aac38d80ef",
-      "bytes": 12707
+      "sha256": "57d80c18bba1a824b20d8fab1e342b6b35cd4038f3a2dab61e55909cc11189bb",
+      "bytes": 12848
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -87,6 +87,10 @@
     "runtime/50-telemetry-ui.js": {
       "sha256": "b29a209d953016d1d192cc0b155374bf76a6ac9d66180e6ee6935d79810033f2",
       "bytes": 52116
+    },
+    "runtime/52-t3-sidebar.js": {
+      "sha256": "cb11f48795d4af502af9db2ed00b6ec4ee04a9843b9e3fa50a8a565d90fb0dd6",
+      "bytes": 36234
     },
     "runtime/55-project-hider.js": {
       "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
@@ -113,8 +117,8 @@
       "bytes": 15066
     },
     "runtime/85-quota-resume.js": {
-      "sha256": "1f8ad9084a84f9196cd95f03052f5010211e484afeebd7314c4da77a96876433",
-      "bytes": 28637
+      "sha256": "2e37de191b349c83c46a1a91a91072a96ed87bcd3f7062e6ad182b253bb5dbb1",
+      "bytes": 28753
     },
     "runtime/90-tail.js": {
       "sha256": "9e9ab5e1219797d146d9c1cf62144aa629cf057a83796c0ddab64c3e47c858b3",
@@ -125,12 +129,12 @@
       "bytes": 7088
     },
     "styles/00-tokens.css": {
-      "sha256": "c64dc944f8e77f792321448e52810712cdd68b54cf1332d52a6b5c22ad3041fa",
-      "bytes": 7711
+      "sha256": "cc53f1cc69372d000ac292bdeaa7e57ed665c0d240d3d28fa1a524d47c99d6ee",
+      "bytes": 8355
     },
     "styles/10-sidebar.css": {
-      "sha256": "ae324eb3c25cf0203ec020f7aa185353a93dc154ce80ddd639cef56cedf5784d",
-      "bytes": 13329
+      "sha256": "854bf74a86d36446614b897e9501ef93bf56f101528da49fb7db4a53c1187f31",
+      "bytes": 30187
     },
     "styles/15-topbar.css": {
       "sha256": "d45197a5ddd7fb2e7108cb7355256a0ee10d20d472707f48112995cd0aa91370",
