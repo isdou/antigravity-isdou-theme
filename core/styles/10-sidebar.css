@@ -4,7 +4,7 @@
  * 设计准则：
  * - 极净中性 Zinc 色阶：浅色 #FAFAFA 底布配 #FFFFFF 抬升选中卡；深色 #0B0B0D 配 #1B1C20 高光卡
  * - 顶部收拢为「搜索 + 筛选 / 新建项目 / 新建对话」，底部收敛为横向图标栏
- * - 16×16 彩色双字母 / 单汉字项目方砖徽标 + 折叠态精准计数与状态点
+ * - 彩色项目缩写与名称对齐，折叠时显示会话数量与状态点
  * - 多维克制卡片行（所属项目 / 状态胶囊 / Git 分支 / PR / 模型徽标），无数据时保持利落单行
  * ============================================================================ */
 
@@ -69,9 +69,9 @@ body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.flex-1.overflow-y-auto {
   display: flex !important;
   align-items: center !important;
   gap: 4px !important;
-  height: 36px !important;
+  height: 42px !important;
   flex-shrink: 0 !important;
-  padding: 2px 10px 6px !important;
+  padding: 3px 10px 8px !important;
   box-sizing: border-box !important;
   font-family: var(--font-sans) !important;
 }
@@ -83,10 +83,10 @@ body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.flex-1.overflow-y-auto {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
-  padding: 0 8px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
+  padding: 0 9px !important;
+  border: 1px solid var(--isdou-sidebar-border) !important;
+  border-radius: 8px !important;
+  background: var(--isdou-sidebar-card-active) !important;
   color: var(--isdou-sidebar-meta) !important;
   font-family: var(--font-sans) !important;
   font-size: 13px !important;
@@ -135,6 +135,20 @@ body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.flex-1.overflow-y-auto {
   color: var(--isdou-fg-primary) !important;
 }
 
+#isdou-t3-sidebar-header .isdou-t3-compose-btn {
+  background-color: var(--isdou-accent-soft) !important;
+  color: var(--isdou-pill-fg) !important;
+}
+
+#isdou-t3-sidebar-header .isdou-t3-compose-btn:hover {
+  background-color: var(--isdou-pill-hover-bg) !important;
+}
+
+:is(#isdou-t3-sidebar-header, #isdou-t3-sidebar-footer) button:focus-visible {
+  outline: 2px solid var(--isdou-pill-fg) !important;
+  outline-offset: 1px !important;
+}
+
 /* 3. 底部横向工具栏（#isdou-t3-sidebar-footer） */
 #isdou-t3-sidebar-footer {
   display: flex !important;
@@ -146,6 +160,13 @@ body[data-isdou-t3-sidebar="1"] .bg-sidebar > div.flex-1.overflow-y-auto {
   border-top: 1px solid var(--isdou-sidebar-divider) !important;
   background-color: var(--isdou-sidebar-bg) !important;
   box-sizing: border-box !important;
+}
+
+#isdou-t3-sidebar-footer .isdou-release-link {
+  margin-inline-start: auto;
+  padding: 4px 6px;
+  color: var(--isdou-pill-fg);
+  font-size: 12px;
 }
 
 /* 未启用 JS 增强时的兼容兜底按钮样式 */
@@ -270,7 +291,7 @@ body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
 }
 
 .bg-sidebar button[data-testid="project-header"] > span:first-child > span {
-  gap: 6px !important;
+  gap: 8px !important;
 }
 
 .bg-sidebar button[data-testid="project-header"] span.truncate {
@@ -278,9 +299,9 @@ body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
   font-weight: 510 !important;
 }
 
-/* 用属性 ::before 绘制 16×16 彩色半透方砖徽标（零修改 React 子元素） */
+/* 给双字徽标留出宽度，保持每个项目名称的起点一致。 */
 .bg-sidebar [data-testid="project-header-icon"] {
-  width: 20px !important;
+  width: 24px !important;
   height: 20px !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
@@ -292,14 +313,14 @@ body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
 
 .bg-sidebar [data-testid="project-header-icon"][data-isdou-mono]::before {
   content: attr(data-isdou-mono);
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  background-color: color-mix(in srgb, var(--isdou-mono-fg, var(--isdou-fg-muted)) 15%, transparent);
-  color: var(--isdou-mono-fg, var(--isdou-fg-secondary));
+  width: 24px;
+  height: 20px;
+  border-radius: 5px;
+  background-color: color-mix(in srgb, var(--isdou-mono-fg, var(--isdou-fg-muted)) 12%, transparent);
+  color: color-mix(in srgb, var(--isdou-mono-fg, var(--isdou-fg-secondary)) 76%, var(--isdou-fg-primary));
   font-family: var(--font-mono);
-  font-size: 8.25px;
-  font-weight: 700;
+  font-size: 9.5px;
+  font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
   display: inline-flex;
@@ -310,7 +331,7 @@ body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
 
 .bg-sidebar [data-testid="project-header-icon"][data-isdou-cjk="1"]::before {
   font-family: var(--font-sans);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0;
 }
@@ -577,6 +598,9 @@ body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
 }
 
 .bg-sidebar .isdou-t3-mini-mono[data-isdou-cjk="1"] {
+  width: auto !important;
+  min-width: 14px !important;
+  padding-inline: 2px !important;
   font-family: var(--font-sans) !important;
   font-size: 8.5px !important;
   font-weight: 600 !important;

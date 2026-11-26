@@ -66,13 +66,41 @@
 
 ## 安装、按需开关与日常命令
 
+### 收到安装包后
+
+解压 ZIP，在包含 `install.mjs` 的目录打开终端。首次安装时，用下面的命令订阅正式版更新。
+
+```bash
+node install.mjs install --auto-update
+```
+
+后台服务启动约 15 秒后会尝试检查更新。自动检查每 6 小时最多一次，重启沿用上次记录。发布者只修改样式或中文文案时，已经打开的窗口会在下一次检查后热更新。自己的主题变量、自定义 CSS 和翻译覆盖继续生效。网络不可用时继续使用已安装的版本。
+
+若新版包含运行脚本、后台服务或安装器变动，侧栏底部会出现「更新主题」（启用侧栏主题时）。打开项目的正式发行页，下载新版 ZIP，解压后再次运行同一条安装命令即可保留个人配置。旧版本用户需要先安装一次支持订阅的版本。
+
+```bash
+node install.mjs update --check     # 查询最新正式版
+node install.mjs update             # 立即应用兼容的外观包，或显示整包升级地址
+node install.mjs update --rollback  # 恢复上一个外观，跳过刚回退的版本
+```
+
+普通安装 `node install.mjs install` 首次默认关闭订阅。可在安装目录的 `user/config.json` 将 `autoUpdate` 设为 `false` 关闭后续自动检查。设置为 `true` 后，在下一次检查或后台服务重启时生效。开发工作树及使用源码软链的安装继续读取本地文件。
+
+### 发布一个能同步的版本
+
+发布者递增 `package.json` 的版本号，运行 `node install.mjs build-manifest`，将源码与清单一起提交。把与版本号一致的标签（例如 `v0.2.0`）推到仓库后，发布工作流会测试并将完整 ZIP、`theme-update.json` 一起附到正式 Release。日常推送 `main` 只更新源码。
+
+本地可以用 `node install.mjs pack` 生成相同的两个文件。手动发布时，将两者上传到同一个正式 Release，并把它设为 Latest。ZIP 发给使用者，更新服务读取对应标签的外观资源并核对下载大小和 SHA-256。版本号每次递增。整包和每个版本的发布说明都在[项目发行页](https://github.com/isdou/antigravity-isdou-theme/releases)。
+
+### 源码开发
+
 ```bash
 # 1. 重新生成资源校验清单并运行语法校验
 node install.mjs build-manifest
 npm run check
 
-# 2. 安装并启动后台守护注入服务（同步 user/ 下个人配置）
-node install.mjs install --sync-user
+# 2. 安装并启动后台守护注入服务
+node install.mjs install
 
 # 3. 诊断 / 验证实时注入状态
 node --disable-warning=ExperimentalWarning install.mjs doctor

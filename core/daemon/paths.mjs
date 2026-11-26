@@ -7,6 +7,7 @@ import os from 'node:os';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_ALLOWED_ORIGINS, extractJsoncNumberProperty, stripUtf8Bom } from '../shared.mjs';
+import { presentationDbPath, readPresentation, releasePage } from '../installer/updates.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -187,10 +188,12 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
   function rebuildBundleIfNeeded() {
     const styleFiles = listSortedFiles(STYLES_DIR, '.css');
     const runtimeFiles = listSortedFiles(RUNTIME_DIR, '.js');
-    const coreFiles = [...styleFiles, path.join(CORE_DIR, 'i18n.json'), ...runtimeFiles];
+    const manifestPath = path.join(CORE_DIR, 'manifest.json');
+    const coreFiles = [...styleFiles, path.join(CORE_DIR, 'i18n.json'), ...runtimeFiles, manifestPath];
     const userFiles = safeMode
       ? []
       : [
+          presentationDbPath(ROOT_DIR),
           path.join(USER_DIR, 'config.json'),
           path.join(USER_DIR, 'custom.css'),
           path.join(USER_DIR, 'i18n.override.json'),
@@ -208,6 +211,10 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     }
 
     const userCfg = safeMode ? {} : readJsonSafe(path.join(USER_DIR, 'config.json'), {});
+    const programManifest = readJsonSafe(manifestPath, null);
+    const { bundle, pending } = safeMode ? { bundle: null, pending: null } :
+      readPresentation(ROOT_DIR, programManifest);
+    const updateNotice = pending ? { version: pending, url: releasePage(pending) } : null;
     const enabled = safeMode ? true : userCfg.enabled !== false;
     const channel = cliChannel || userCfg.channel || 'auto';
     const presetRaw = String(userCfg.preset || 'linear-light').trim();
@@ -320,14 +327,13 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       endpoints
     };
 
-    const activeStyleFiles = styleFiles.filter((filePath) => {
-      const base = path.basename(filePath);
-      if (base === '90-telemetry.css') return Boolean(modules.metrics);
-      return modules.theme !== false;
-    });
-    const baseCss = activeStyleFiles.map((f) => readTextSafe(f, '')).join('\n\n');
+    const styleNames = bundle && !programManifest?.partial
+      ? Object.keys(bundle.styles).sort((a, b) => a.localeCompare(b))
+      : styleFiles.map(file => path.basename(file));
+    const baseCss = styleNames.filter(name => name === '90-telemetry.css' ? modules.metrics : modules.theme !== false)
+      .map(name => bundle ? (bundle.styles[name] || '') : readTextSafe(path.join(STYLES_DIR, name), '')).join('\n\n');
     const customCss = !safeMode && modules.customCss ? readTextSafe(path.join(USER_DIR, 'custom.css'), '') : '';
-    const baseDict = modules.i18n ? readJsonSafe(path.join(CORE_DIR, 'i18n.json'), {}) : {};
+    const baseDict = modules.i18n ? (bundle?.i18n || readJsonSafe(path.join(CORE_DIR, 'i18n.json'), {})) : {};
     const rawOverrideDict =
       modules.i18n && !safeMode ? readJsonSafe(path.join(USER_DIR, 'i18n.override.json'), {}) : {};
     const mergedDict = modules.i18n ? Object.assign({}, baseDict, normalizeOverrideDict(rawOverrideDict)) : {};
@@ -341,6 +347,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       .update(baseCss)
       .update(customCss)
       .update(JSON.stringify(mergedDict))
+      .update(JSON.stringify(updateNotice))
       .update(customJs)
       .update(
         JSON.stringify({
@@ -360,6 +367,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
 
     const bootPayload = {
       version: cachedPatchVersion,
+      updateNotice,
       platform: process.platform,
       enabled,
       preset,

@@ -3,7 +3,7 @@
  *
  * - 顶部收拢为「搜索框 + 显示选项 / 新建项目 / 新建对话」紧凑工具栏
  * - 底部收敛为「系统设置 / 自动化任务 / 技能与自定义」横向图标栏
- * - 为每个项目文件夹生成确定性双字母 / 单汉字彩色方砖徽标（Monogram）与折叠计数 / 状态圆点
+ * - 为项目文件夹生成彩色缩写徽标，同首字项目用双字区分，折叠时附带计数和状态点
  * - 为会话行按需补充所属项目徽标、Git 分支与 PR 编号、模型厂商图标与状态胶囊（零造假元数据）
  * - 通过签名前置短路 + 零破坏原生 React 子节点的追加顺序，确保虚拟列表 ResizeObserver 精确对齐
  */
@@ -152,27 +152,25 @@
         return PALETTE[(h >>> 0) % PALETTE.length];
       }
 
-      function computeMonogram(name) {
-        const clean = String(name || '').trim().replace(/^[^\p{L}\p{N}]+/u, '');
-        if (!clean) return { text: 'PR', cjk: false };
-        const firstChar = Array.from(clean)[0] || '';
+      function computeMonogram(name, cjkLength = 1) {
+        const parts = String(name || '').match(/[\p{L}\p{N}]+/gu) || [];
+        if (!parts.length) return { text: 'PR', cjk: false };
+        const chars = Array.from(parts[0]);
+        const firstChar = chars[0];
         if (CJK_RE.test(firstChar)) {
-          return { text: firstChar, cjk: true };
+          return { text: chars.slice(0, cjkLength).join(''), cjk: true };
         }
-        const parts = clean.split(/[-_.\s/]+/).filter(Boolean);
-        if (parts.length >= 2) {
-          const a = Array.from(parts[0])[0] || '';
-          const b = Array.from(parts[1])[0] || '';
-          return { text: (a + b).toUpperCase(), cjk: false };
+        const nextInitial = Array.from(parts[1] || '')[0];
+        if (nextInitial && !CJK_RE.test(nextInitial)) {
+          return { text: (firstChar + nextInitial).toUpperCase(), cjk: false };
         }
-        const camel = clean.replace(/([a-z0-9])([A-Z])/g, '$1 $2').split(/\s+/).filter(Boolean);
+        const camel = parts[0].split(/(?<=[a-z0-9])(?=[A-Z])/);
         if (camel.length >= 2) {
           return {
             text: ((Array.from(camel[0])[0] || '') + (Array.from(camel[1])[0] || '')).toUpperCase(),
             cjk: false
           };
         }
-        const chars = Array.from(clean);
         return {
           text: chars.slice(0, 2).join('').toUpperCase() || 'PR',
           cjk: false
@@ -252,6 +250,7 @@
 
         const rppMap = pms?.richProjectsProvider?.getState?.();
         if (rppMap instanceof Map) {
+          const firstProjectByGlyph = new Map();
           for (const item of rppMap.values()) {
             const p = item?.project;
             if (!p || !p.id) continue;
@@ -263,6 +262,15 @@
               cjk: mono.cjk,
               tone: hashTone(p.id || p.name)
             };
+            if (info.cjk) {
+              const first = firstProjectByGlyph.get(mono.text);
+              if (first) {
+                first.mono = computeMonogram(first.name, 2).text;
+                info.mono = computeMonogram(info.name, 2).text;
+              } else {
+                firstProjectByGlyph.set(mono.text, info);
+              }
+            }
             projectsById.set(p.id, info);
             if (p.name) projectsByName.set(p.name, info);
           }
@@ -383,6 +391,17 @@
             '<button type="button" class="isdou-t3-icon-btn" data-isdou-action="customizations" aria-label="技能与自定义" title="技能与自定义">' +
             SVG_ICONS.blocks +
             '</button>';
+
+          if (boot.updateNotice) {
+            const link = document.createElement('a');
+            link.className = 'isdou-release-link';
+            link.href = boot.updateNotice.url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = '更新主题';
+            link.title = '查看主题新版 v' + boot.updateNotice.version;
+            footer.appendChild(link);
+          }
 
           footer.querySelector('[data-isdou-action="settings"]')?.addEventListener('click', (e) => {
             e.preventDefault();

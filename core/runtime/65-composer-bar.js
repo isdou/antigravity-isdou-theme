@@ -577,6 +577,10 @@
         }
       }
 
+      function usageReading(label, value) {
+        return `<span>${escapeHtml(label)}</span>` + (value ? ` <strong>${escapeHtml(value)}</strong>` : '');
+      }
+
       function syncUsage(footer, ctrl, compact) {
         const right = footer.lastElementChild;
         if (!right) return;
@@ -586,6 +590,8 @@
           controls = document.createElement('div');
           controls.className = 'isdou-usage-controls';
           controls.setAttribute('data-ag-i18n-exclude', 'true');
+          controls.setAttribute('role', 'group');
+          controls.setAttribute('aria-label', '用量');
           ensurePopover();
           controls.append(initBadge('quota'), initBadge('session'));
           right.prepend(controls);
@@ -599,15 +605,18 @@
         }
         const { q, stats } = state;
         const ctx = contextInfo(stats);
-        const quotaText = q ? quotaLabel(q) : '额度';
-        const sessionText = ctx.pct === null && ctx.label === '—' ? '会话' : '上下文 ' + ctx.label;
+        const quotaValue = q ? quotaLabel(q) : '';
+        const sessionValue = ctx.label === '—' ? '' : ctx.label;
+        const sessionName = ctx.pct !== null ? '上下文已用' : sessionValue ? '上下文' : '会话';
         // A single trigger on narrow footers still provides both pages via the header.
         const showSession = Boolean(stats && (!compact || !q));
         const showQuota = !compact || !showSession;
-        const quotaMarkup = (q ? buildRingSvg(q.fraction * 100, toneFor(q)) : '') + `<span>${escapeHtml(quotaText)}</span>`;
-        updateBadge(quotaBtn, state, showQuota, quotaMarkup, '模型剩余额度' + (q ? ' ' + quotaText : ''), toneFor(q));
-        updateBadge(sessionBtn, state, showSession, `<span>${escapeHtml(sessionText)}</span>`,
-          '会话用量，' + sessionText, contextTone(ctx.pct));
+        const quotaMarkup = q
+          ? buildRingSvg(q.fraction * 100, toneFor(q)) + `<strong>${escapeHtml(quotaValue)}</strong>`
+          : '<span>额度</span>';
+        updateBadge(quotaBtn, state, showQuota, quotaMarkup, ('模型剩余额度 ' + quotaValue).trim(), toneFor(q));
+        updateBadge(sessionBtn, state, showSession, usageReading(sessionName, sessionValue),
+          ('会话用量，' + sessionName + ' ' + sessionValue).trim(), contextTone(ctx.pct));
         if (anchor && controls.contains(anchor)) {
           if (anchor.hidden) {
             const replacement = anchor === quotaBtn ? sessionBtn : quotaBtn;
@@ -716,7 +725,7 @@
         const hasPerm = Boolean(footer.querySelector('[data-testid="permissions-selector-trigger"]'));
         // 有权限按钮时（主栏）需要更宽松的阈值才会展开 4 档全称；无权限按钮时（Side Question）500px 即可展开
         const wideEffortThreshold = hasPerm ? 640 : 480;
-        const wideUsageThreshold = hasPerm ? 580 : 430;
+        const wideUsageThreshold = hasPerm ? 670 : 510;
         const compactEffort = footerW > 0 && footerW < wideEffortThreshold;
         const compactUsage = footerW > 0 && footerW < wideUsageThreshold;
         const ultraCompact = footerW > 0 && footerW < 470;

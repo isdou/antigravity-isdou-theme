@@ -5,6 +5,7 @@
 export const BASE_SPARSE_PATHS = Object.freeze([
   '/install.mjs',
   '/package.json',
+  '/distribution/README.md',
   '/SKILL.md',
   '/LICENSE',
   '/user/config.json',

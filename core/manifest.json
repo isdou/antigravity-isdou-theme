@@ -1,12 +1,13 @@
 {
   "name": "antigravity-isdou-theme",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "programHash": "d30e5cf2ca4c1dfa3988d3cbe7921fe889aaef47fbceaf504ae1592ed8aa2d2a",
   "minNodeVersion": "22.13.0",
   "fullMetricsNodeVersion": "22.13.0",
   "files": {
     "daemon.mjs": {
-      "sha256": "565f762a741aaba96186521b088437fd0683e15203a7aa9376facf8cd48240fa",
-      "bytes": 4376
+      "sha256": "0266a2c0f4102b18ecb85943fe0f9c4ff00fca55be667edd7e9cca21a8f1be04",
+      "bytes": 4520
     },
     "daemon/cdp-bridge.mjs": {
       "sha256": "21f63ee95344bd25b3713fa88fe06199014811f49553ca1fd2473f64de26ebf6",
@@ -21,8 +22,8 @@
       "bytes": 2123
     },
     "daemon/paths.mjs": {
-      "sha256": "f089e8683166837bad99681aaf08507f56656ad54b6a1a6547024b8584330889",
-      "bytes": 14700
+      "sha256": "d79434386deb3695488d03efbb0c03f5a029c50371cfeeca294473cf06c5fa9a",
+      "bytes": 15386
     },
     "daemon/prompt-suggest.mjs": {
       "sha256": "5475ade6307a16edc0d1748d87834c8fbccd87e1e1d5dfee184a278296988edb",
@@ -53,20 +54,24 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "5c019445136a899476838f308dfef9cd9bc3402092778428d0e4be25fd8b9478",
-      "bytes": 6042
+      "sha256": "a2c75a9becbbda82545d3951dbf901d9f01532eab011dcc0baa30237cc09c74d",
+      "bytes": 6071
     },
     "installer/manifest.mjs": {
-      "sha256": "4001613efc367581f47aa39e7080f39466810a38aff58c373eb654e54da5a651",
-      "bytes": 5745
+      "sha256": "972aa632c678e188dd4bd8fe2b35dbd3900f7a52f9268e4cdcc6939cbc3822b3",
+      "bytes": 7895
     },
     "installer/service.mjs": {
       "sha256": "39af71a4f46abc1a59bac26c899f1ccb1790d17cb0ddf380118cea7dceaa0346",
       "bytes": 13504
     },
+    "installer/updates.mjs": {
+      "sha256": "db4f87ff3d3351a6286ee3139ef78afec472afdb02db86a0258b839d03e1c787",
+      "bytes": 11631
+    },
     "runtime/00-head.js": {
-      "sha256": "57d80c18bba1a824b20d8fab1e342b6b35cd4038f3a2dab61e55909cc11189bb",
-      "bytes": 12848
+      "sha256": "e55aa4a511046892228b09055f414b714074d05ded6312b7faa498e060499268",
+      "bytes": 12871
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -89,8 +94,8 @@
       "bytes": 52116
     },
     "runtime/52-t3-sidebar.js": {
-      "sha256": "cb11f48795d4af502af9db2ed00b6ec4ee04a9843b9e3fa50a8a565d90fb0dd6",
-      "bytes": 36234
+      "sha256": "9a7b32a107f4fdbe13f591daa1aa22892105f235f00acd9d8575b3e114177c45",
+      "bytes": 37001
     },
     "runtime/55-project-hider.js": {
       "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
@@ -105,8 +110,8 @@
       "bytes": 23895
     },
     "runtime/65-composer-bar.js": {
-      "sha256": "f0e65475d62fbc766f2d359f6e411809d25289da4d652d1c058d96dec50aec10",
-      "bytes": 42363
+      "sha256": "03264ebf8704fb1104075b41cf02f629e52a87032d8b71432ab1d7cff6a00f71",
+      "bytes": 42758
     },
     "runtime/70-prompt-suggestions.js": {
       "sha256": "f69319befaa1112b3a299a3cf8e20c7e5315c04edba3f147131415f00fd97f91",
@@ -129,24 +134,24 @@
       "bytes": 7088
     },
     "styles/00-tokens.css": {
-      "sha256": "cc53f1cc69372d000ac292bdeaa7e57ed665c0d240d3d28fa1a524d47c99d6ee",
+      "sha256": "f054b2a4fb4632927f97ca8258acb6e768c89aa490a25ca068cd5e483f922cca",
       "bytes": 8355
     },
     "styles/10-sidebar.css": {
-      "sha256": "854bf74a86d36446614b897e9501ef93bf56f101528da49fb7db4a53c1187f31",
-      "bytes": 30187
+      "sha256": "f43ff733cc5f1ec7f2ec6c02e505b97eb2c907e4c976f434348eb3358c350d47",
+      "bytes": 30936
     },
     "styles/15-topbar.css": {
       "sha256": "d45197a5ddd7fb2e7108cb7355256a0ee10d20d472707f48112995cd0aa91370",
       "bytes": 3432
     },
     "styles/20-chat.css": {
-      "sha256": "4719e8ac8d8f32a308bcb15b305020f4ce7be78c19e433bb5104a8537455e83d",
-      "bytes": 15760
+      "sha256": "1c33219f45f8b0b03925de0b70b1b8cfc9afa484a49a05706d402410cd107432",
+      "bytes": 16450
     },
     "styles/30-composer.css": {
-      "sha256": "0d0ae94b98509bcd0e382d1663e1bd001e7448be970ed9f7a043b99a01cfceab",
-      "bytes": 24943
+      "sha256": "236fb39dbaa8d952a6c930c743cae115c3a39ac339b4ab5ca197ef4de469bcae",
+      "bytes": 25739
     },
     "styles/40-modals-home.css": {
       "sha256": "eca2f9e61cae30ed1431da596b323b55a2f2d7303119c0b6a94ebd091dd72301",

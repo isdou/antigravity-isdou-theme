@@ -11,6 +11,7 @@
  *   node install.mjs uninstall    [--target-dir <dir>]
  *   node install.mjs sparse-paths [--only <features>] [--without <features>] [--json]
  *   node install.mjs build-manifest
+ *   node install.mjs update       [--check | --rollback] [--target-dir <dir>]
  *   node install.mjs pack
  */
 import fs from 'node:fs';
@@ -147,7 +148,8 @@ async function runInstall() {
     process.exit(1);
   }
 
-  buildManifest(__dirname);
+  if (hasFlag('--auto-update') && hasFlag('--no-auto-update')) throw new Error('请选择一种自动更新设置。');
+  const sourceManifest = buildManifest(__dirname);
 
   const srcCore = path.join(__dirname, 'core');
   const srcUser = path.join(__dirname, 'user');
@@ -207,7 +209,7 @@ async function runInstall() {
     }
 
     if (minimalMode && featureSel.explicit) {
-      buildManifest(targetDir);
+      buildManifest(targetDir, sourceManifest.programHash);
     }
   }
 
@@ -216,6 +218,8 @@ async function runInstall() {
     ? JSON.parse(stripUtf8Bom(fs.readFileSync(userConfigPath, 'utf8')))
     : {};
   if (typeof currentCfg.enabled !== 'boolean') currentCfg.enabled = true;
+  if (hasFlag('--auto-update')) currentCfg.autoUpdate = true;
+  else if (hasFlag('--no-auto-update') || typeof currentCfg.autoUpdate !== 'boolean') currentCfg.autoUpdate = false;
   if (cliChannel) {
     currentCfg.channel = cliChannel;
   } else if (!currentCfg.channel) {
@@ -402,6 +406,15 @@ async function runVerify() {
 async function runRollback() {
   const targetDir = path.resolve(getArg('--target-dir', resolveDefaultTargetDir()));
   const targetCore = path.join(targetDir, 'core');
+  if (fs.existsSync(path.join(targetDir, 'updates', 'appearance.sqlite')) &&
+      fs.existsSync(path.join(__dirname, 'core', 'installer', 'updates.mjs'))) {
+    const { readPresentation, rollbackPresentation } = await import('./core/installer/updates.mjs');
+    const manifest = JSON.parse(fs.readFileSync(path.join(targetCore, 'manifest.json'), 'utf8'));
+    if (readPresentation(targetDir, manifest).bundle) {
+      console.log(JSON.stringify(rollbackPresentation(targetDir), null, 2));
+      return;
+    }
+  }
   const targetPrev = path.join(targetDir, 'core.prev');
   const backupsDir = path.join(targetDir, 'backups');
 
@@ -481,12 +494,22 @@ switch (subcommand) {
   }
   case 'pack': {
     const packed = buildDistZip(__dirname);
+    console.log('Release appearance asset:', packed.assetPath);
     console.log('Packed & verified dist archive:', packed.zipPath, `(verified ${packed.filesVerified} core files)`);
     break;
   }
   case 'doctor':
     await runDoctor();
     break;
+  case 'update': {
+    const { checkPresentation, rollbackPresentation } = await import('./core/installer/updates.mjs');
+    const target = path.resolve(getArg('--target-dir', resolveDefaultTargetDir()));
+    if (hasFlag('--check') && hasFlag('--rollback')) throw new Error('检查和回退请分开执行。');
+    const result = hasFlag('--rollback') ? rollbackPresentation(target) :
+      await checkPresentation(target, { checkOnly: hasFlag('--check') });
+    console.log(JSON.stringify(result, null, 2));
+    break;
+  }
   case 'install':
     await runInstall();
     break;
@@ -516,9 +539,10 @@ switch (subcommand) {
   }
   default:
     console.log(`antigravity-isdou-theme CLI Usage:
-  node install.mjs install        [--channel auto|stable|insiders] [--preset linear-light|linear-dark] [--only theme,i18n,metrics,fixes] [--without <list>] [--minimal] [--with-launcher] [--sync-user]
+  node install.mjs install        [--channel auto|stable|insiders] [--preset linear-light|linear-dark] [--only theme,i18n,metrics,fixes] [--without <list>] [--minimal] [--with-launcher] [--sync-user] [--auto-update | --no-auto-update]
   node install.mjs relaunch       [--channel auto|stable|insiders] [--force]
   node install.mjs doctor         [--channel auto|stable|insiders]
+  node install.mjs update         [--check | --rollback] [--target-dir <dir>]
   node install.mjs verify         [--safe-mode] [--channel auto|stable|insiders]
   node install.mjs rollback
   node install.mjs uninstall

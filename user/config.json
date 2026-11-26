@@ -1,5 +1,6 @@
 {
   "enabled": true,
+  "autoUpdate": false,
   "channel": "auto",
   "preset": "linear-light",
   "telemetryLayout": "compact",

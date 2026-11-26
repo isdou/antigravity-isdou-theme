@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { startPresentationChecks } from './installer/updates.mjs';
 import {
   parseDaemonCliArgs,
   createBundleController
@@ -123,6 +124,7 @@ export async function startDaemon() {
     process.exit(0);
   } else {
     setInterval(() => cdpManager.sync(), 2500);
+    if (!cliOpts.safeMode) startPresentationChecks(path.dirname(__dirname));
   }
 }
 

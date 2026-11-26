@@ -50,8 +50,8 @@ html:not([data-ag-theme-mode="dark"]) body:not(.dark) {
 
   --isdou-fg-primary: #16171A;
   --isdou-fg-secondary: #494E56;
-  --isdou-fg-muted: #8A8F98;
-  --isdou-fg-subtle: #A0A5AE;
+  --isdou-fg-muted: #656B75;
+  --isdou-fg-subtle: #707680;
 
   --isdou-composer-tray: #F4F5F7;
   --isdou-composer-card: #FFFFFF;
@@ -144,9 +144,9 @@ body.theme-dark {
   --isdou-t3-failed: #F87171;
 
   --isdou-fg-primary: #F2F3F5;
-  --isdou-fg-secondary: #9CA1AA;
-  --isdou-fg-muted: #6C717A;
-  --isdou-fg-subtle: #555962;
+  --isdou-fg-secondary: #BEC3CD;
+  --isdou-fg-muted: #9BA2AE;
+  --isdou-fg-subtle: #8C939F;
 
   --isdou-composer-tray: #16171B;
   --isdou-composer-card: #191A1F;

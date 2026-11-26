@@ -177,7 +177,7 @@ code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
 }
 
 /* 纯独立 pre 节点兜底（无外层 wrapper 时） */
-[data-markdown-root] > pre {
+[data-markdown-root] > pre:not(:has(> .md-code-surface)) {
   border-radius: var(--isdou-radius-md) !important;
   border: 1px solid var(--isdou-code-border) !important;
   background-color: var(--isdou-code-bg) !important;
@@ -189,6 +189,26 @@ code, pre, kbd, samp, .font-mono, [class*="language-"], .monaco-editor, .xterm {
   font-size: 12.75px !important;
   line-height: 1.62 !important;
   tab-size: 2 !important;
+}
+
+[data-markdown-root] pre:has(> .md-code-surface) {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+[data-markdown-root] pre > .md-code-surface {
+  margin: 0 !important;
+  border: 1px solid var(--isdou-code-border) !important;
+  border-radius: var(--isdou-radius-md) !important;
+  background-color: var(--isdou-code-bg) !important;
+}
+
+[data-markdown-root] pre > .md-code-surface > :first-child:has(button) {
+  border-radius: var(--isdou-radius-md) var(--isdou-radius-md) 0 0;
+  border-bottom-color: var(--isdou-code-border) !important;
+  background-color: var(--isdou-code-header-bg);
 }
 
 [data-markdown-root] pre code {

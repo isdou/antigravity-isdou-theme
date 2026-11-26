@@ -24,7 +24,7 @@
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
 }
 
 /* 顶部项目/分支附栏（存在时）收紧为 6px 利落小按钮 */
@@ -52,7 +52,7 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
 [id="antigravity.agentSidePanelInputBox"] > div.bg-card {
   background-color: var(--isdou-composer-card) !important;
   border: 1px solid var(--isdou-composer-border) !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   padding: 0 !important;
   box-shadow: var(--isdou-composer-shadow) !important;
   transition: border-color 140ms ease, box-shadow 140ms ease !important;
@@ -69,7 +69,7 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
  * ---------------------------------------------------------------------------- */
 #antigravity\.agentSidePanelInputBox [data-lexical-editor="true"],
 .surface-composer-card [data-lexical-editor="true"] {
-  padding: 10px 12px 8px 12px !important;
+  padding: 12px 14px 10px !important;
   font-family: var(--font-sans) !important;
   font-size: 14px !important;
   font-weight: 420 !important;
@@ -80,9 +80,9 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
 
 #antigravity\.agentSidePanelInputBox div:not([data-ag-has-suggestion="true"]):has(> [data-lexical-editor="true"]) > p.pointer-events-none,
 .surface-composer-card div:not([data-ag-has-suggestion="true"]) > [data-lexical-editor="true"] ~ p.pointer-events-none {
-  left: 12px !important;
-  right: 12px !important;
-  top: 10px !important;
+  left: 14px !important;
+  right: 14px !important;
+  top: 12px !important;
   font-family: var(--font-sans) !important;
   font-size: 14px !important;
   font-weight: 400 !important;
@@ -100,6 +100,12 @@ body[data-agy-theme] .surface-composer > .surface-composer-card,
   border-top: 1px solid var(--isdou-composer-divider) !important;
   gap: 6px !important;
   overflow: hidden !important;
+}
+
+.surface-composer-card .agy-composer-footer {
+  background-color: color-mix(in srgb, var(--isdou-composer-card) 65%, var(--isdou-composer-tray));
+  border-end-start-radius: 11px;
+  border-end-end-radius: 11px;
 }
 
 .agy-composer-footer > div:first-child {
@@ -275,7 +281,10 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
-  gap: 2px;
+  gap: 0;
+  padding: 1px;
+  border-radius: 7px;
+  background-color: var(--isdou-chip-bg);
 }
 
 :is(.agy-composer-footer, [data-agent-composer-root]) button.isdou-usage-badge {
@@ -300,6 +309,29 @@ html[data-ag-theme-mode="dark"] .agy-composer-footer .isdou-effort-seg button.is
 }
 :is(.agy-composer-footer, [data-agent-composer-root]) button.isdou-usage-badge[hidden],
 #isdou-usage-popover[hidden] { display: none !important; }
+
+.isdou-usage-badge > span {
+  color: var(--iu-secondary);
+  font-size: 11px;
+}
+
+.isdou-usage-badge > strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.isdou-usage-badge:not([hidden]) + .isdou-usage-badge:not([hidden])::before {
+  content: '';
+  width: 1px;
+  height: 12px;
+  margin-inline-end: 4px;
+  background-color: var(--isdou-chip-border);
+}
+
+:is(.agy-composer-footer, [data-agent-composer-root]) .isdou-usage-badge:focus-visible {
+  outline: 2px solid var(--isdou-pill-fg);
+  outline-offset: -2px;
+}
 
 :is(.agy-composer-footer, [data-agent-composer-root]) .isdou-usage-badge:is(:hover, [aria-expanded="true"]) {
   background: var(--isdou-sidebar-hover) !important;
