@@ -305,10 +305,38 @@ body.dark .bg-sidebar [data-isdou-tone="fuchsia"]  { --isdou-mono-fg: #E879F9; }
   height: 20px !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.bg-sidebar [data-testid="project-header-icon"][data-isdou-mono] svg {
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-mono] svg,
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-custom-icon="1"] svg {
   display: none !important;
+}
+
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-custom-icon="1"]::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background-color: transparent;
+  background-image: var(--isdou-custom-icon);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.bg-sidebar [data-testid="project-header-icon"][data-isdou-custom-icon="1"][data-isdou-opaque="1"]::before {
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+}
+
+html[data-ag-theme-mode="dark"] .bg-sidebar [data-testid="project-header-icon"][data-isdou-custom-icon="1"][data-isdou-opaque="1"]::before,
+body.dark .bg-sidebar [data-testid="project-header-icon"][data-isdou-custom-icon="1"][data-isdou-opaque="1"]::before {
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
 }
 
 .bg-sidebar [data-testid="project-header-icon"][data-isdou-mono]::before {
@@ -604,6 +632,28 @@ body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
   font-family: var(--font-sans) !important;
   font-size: 8.5px !important;
   font-weight: 600 !important;
+}
+
+.bg-sidebar .isdou-t3-mini-icon {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 3.5px !important;
+  background-color: transparent !important;
+  background-image: var(--isdou-custom-icon) !important;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+}
+
+.bg-sidebar .isdou-t3-mini-icon[data-isdou-opaque="1"] {
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.1) !important;
+}
+
+html[data-ag-theme-mode="dark"] .bg-sidebar .isdou-t3-mini-icon[data-isdou-opaque="1"],
+body.dark .bg-sidebar .isdou-t3-mini-icon[data-isdou-opaque="1"] {
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14) !important;
 }
 
 .bg-sidebar .isdou-t3-card-proj-name {

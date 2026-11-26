@@ -1,7 +1,7 @@
 {
   "name": "antigravity-isdou-theme",
   "version": "0.2.0",
-  "programHash": "d30e5cf2ca4c1dfa3988d3cbe7921fe889aaef47fbceaf504ae1592ed8aa2d2a",
+  "programHash": "19e93ba224ecd1559981363a1686c2098b28d6cce62bd3a6d75fed7114da06c8",
   "minNodeVersion": "22.13.0",
   "fullMetricsNodeVersion": "22.13.0",
   "files": {
@@ -70,8 +70,8 @@
       "bytes": 11631
     },
     "runtime/00-head.js": {
-      "sha256": "e55aa4a511046892228b09055f414b714074d05ded6312b7faa498e060499268",
-      "bytes": 12871
+      "sha256": "446359b214ab7a12f4fd77c2a7ed2f4700c951302f236f83a4ddc6252e668254",
+      "bytes": 12963
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -94,8 +94,8 @@
       "bytes": 52116
     },
     "runtime/52-t3-sidebar.js": {
-      "sha256": "9a7b32a107f4fdbe13f591daa1aa22892105f235f00acd9d8575b3e114177c45",
-      "bytes": 37001
+      "sha256": "39da96fd0dabd42cf32c032578d60a99da1fb06d86eba20e3a8d5b2f184e7746",
+      "bytes": 59775
     },
     "runtime/55-project-hider.js": {
       "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
@@ -138,8 +138,8 @@
       "bytes": 8355
     },
     "styles/10-sidebar.css": {
-      "sha256": "f43ff733cc5f1ec7f2ec6c02e505b97eb2c907e4c976f434348eb3358c350d47",
-      "bytes": 30936
+      "sha256": "82b7bc4d18303de64b153becaf0ba089013781802fa7562d9f5a85bacd79f206",
+      "bytes": 32759
     },
     "styles/15-topbar.css": {
       "sha256": "d45197a5ddd7fb2e7108cb7355256a0ee10d20d472707f48112995cd0aa91370",
