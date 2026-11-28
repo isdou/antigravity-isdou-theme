@@ -35,6 +35,7 @@ const lsLogMod = await loadOptionalModule('daemon/ls-log.mjs');
 const sqliteMetricsMod = await loadOptionalModule('daemon/sqlite-metrics.mjs');
 const promptSuggestMod = await loadOptionalModule('daemon/prompt-suggest.mjs');
 const skillDexMod = await loadOptionalModule('daemon/skilldex.mjs');
+const worktreeCleanerMod = await loadOptionalModule('daemon/worktree-cleaner.mjs');
 
 const parseProto = protoMod?.parseProto || null;
 const parseGenMetadataRow = protoMod?.parseGenMetadataRow || null;
@@ -77,12 +78,37 @@ const promptSuggester = promptSuggestMod
   : null;
 
 const skillDexEngine = skillDexMod ? skillDexMod.createSkillDexEngine() : null;
+const worktreeCleanerEngine = worktreeCleanerMod ? worktreeCleanerMod.createWorktreeCleanerEngine() : null;
+
+// 自动加载 user/extensions/<ext-id>/daemon.mjs 第三方/个人扩展后端（带禁用列表过滤）
+const extensionEngines = new Map();
+const userExtensionsDir = path.join(__dirname, '..', 'user', 'extensions');
+if (!cliOpts.safeMode && fs.existsSync(userExtensionsDir)) {
+  try {
+    for (const ent of fs.readdirSync(userExtensionsDir, { withFileTypes: true })) {
+      if (!ent.isDirectory() || ent.name.startsWith('.')) continue;
+      const daemonFile = path.join(userExtensionsDir, ent.name, 'daemon.mjs');
+      if (!fs.existsSync(daemonFile)) continue;
+      try {
+        const mod = await import(new URL(`../user/extensions/${ent.name}/daemon.mjs`, import.meta.url).href);
+        const inst = typeof mod.createExtension === 'function' ? await mod.createExtension() : mod;
+        if (inst && typeof inst.handleRequest === 'function') {
+          extensionEngines.set(ent.name, inst);
+        }
+      } catch (err) {
+        console.error(`[Daemon] Failed to load extension "${ent.name}":`, err?.message || err);
+      }
+    }
+  } catch {}
+}
 
 const cdpManager = createCdpManager({
   bundleCtrl,
   metricsReader,
   promptSuggester,
   skillDexEngine,
+  worktreeCleanerEngine,
+  extensionEngines,
   hasSqlite: () => Boolean(DatabaseSync && sqliteMetricsMod),
   runOnce: cliOpts.runOnce,
   safeMode: cliOpts.safeMode

@@ -25,6 +25,7 @@
       promptSuggestions: true,
       projectHider: true,
       skillDex: true,
+      worktreeCleaner: true,
       accountSwitcher: true,
       folderDrop: true,
       quotaResume: true,
@@ -39,7 +40,7 @@
 
   const DEFAULT_PRESET = boot.preset || 'linear-light';
   const DEFAULT_EXCLUDE_I18N =
-    'code, pre, kbd, samp, textarea, input, style, script, noscript, [contenteditable="true"], [data-markdown-root], [data-testid="user-message-content"], .agy-user-bubble, .monaco-editor, .monaco-diff-editor, .xterm, [class*="onyx-key"], .prose, .markdown, [class*="chat-message"], [class*="group/file-title"], [data-testid="conversation-row-sidebar"] a[href^="/c/"], [data-testid="conversation-row-sidebar"] span.truncate, [data-testid="conversation-row-history"] a[href^="/c/"], [data-testid="conversation-row-history"] span.truncate, [data-testid="conversation-navigator-turn"], #ag-live-metrics-pill, .ag-live-metrics-pill, #ag-live-metrics-tooltip, #ag-turn-metrics-tooltip, .ag-turn-metrics, .ag-prompt-ghost-overlay, .ag-prompt-ghost-text, .ag-prompt-ghost-kbd, #isdou-effort-seg, #isdou-usage-badge, .isdou-usage-controls, #isdou-usage-popover, #isdou-drop-overlay, #isdou-drop-toast, #isdou-resume-bar, #isdou-auth-banner-actions, #isdou-hidden-projects-btn, #isdou-hidden-projects-popover, [data-testid="isdou-project-hide-item"], [data-testid="isdou-project-icon-set-item"], [data-testid="isdou-project-icon-reset-item"], #isdou-t3-sidebar-header, #isdou-t3-sidebar-footer, #isdou-skilldex-backdrop, #isdou-skilldex-modal, .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-status-pill';
+    'code, pre, kbd, samp, textarea, input, style, script, noscript, [contenteditable="true"], [data-markdown-root], [data-testid="user-message-content"], .agy-user-bubble, .monaco-editor, .monaco-diff-editor, .xterm, [class*="onyx-key"], .prose, .markdown, [class*="chat-message"], [class*="group/file-title"], [data-testid="conversation-row-sidebar"] a[href^="/c/"], [data-testid="conversation-row-sidebar"] span.truncate, [data-testid="conversation-row-history"] a[href^="/c/"], [data-testid="conversation-row-history"] span.truncate, [data-testid="conversation-navigator-turn"], #ag-live-metrics-pill, .ag-live-metrics-pill, #ag-live-metrics-tooltip, #ag-turn-metrics-tooltip, .ag-turn-metrics, .ag-prompt-ghost-overlay, .ag-prompt-ghost-text, .ag-prompt-ghost-kbd, #isdou-effort-seg, #isdou-usage-badge, .isdou-usage-controls, #isdou-usage-popover, #isdou-drop-overlay, #isdou-drop-toast, #isdou-resume-bar, #isdou-auth-banner-actions, #isdou-hidden-projects-btn, #isdou-hidden-projects-popover, [data-testid="isdou-project-hide-item"], [data-testid="isdou-project-icon-set-item"], [data-testid="isdou-project-icon-reset-item"], #isdou-t3-sidebar-header, #isdou-t3-sidebar-footer, #isdou-skilldex-backdrop, #isdou-skilldex-modal, #isdou-wtc-backdrop, #isdou-wtc-modal, .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-status-pill';
 
   const SELECTORS = Object.assign(
     {
@@ -308,3 +309,50 @@
     }
   }
   ensureStylesAtEndOfHead();
+
+  // 扩展插件前端 -> Daemon 统一 RPC 桥（供 user/extensions/<id>/runtime.js 调用）
+  if (!IS_SWARM_PLUGIN_FRAME) {
+    let extReqSeq = 1;
+    const extPendingReqs = new Map();
+    window.__ag_on_extension_response = (reqId, payload) => {
+      const cb = extPendingReqs.get(String(reqId));
+      if (!cb) return;
+      extPendingReqs.delete(String(reqId));
+      cb(payload);
+    };
+    window.__agCallExtension = (extId, payload = {}, timeoutMs = 30000) =>
+      new Promise((resolve) => {
+        if (typeof window.__agExtensionRequest !== 'function') {
+          resolve({ ok: false, error: '主题守护进程未连接扩展桥' });
+          return;
+        }
+        const cleanId = String(extId || '').trim();
+        if (!cleanId) {
+          resolve({ ok: false, error: 'Missing extension id' });
+          return;
+        }
+        const reqId = 'ext_' + Date.now() + '_' + extReqSeq++;
+        const timer = setTimeout(() => {
+          if (extPendingReqs.has(reqId)) {
+            extPendingReqs.delete(reqId);
+            resolve({ ok: false, error: '扩展调用超时' });
+          }
+        }, Math.max(1000, Number(timeoutMs) || 30000));
+        extPendingReqs.set(reqId, (res) => {
+          clearTimeout(timer);
+          resolve(res || { ok: false, error: '空响应' });
+        });
+        try {
+          window.__agExtensionRequest(JSON.stringify({ reqId, extId: cleanId, payload }));
+        } catch (err) {
+          clearTimeout(timer);
+          extPendingReqs.delete(reqId);
+          resolve({ ok: false, error: err?.message || '扩展调用失败' });
+        }
+      });
+    window.__ag_cleanup_fns.push(() => {
+      extPendingReqs.clear();
+      delete window.__agCallExtension;
+      delete window.__ag_on_extension_response;
+    });
+  }

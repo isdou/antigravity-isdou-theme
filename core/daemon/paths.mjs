@@ -171,6 +171,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       promptSuggestions: true,
       projectHider: true,
       skillDex: true,
+      worktreeCleaner: true,
       accountSwitcher: true,
       folderDrop: true,
       quotaResume: true,
@@ -191,6 +192,18 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     const runtimeFiles = listSortedFiles(RUNTIME_DIR, '.js');
     const manifestPath = path.join(CORE_DIR, 'manifest.json');
     const coreFiles = [...styleFiles, path.join(CORE_DIR, 'i18n.json'), ...runtimeFiles, manifestPath];
+    const extensionsDir = path.join(USER_DIR, 'extensions');
+    const extensionDirs = !safeMode && fs.existsSync(extensionsDir)
+      ? fs
+          .readdirSync(extensionsDir, { withFileTypes: true })
+          .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+          .map((e) => e.name)
+          .sort((a, b) => a.localeCompare(b))
+      : [];
+    const extensionFiles = extensionDirs.flatMap((id) => [
+      path.join(extensionsDir, id, 'style.css'),
+      path.join(extensionsDir, id, 'runtime.js')
+    ]);
     const userFiles = safeMode
       ? []
       : [
@@ -198,7 +211,8 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
           path.join(USER_DIR, 'config.json'),
           path.join(USER_DIR, 'custom.css'),
           path.join(USER_DIR, 'i18n.override.json'),
-          path.join(USER_DIR, 'custom.js')
+          path.join(USER_DIR, 'custom.js'),
+          ...extensionFiles
         ];
 
     const sig =
@@ -246,6 +260,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
         promptSuggestions: true,
         projectHider: true,
         skillDex: true,
+        worktreeCleaner: true,
         accountSwitcher: true,
         folderDrop: true,
         quotaResume: true,
@@ -270,6 +285,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     const hasPromptSuggestionsFile = fs.existsSync(path.join(RUNTIME_DIR, '70-prompt-suggestions.js'));
     const hasProjectHiderFile = fs.existsSync(path.join(RUNTIME_DIR, '55-project-hider.js'));
     const hasSkillDexFile = fs.existsSync(path.join(RUNTIME_DIR, '58-skilldex.js'));
+    const hasWorktreeCleanerFile = fs.existsSync(path.join(RUNTIME_DIR, '59-worktree-cleaner.js'));
     const hasAccountSwitcherFile = fs.existsSync(path.join(RUNTIME_DIR, '62-account-switcher.js'));
     const hasFolderDropFile = fs.existsSync(path.join(RUNTIME_DIR, '80-folder-drop.js'));
     const hasQuotaResumeFile = fs.existsSync(path.join(RUNTIME_DIR, '85-quota-resume.js'));
@@ -279,6 +295,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     if (!hasPromptSuggestionsFile) modules.promptSuggestions = false;
     if (!hasProjectHiderFile) modules.projectHider = false;
     if (!hasSkillDexFile) modules.skillDex = false;
+    if (!hasWorktreeCleanerFile) modules.worktreeCleaner = false;
     if (!hasAccountSwitcherFile) modules.accountSwitcher = false;
     if (!hasFolderDropFile) modules.folderDrop = false;
     if (!hasQuotaResumeFile) modules.quotaResume = false;
@@ -314,6 +331,22 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
         ? userCfg.promptSuggestionModel.trim()
         : 'gemini-3.8-flash-low';
 
+    const disabledExtensions = Array.isArray(userCfg.disabledExtensions)
+      ? userCfg.disabledExtensions.map((x) => String(x || '').trim()).filter(Boolean)
+      : [];
+    const disabledExtSet = new Set(disabledExtensions);
+    const activeExtIds = safeMode ? [] : extensionDirs.filter((id) => !disabledExtSet.has(id));
+    const extCssChunks = activeExtIds
+      .map((id) => readTextSafe(path.join(extensionsDir, id, 'style.css'), ''))
+      .filter(Boolean);
+    const extJsChunks = activeExtIds
+      .map((id) => {
+        const src = readTextSafe(path.join(extensionsDir, id, 'runtime.js'), '');
+        if (!src.trim()) return '';
+        return `try { /* extension:${id} */\n(function(){\n${src}\n})();\n} catch (e) { console.error('[isdou-ext:${id}]', e); }`;
+      })
+      .filter(Boolean);
+
     activeConfig = {
       enabled,
       channel,
@@ -325,6 +358,7 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
       fallbackContextLimit,
       promptSuggestionModel,
       modules,
+      disabledExtensions,
       themeVars,
       selectors: normalizedSelectors,
       allowedOrigins: Array.isArray(userCfg.allowedOrigins) ? userCfg.allowedOrigins : DEFAULT_ALLOWED_ORIGINS,
@@ -334,14 +368,22 @@ export function createBundleController({ safeMode = false, cliChannel = null, ha
     const styleNames = bundle && !programManifest?.partial
       ? Object.keys(bundle.styles).sort((a, b) => a.localeCompare(b))
       : styleFiles.map(file => path.basename(file));
-    const baseCss = styleNames.filter(name => name === '90-telemetry.css' ? modules.metrics : modules.theme !== false)
-      .map(name => bundle ? (bundle.styles[name] || '') : readTextSafe(path.join(STYLES_DIR, name), '')).join('\n\n');
-    const customCss = !safeMode && modules.customCss ? readTextSafe(path.join(USER_DIR, 'custom.css'), '') : '';
+    const baseCss = styleNames
+      .filter((name) => {
+        if (name === '90-telemetry.css') return modules.metrics;
+        if (name === '46-worktree-cleaner.css') return modules.worktreeCleaner !== false;
+        return modules.theme !== false;
+      })
+      .map((name) => (bundle ? bundle.styles[name] || '' : readTextSafe(path.join(STYLES_DIR, name), '')))
+      .join('\n\n');
+    const customCssBase = !safeMode && modules.customCss ? readTextSafe(path.join(USER_DIR, 'custom.css'), '') : '';
+    const customCss = [customCssBase, ...extCssChunks].filter(Boolean).join('\n\n');
     const baseDict = modules.i18n ? (bundle?.i18n || readJsonSafe(path.join(CORE_DIR, 'i18n.json'), {})) : {};
     const rawOverrideDict =
       modules.i18n && !safeMode ? readJsonSafe(path.join(USER_DIR, 'i18n.override.json'), {}) : {};
     const mergedDict = modules.i18n ? Object.assign({}, baseDict, normalizeOverrideDict(rawOverrideDict)) : {};
-    const customJs = !safeMode && modules.customJs ? readTextSafe(path.join(USER_DIR, 'custom.js'), '') : '';
+    const customJsBase = !safeMode && modules.customJs ? readTextSafe(path.join(USER_DIR, 'custom.js'), '') : '';
+    const customJs = [customJsBase, ...extJsChunks].filter(Boolean).join('\n\n');
     const runtimeTemplate = runtimeFiles.map((f) => readTextSafe(f, '')).join('\n');
 
     const hash = crypto

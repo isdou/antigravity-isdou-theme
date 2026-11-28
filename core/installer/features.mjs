@@ -92,14 +92,17 @@ export const FEATURE_GROUPS = Object.freeze({
   },
   fixes: {
     id: 'fixes',
-    label: '设置死锁修复、侧栏项目隐藏、原生一键切号、拖拽打开文件夹、配额恢复续跑与缩放快捷键',
-    configKeys: ['deadlockHealer', 'zoomShortcuts', 'projectHider', 'skillDex', 'accountSwitcher', 'folderDrop', 'quotaResume'],
+    label: '设置死锁修复、侧栏项目隐藏、SkillDex 图鉴、Worktree 清理、原生一键切号、拖拽打开文件夹、配额恢复续跑与缩放快捷键',
+    configKeys: ['deadlockHealer', 'zoomShortcuts', 'projectHider', 'skillDex', 'worktreeCleaner', 'accountSwitcher', 'folderDrop', 'quotaResume'],
     sparsePaths: [
       '/core/runtime/10-guards.js',
       '/core/runtime/55-project-hider.js',
       '/core/runtime/58-skilldex.js',
       '/core/styles/45-skilldex.css',
       '/core/daemon/skilldex.mjs',
+      '/core/runtime/59-worktree-cleaner.js',
+      '/core/styles/46-worktree-cleaner.css',
+      '/core/daemon/worktree-cleaner.mjs',
       '/core/runtime/62-account-switcher.js',
       '/core/runtime/80-folder-drop.js',
       '/core/runtime/85-quota-resume.js'
@@ -110,11 +113,14 @@ export const FEATURE_GROUPS = Object.freeze({
       'runtime/58-skilldex.js',
       'styles/45-skilldex.css',
       'daemon/skilldex.mjs',
+      'runtime/59-worktree-cleaner.js',
+      'styles/46-worktree-cleaner.css',
+      'daemon/worktree-cleaner.mjs',
       'runtime/62-account-switcher.js',
       'runtime/80-folder-drop.js',
       'runtime/85-quota-resume.js'
     ],
-    aliases: ['fixes', 'fix', 'guards', 'deadlock', 'deadlockhealer', 'zoom', 'zoomshortcuts', 'hide', 'project', 'account', 'switch', 'drop', 'resume']
+    aliases: ['fixes', 'fix', 'guards', 'deadlock', 'deadlockhealer', 'zoom', 'zoomshortcuts', 'hide', 'project', 'skilldex', 'worktree', 'worktreecleaner', 'account', 'switch', 'drop', 'resume']
   }
 });
 

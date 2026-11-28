@@ -106,6 +106,8 @@ export function createCdpManager({
   metricsReader,
   promptSuggester = null,
   skillDexEngine = null,
+  worktreeCleanerEngine = null,
+  extensionEngines = null,
   hasSqlite,
   runOnce = false,
   safeMode = false
@@ -421,6 +423,8 @@ export function createCdpManager({
             await send('Runtime.addBinding', { name: '__agSyncHostThemeMode' });
             await send('Runtime.addBinding', { name: '__agRequestPromptSuggestion' });
             await send('Runtime.addBinding', { name: '__agSkillDexRequest' });
+            await send('Runtime.addBinding', { name: '__agWorktreeRequest' });
+            await send('Runtime.addBinding', { name: '__agExtensionRequest' });
           }
           await updateNewDocScript();
           const ok = await inject();
@@ -562,6 +566,80 @@ export function createCdpManager({
                   try {
                     await send('Runtime.evaluate', {
                       expression: `if (typeof window.__ag_on_skilldex_response === 'function') { window.__ag_on_skilldex_response(${JSON.stringify(reqId)}, ${payloadJson}); }`,
+                      returnByValue: false
+                    });
+                  } catch {}
+                }
+              })();
+              return;
+            }
+            if (msg.method === 'Runtime.bindingCalled' && msg.params?.name === '__agWorktreeRequest') {
+              const { activeConfig } = bundleCtrl.getState();
+              if (
+                isSwarmIframe ||
+                !hostConfirmed ||
+                !worktreeCleanerEngine ||
+                !activeConfig.enabled ||
+                activeConfig.modules.worktreeCleaner === false
+              ) {
+                return;
+              }
+              let req = {};
+              try {
+                req = msg.params.payload ? JSON.parse(String(msg.params.payload)) : {};
+              } catch {}
+              const reqId = String(req?.reqId || '');
+              void (async () => {
+                let out;
+                try {
+                  out = await worktreeCleanerEngine.handleRequest(req);
+                } catch (err) {
+                  out = { ok: false, error: err?.message || String(err || 'Worktree Cleaner error') };
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                  const payloadJson = JSON.stringify(out)
+                    .replace(/\u2028/g, '\\u2028')
+                    .replace(/\u2029/g, '\\u2029');
+                  try {
+                    await send('Runtime.evaluate', {
+                      expression: `if (typeof window.__ag_on_worktree_response === 'function') { window.__ag_on_worktree_response(${JSON.stringify(reqId)}, ${payloadJson}); }`,
+                      returnByValue: false
+                    });
+                  } catch {}
+                }
+              })();
+              return;
+            }
+            if (msg.method === 'Runtime.bindingCalled' && msg.params?.name === '__agExtensionRequest') {
+              const { activeConfig } = bundleCtrl.getState();
+              if (isSwarmIframe || !hostConfirmed || !extensionEngines || !activeConfig.enabled) {
+                return;
+              }
+              let req = {};
+              try {
+                req = msg.params.payload ? JSON.parse(String(msg.params.payload)) : {};
+              } catch {}
+              const reqId = String(req?.reqId || '');
+              const extId = String(req?.extId || '').trim();
+              const disabledSet = new Set(Array.isArray(activeConfig.disabledExtensions) ? activeConfig.disabledExtensions : []);
+              void (async () => {
+                let out;
+                try {
+                  if (!extId || disabledSet.has(extId) || !extensionEngines.has(extId)) {
+                    out = { ok: false, error: `Extension "${extId}" not available` };
+                  } else {
+                    out = await extensionEngines.get(extId).handleRequest(req);
+                  }
+                } catch (err) {
+                  out = { ok: false, error: err?.message || String(err || 'Extension error') };
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                  const payloadJson = JSON.stringify(out)
+                    .replace(/\u2028/g, '\\u2028')
+                    .replace(/\u2029/g, '\\u2029');
+                  try {
+                    await send('Runtime.evaluate', {
+                      expression: `if (typeof window.__ag_on_extension_response === 'function') { window.__ag_on_extension_response(${JSON.stringify(reqId)}, ${payloadJson}); }`,
                       returnByValue: false
                     });
                   } catch {}

@@ -1,17 +1,17 @@
 {
   "name": "antigravity-isdou-theme",
   "version": "0.3.0",
-  "programHash": "99b44cda618aa4093f97957ee1927397bf293ea31d78509fe3dd2a0d9529110e",
+  "programHash": "2b217ffd6f39f97510e4e9b028ccf878694b593e8e6a1cdb793d90d5e3e00ebb",
   "minNodeVersion": "22.13.0",
   "fullMetricsNodeVersion": "22.13.0",
   "files": {
     "daemon.mjs": {
-      "sha256": "86bc9f725192abac1010dbfe4788543c11599238dd2b275a0bd10201ddfe5db3",
-      "bytes": 4688
+      "sha256": "6cb08a8d2b68c88e0dd00810c7c4a913727fc5b63787ae8ec787480597defbfa",
+      "bytes": 5985
     },
     "daemon/cdp-bridge.mjs": {
-      "sha256": "fa0499dfa99b469c034d3cee7f35ed6d6ecb6c60aa74ad8317453c6b5c5b0592",
-      "bytes": 31255
+      "sha256": "b3516ecdc23fd23356730a0f93bbbd4b4d7ca5adf059ff7d9d84515dd565af67",
+      "bytes": 34976
     },
     "daemon/cdp-relaunch.mjs": {
       "sha256": "51e9a4212942252547594c3294a6cccba426d081b5934a69fab3068aa21370c1",
@@ -22,8 +22,8 @@
       "bytes": 2123
     },
     "daemon/paths.mjs": {
-      "sha256": "8f40126b124e7f2e45ab7ab81a6d81052fc5f5f0290a55829480d5917b36339c",
-      "bytes": 15569
+      "sha256": "e0a5881f895dd64cbf7c8f0687f9967b8c408b7c37ba7aa226bfd39cb728b737",
+      "bytes": 17507
     },
     "daemon/prompt-suggest.mjs": {
       "sha256": "5475ade6307a16edc0d1748d87834c8fbccd87e1e1d5dfee184a278296988edb",
@@ -45,6 +45,10 @@
       "sha256": "186e438512a681e2eccbbdbc15f771ce30f7602af6a27f5d56ee6dda1d636ef7",
       "bytes": 19694
     },
+    "daemon/worktree-cleaner.mjs": {
+      "sha256": "607b8f910e2378b86b1eb421f61d2913e29109e7d0894ad2bdce3987f50fc5a3",
+      "bytes": 19952
+    },
     "i18n.json": {
       "sha256": "22f5e7c475d9110c228eaeb94f23a1e60b34918b347d7c726c77d1ae298fd065",
       "bytes": 117134
@@ -58,8 +62,8 @@
       "bytes": 12591
     },
     "installer/features.mjs": {
-      "sha256": "d921959c00bfebeec5b247e6aaadf52df911e8bfd83411ad0bc29fad531e6bfb",
-      "bytes": 6287
+      "sha256": "ffe868f73e9e5c8e61a3178e876baf8ffc568fa037853add7c6db365a2e183bd",
+      "bytes": 6637
     },
     "installer/manifest.mjs": {
       "sha256": "972aa632c678e188dd4bd8fe2b35dbd3900f7a52f9268e4cdcc6939cbc3822b3",
@@ -74,8 +78,8 @@
       "bytes": 11631
     },
     "runtime/00-head.js": {
-      "sha256": "cb4864431a8959909cca33e571abf9afbe3cf87cb07d1432876df4e5a1b6283a",
-      "bytes": 13034
+      "sha256": "1ffac2d7ea140875e75b42a9f98882150343b3342879ff60e80c62798d6031fa",
+      "bytes": 14891
     },
     "runtime/10-guards.js": {
       "sha256": "f4aedd3e4c615f638fe213c3c9304e51467dd6eceb4ae57b7085db47f6155087",
@@ -98,8 +102,8 @@
       "bytes": 52116
     },
     "runtime/52-t3-sidebar.js": {
-      "sha256": "fc6cdb45a5c5fe8d2d3265412bc1f59edd5c772e585ba45852680989a4afee9b",
-      "bytes": 60917
+      "sha256": "3f99110fff3ceb2bb2dab6ed13bd76ce1089af80329e7f5c2092f01764a92032",
+      "bytes": 65243
     },
     "runtime/55-project-hider.js": {
       "sha256": "b3f9cf18644c5215b069ef9f6eabb2167e10a7dd0494910bce0a51d5daced61e",
@@ -108,6 +112,10 @@
     "runtime/58-skilldex.js": {
       "sha256": "fb1da517f7f09f81e8cf39e33d2d69644599eb742e0da337dbb2539120ae474f",
       "bytes": 45081
+    },
+    "runtime/59-worktree-cleaner.js": {
+      "sha256": "a371ddac7217d71e48dfc7cd13f66cb1296fdced326897cd1a1a1c83cf0e72f4",
+      "bytes": 24593
     },
     "runtime/60-i18n-engine.js": {
       "sha256": "cd47a833fe2df838b3a33ab6fa967c71d70707fd175650c098e8e3d58f1f53d2",
@@ -168,6 +176,10 @@
     "styles/45-skilldex.css": {
       "sha256": "3cd5ac30f452a6110ba023752e931f74287cd9b6788fe4d84d2ecb23fbfce836",
       "bytes": 19230
+    },
+    "styles/46-worktree-cleaner.css": {
+      "sha256": "3eefffe68db41fd787bf6a54645b7242d50c7f8c09a2c00cbd9f1d29db44f651",
+      "bytes": 12536
     }
   }
 }

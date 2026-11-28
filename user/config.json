@@ -14,6 +14,7 @@
     "promptSuggestions": true,
     "projectHider": true,
     "skillDex": true,
+    "worktreeCleaner": true,
     "accountSwitcher": true,
     "folderDrop": true,
     "quotaResume": true,

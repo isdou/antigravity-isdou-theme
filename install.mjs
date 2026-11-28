@@ -194,10 +194,15 @@ async function runInstall() {
     }
 
     fs.mkdirSync(targetUser, { recursive: true });
+    fs.mkdirSync(path.join(targetUser, 'extensions'), { recursive: true });
     for (const item of fs.readdirSync(srcUser)) {
       const s = path.join(srcUser, item);
       const d = path.join(targetUser, item);
-      if (syncUser || !fs.existsSync(d)) {
+      if (fs.statSync(s).isDirectory()) {
+        if (syncUser || !fs.existsSync(d)) {
+          copyDirRecursive(s, d);
+        }
+      } else if (syncUser || !fs.existsSync(d)) {
         fs.copyFileSync(s, d);
       }
     }
@@ -242,6 +247,7 @@ async function runInstall() {
     'promptSuggestions',
     'projectHider',
     'skillDex',
+    'worktreeCleaner',
     'accountSwitcher',
     'folderDrop',
     'quotaResume',
@@ -280,6 +286,9 @@ async function runInstall() {
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '58-skilldex.js'))) {
     currentCfg.modules.skillDex = false;
+  }
+  if (!fs.existsSync(path.join(targetCore, 'runtime', '59-worktree-cleaner.js'))) {
+    currentCfg.modules.worktreeCleaner = false;
   }
   if (!fs.existsSync(path.join(targetCore, 'runtime', '62-account-switcher.js'))) {
     currentCfg.modules.accountSwitcher = false;

@@ -646,6 +646,97 @@
         }
       }
 
+      const registeredSidebarTools = new Map();
+
+      function syncSidebarToolButtons(footerEl) {
+        const footer = footerEl || document.getElementById(FOOTER_ID);
+        if (!footer) return;
+        const releaseLink = footer.querySelector('.isdou-release-link');
+        const sorted = Array.from(registeredSidebarTools.values()).sort((a, b) => {
+          const oa = Number.isFinite(a.order) ? a.order : 100;
+          const ob = Number.isFinite(b.order) ? b.order : 100;
+          return oa - ob || a.id.localeCompare(b.id);
+        });
+        const keepIds = new Set(sorted.map((t) => t.id));
+        footer.querySelectorAll('[data-isdou-tool-id]').forEach((el) => {
+          if (!keepIds.has(el.getAttribute('data-isdou-tool-id'))) el.remove();
+        });
+        for (const tool of sorted) {
+          let btn = footer.querySelector(`[data-isdou-tool-id="${CSS.escape(tool.id)}"]`);
+          if (!btn) {
+            btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'isdou-t3-icon-btn';
+            btn.setAttribute('data-isdou-tool-id', tool.id);
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const latest = registeredSidebarTools.get(tool.id);
+              try {
+                latest?.onClick?.(e);
+              } catch (err) {
+                console.error('[isdou-sidebar-tool:' + tool.id + ']', err);
+              }
+            });
+          }
+          const title = tool.title || tool.ariaLabel || tool.id;
+          const ariaLabel = tool.ariaLabel || tool.title || tool.id;
+          if (btn.getAttribute('title') !== title) btn.setAttribute('title', title);
+          if (btn.getAttribute('aria-label') !== ariaLabel) btn.setAttribute('aria-label', ariaLabel);
+          if (tool.svg && btn.dataset.isdouToolSvg !== tool.svg) {
+            btn.innerHTML = tool.svg;
+            btn.dataset.isdouToolSvg = tool.svg;
+          }
+          if (tool.hasAlert) btn.setAttribute('data-isdou-has-alert', 'true');
+          else btn.removeAttribute('data-isdou-has-alert');
+          if (releaseLink && releaseLink.parentElement === footer) {
+            footer.insertBefore(btn, releaseLink);
+          } else {
+            footer.appendChild(btn);
+          }
+        }
+      }
+
+      window.__isdouSidebarTools = {
+        register(spec) {
+          if (!spec || typeof spec.id !== 'string' || !spec.id.trim()) return false;
+          const id = spec.id.trim();
+          const prev = registeredSidebarTools.get(id);
+          registeredSidebarTools.set(id, {
+            id,
+            title: spec.title || prev?.title || id,
+            ariaLabel: spec.ariaLabel || spec.title || prev?.ariaLabel || id,
+            svg: typeof spec.svg === 'string' ? spec.svg : prev?.svg || '',
+            order: Number.isFinite(spec.order) ? spec.order : prev?.order ?? 100,
+            onClick: typeof spec.onClick === 'function' ? spec.onClick : prev?.onClick || null,
+            hasAlert: typeof spec.hasAlert === 'boolean' ? spec.hasAlert : Boolean(prev?.hasAlert)
+          });
+          syncSidebarToolButtons();
+          return true;
+        },
+        unregister(id) {
+          const cleanId = String(id || '').trim();
+          if (!cleanId) return;
+          registeredSidebarTools.delete(cleanId);
+          syncSidebarToolButtons();
+        },
+        setBadge(id, hasAlert) {
+          const cleanId = String(id || '').trim();
+          const tool = registeredSidebarTools.get(cleanId);
+          if (!tool) return;
+          tool.hasAlert = Boolean(hasAlert);
+          const footer = document.getElementById(FOOTER_ID);
+          const btn = footer?.querySelector(`[data-isdou-tool-id="${CSS.escape(cleanId)}"]`);
+          if (btn) {
+            if (tool.hasAlert) btn.setAttribute('data-isdou-has-alert', 'true');
+            else btn.removeAttribute('data-isdou-has-alert');
+          }
+        },
+        list() {
+          return Array.from(registeredSidebarTools.keys());
+        }
+      };
+
       function ensureSidebarFooter(sidebarEl) {
         if (!sidebarEl) return;
         let footer = document.getElementById(FOOTER_ID);
@@ -708,6 +799,7 @@
         if (footer.parentElement !== sidebarEl) {
           sidebarEl.appendChild(footer);
         }
+        syncSidebarToolButtons(footer);
       }
 
       function syncProjectHeader(btn, snap) {
@@ -1218,8 +1310,9 @@
                   target.id === ICON_INPUT_ID ||
                   target.id === TOAST_ID ||
                   target.id === 'isdou-skilldex-backdrop' ||
+                  target.id === 'isdou-wtc-backdrop' ||
                   target.closest?.(
-                    `#${HEADER_ID}, #${FOOTER_ID}, #${ICON_INPUT_ID}, #${TOAST_ID}, #isdou-skilldex-backdrop, [data-testid="${ICON_SET_MENU_TESTID}"], [data-testid="${ICON_RESET_MENU_TESTID}"], .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-proj-trailing`
+                    `#${HEADER_ID}, #${FOOTER_ID}, #${ICON_INPUT_ID}, #${TOAST_ID}, #isdou-skilldex-backdrop, #isdou-wtc-backdrop, [data-testid="${ICON_SET_MENU_TESTID}"], [data-testid="${ICON_RESET_MENU_TESTID}"], .isdou-t3-card-top, .isdou-t3-card-bottom, .isdou-t3-inline-meta, .isdou-t3-proj-trailing`
                   )
                 ) {
                   continue;
@@ -1322,6 +1415,10 @@
           });
         if (window.__isdouProjectIcons) {
           delete window.__isdouProjectIcons;
+        }
+        registeredSidebarTools.clear();
+        if (window.__isdouSidebarTools) {
+          delete window.__isdouSidebarTools;
         }
       });
     })();
